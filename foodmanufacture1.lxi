@@ -1,0 +1,29 @@
+B 2 C o m p i l a t i o n
+B 90 Equation Listing    SOLVE food1 Using LP From line 76
+D 91 massbalance
+D 107 storecalc
+D 170 prodLimitVeg
+D 185 prodLimitNVeg
+D 200 hardnessup
+D 215 hardnesslow
+D 230 cost
+B 249 Column Listing      SOLVE food1 Using LP From line 76
+E 250 storage
+E 272 rawmat
+E 291 rawmatused
+E 319 product
+E 344 profit
+B 353 Model Statistics    SOLVE food1 Using LP From line 76
+B 369 Solution Report     SOLVE food1 Using LP From line 76
+F 401 massbalance
+F 412 storecalc
+F 447 prodLimitVeg
+F 458 prodLimitNVeg
+F 469 hardnessup
+F 480 hardnesslow
+F 489 cost
+G 492 storage
+G 527 rawmat
+G 562 rawmatused
+G 597 product
+G 608 profit
