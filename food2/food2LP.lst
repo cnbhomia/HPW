@@ -1,4 +1,4 @@
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/10/18 11:23:53 Page 1
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/10/18 17:19:19 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -43,51 +43,76 @@ C o m p i l a t i o n
   40      RMstock(oil,month) 'amount of oil in stock at the begining of each month'
   41      product(month) 'amount of final product each month'
   42      ;
-  43  variable
-  44      profit 'profit overall'
-  45      ;
-  46  *fixing stocks
-  47  RMstock.fx(oil,'Jan') = 500;
-  48  RMstock.up(oil,month) = 1000;
-  49   
-  50   
-  51  equations
-  52      stockcalc(oil,month) 'stock calculation'
-  53      matbalance(month) 'material balance each month'
-  54      hardnessup(month) ' hardness less than 6'
-  55      hardnesslow(month) ' hardness more than 3'
-  56      refiningLimVeg(month) 'refining limit of each month for veg oil'
-  57      refiningLimNVeg(month) 'refining limit of each month for nonveg oil'
-  58      profitcalc 'profit equation';
-  59   
-  60   
-  61  stockcalc(oil,month).. RMstock(oil,month++1) =e= RMstock(oil,month) + RMpur(oil,month) - RMused(oil,month) ;
-  62   
-  63  matbalance(month).. product(month) =e= sum(oil, RMused(oil,month));
-  64   
-  65  hardnessup(month).. sum(oil,RMused(oil,month)*hardness(oil)) - 6*product(month) =l=0 ;
-  66   
-  67  hardnesslow(month).. sum(oil,RMused(oil,month)*hardness(oil)) - 3*product(month) =g=0 ;
+  43   
+  44  binary variable
+  45      D(oil,month)  'D to process a given oil of oil'
+  46      ;
+  47   
+  48  variable
+  49      profit 'profit overall'
+  50      ;
+  51  *fixing stocks
+  52  RMstock.fx(oil,'Jan') = 500;
+  53  RMstock.up(oil,month) = 1000;
+  54   
+  55   
+  56  equations
+  57      stockcalc(oil,month) 'stock calculation'
+  58      matbalance(month) 'material balance each month'
+  59      hardnessup(month) ' hardness less than 6'
+  60      hardnesslow(month) ' hardness more than 3'
+  61      refiningLimVeg(month) 'refining limit of each month for veg oil'
+  62      refiningLimNVeg(month) 'refining limit of each month for nonveg oil'
+  63      profitcalc 'profit equation'
+  64      threeoils 'constraints of no more than 3 oils'
+  65      minuse(oil,month) 'minimum amount to be used 20 tonn'
+  66      combination(oil,month)
+  67      ;
   68   
-  69  refiningLimVeg(month).. sum(oil$veg(oil), RMused(oil,month)) =l= RefineLimVeg ;
-  70   
-  71  refiningLimNVeg(month).. sum(oil$nonveg(oil), RMused(oil,month)) =l= RefineLimNVeg ;
-  72   
-  73  profitcalc.. profit =e= sum(month,product(month)*sellprice) - sum((oil,month), RMpur(oil,month)*price(month,oil)) - sum((oil,month),RMstock(oil,month)*storecost);
-  74   
-  75   
-  76  model food1 /all/;
-  77  option limrow=100
-  78  solve food1 using LP maximizing profit;
-  79   
+      logic equations
+          combo(oil,month) 'combination of veg1,veg2, oil3'
+          ;
+          
+      combo(oil,month).. D('veg1',month) or D('veg2',month) -> D('oil3',month) ;
+  76   
+  77   
+  78  *initalization and nounds
+  79  D.l(oil,month) = 1;
   80   
   81   
+  82  stockcalc(oil,month).. RMstock(oil,month++1) =e= RMstock(oil,month) + RMpur(oil,month) - RMused(oil,month) ;
+  83   
+  84  matbalance(month).. product(month) =e= sum(oil, RMused(oil,month));
+  85   
+  86  hardnessup(month).. sum(oil,RMused(oil,month)*hardness(oil)) - 6*product(month) =l=0 ;
+  87   
+  88  hardnesslow(month).. sum(oil,RMused(oil,month)*hardness(oil)) - 3*product(month) =g=0 ;
+  89   
+  90  refiningLimVeg(month).. sum(oil$veg(oil), RMused(oil,month)) =l= RefineLimVeg ;
+  91   
+  92  refiningLimNVeg(month).. sum(oil$nonveg(oil), RMused(oil,month)) =l= RefineLimNVeg ;
+  93   
+  94  profitcalc.. profit =e= sum(month,product(month)*sellprice) - sum((oil,month), RMpur(oil,month)*price(month,oil)) - sum((oil,month),RMstock(oil,month)*storecost);
+  95   
+  96  threeoils.. sum((oil,month), D(oil,month)) =l= 3;
+  97   
+  98  minuse(oil,month).. RMused(oil,month) =g= 20 *D(oil,month);
+  99   
+ 100  combination(oil,month).. D('veg1',month) + D('veg2',month) -2*D('oil3',month) =l= 0;
+ 101   
+ 102   
+ 103  model food1 /all/;
+ 104  option limrow=100
+ 105  solve food1 using MIP maximizing profit;
+ 106   
+ 107   
+ 108   
 
 
-COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/10/18 11:23:53 Page 2
+COMPILATION TIME     =        0.001 SECONDS      3 MB  25.1.1 r66732 DEX-DEG
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/10/18 17:19:19 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE food1 Using LP From line 78
+Equation Listing    SOLVE food1 Using MIP From line 105
 
 
 ---- stockcalc  =E=  stock calculation
@@ -244,9 +269,142 @@ profitcalc..  110*RMpur(veg1,Jan) + 130*RMpur(veg1,Feb) + 110*RMpur(veg1,Mar) + 
      
       (LHS = 12500, INFES = 12500 ****)
      
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/10/18 11:23:53 Page 3
+
+---- threeoils  =L=  constraints of no more than 3 oils
+
+threeoils..  D(veg1,Jan) + D(veg1,Feb) + D(veg1,Mar) + D(veg1,Apr) + D(veg1,May) + D(veg1,June) + D(veg2,Jan) + D(veg2,Feb) + D(veg2,Mar) + D(veg2,Apr) + D(veg2,May) + D(veg2,June) + D(oil1,Jan) + D(oil1,Feb) + D(oil1,Mar) + D(oil1,Apr) + D(oil1,May)
+     
+      + D(oil1,June) + D(oil2,Jan) + D(oil2,Feb) + D(oil2,Mar) + D(oil2,Apr) + D(oil2,May) + D(oil2,June) + D(oil3,Jan) + D(oil3,Feb) + D(oil3,Mar) + D(oil3,Apr) + D(oil3,May) + D(oil3,June) =L= 3 ; (LHS = 30, INFES = 27 ****)
+     
+
+---- minuse  =G=  minimum amount to be used 20 tonn
+
+minuse(veg1,Jan)..  RMused(veg1,Jan) - 20*D(veg1,Jan) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(veg1,Feb)..  RMused(veg1,Feb) - 20*D(veg1,Feb) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(veg1,Mar)..  RMused(veg1,Mar) - 20*D(veg1,Mar) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(veg1,Apr)..  RMused(veg1,Apr) - 20*D(veg1,Apr) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(veg1,May)..  RMused(veg1,May) - 20*D(veg1,May) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(veg1,June)..  RMused(veg1,June) - 20*D(veg1,June) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(veg2,Jan)..  RMused(veg2,Jan) - 20*D(veg2,Jan) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(veg2,Feb)..  RMused(veg2,Feb) - 20*D(veg2,Feb) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(veg2,Mar)..  RMused(veg2,Mar) - 20*D(veg2,Mar) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(veg2,Apr)..  RMused(veg2,Apr) - 20*D(veg2,Apr) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(veg2,May)..  RMused(veg2,May) - 20*D(veg2,May) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(veg2,June)..  RMused(veg2,June) - 20*D(veg2,June) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(oil1,Jan)..  RMused(oil1,Jan) - 20*D(oil1,Jan) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(oil1,Feb)..  RMused(oil1,Feb) - 20*D(oil1,Feb) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(oil1,Mar)..  RMused(oil1,Mar) - 20*D(oil1,Mar) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(oil1,Apr)..  RMused(oil1,Apr) - 20*D(oil1,Apr) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(oil1,May)..  RMused(oil1,May) - 20*D(oil1,May) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(oil1,June)..  RMused(oil1,June) - 20*D(oil1,June) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(oil2,Jan)..  RMused(oil2,Jan) - 20*D(oil2,Jan) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(oil2,Feb)..  RMused(oil2,Feb) - 20*D(oil2,Feb) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(oil2,Mar)..  RMused(oil2,Mar) - 20*D(oil2,Mar) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(oil2,Apr)..  RMused(oil2,Apr) - 20*D(oil2,Apr) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(oil2,May)..  RMused(oil2,May) - 20*D(oil2,May) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(oil2,June)..  RMused(oil2,June) - 20*D(oil2,June) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(oil3,Jan)..  RMused(oil3,Jan) - 20*D(oil3,Jan) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(oil3,Feb)..  RMused(oil3,Feb) - 20*D(oil3,Feb) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(oil3,Mar)..  RMused(oil3,Mar) - 20*D(oil3,Mar) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(oil3,Apr)..  RMused(oil3,Apr) - 20*D(oil3,Apr) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(oil3,May)..  RMused(oil3,May) - 20*D(oil3,May) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+minuse(oil3,June)..  RMused(oil3,June) - 20*D(oil3,June) =G= 0 ; (LHS = -20, INFES = 20 ****)
+     
+
+---- combination  =L=  
+
+combination(veg1,Jan)..  D(veg1,Jan) + D(veg2,Jan) - 2*D(oil3,Jan) =L= 0 ; (LHS = 0)
+     
+combination(veg1,Feb)..  D(veg1,Feb) + D(veg2,Feb) - 2*D(oil3,Feb) =L= 0 ; (LHS = 0)
+     
+combination(veg1,Mar)..  D(veg1,Mar) + D(veg2,Mar) - 2*D(oil3,Mar) =L= 0 ; (LHS = 0)
+     
+combination(veg1,Apr)..  D(veg1,Apr) + D(veg2,Apr) - 2*D(oil3,Apr) =L= 0 ; (LHS = 0)
+     
+combination(veg1,May)..  D(veg1,May) + D(veg2,May) - 2*D(oil3,May) =L= 0 ; (LHS = 0)
+     
+combination(veg1,June)..  D(veg1,June) + D(veg2,June) - 2*D(oil3,June) =L= 0 ; (LHS = 0)
+     
+combination(veg2,Jan)..  D(veg1,Jan) + D(veg2,Jan) - 2*D(oil3,Jan) =L= 0 ; (LHS = 0)
+     
+combination(veg2,Feb)..  D(veg1,Feb) + D(veg2,Feb) - 2*D(oil3,Feb) =L= 0 ; (LHS = 0)
+     
+combination(veg2,Mar)..  D(veg1,Mar) + D(veg2,Mar) - 2*D(oil3,Mar) =L= 0 ; (LHS = 0)
+     
+combination(veg2,Apr)..  D(veg1,Apr) + D(veg2,Apr) - 2*D(oil3,Apr) =L= 0 ; (LHS = 0)
+     
+combination(veg2,May)..  D(veg1,May) + D(veg2,May) - 2*D(oil3,May) =L= 0 ; (LHS = 0)
+     
+combination(veg2,June)..  D(veg1,June) + D(veg2,June) - 2*D(oil3,June) =L= 0 ; (LHS = 0)
+     
+combination(oil1,Jan)..  D(veg1,Jan) + D(veg2,Jan) - 2*D(oil3,Jan) =L= 0 ; (LHS = 0)
+     
+combination(oil1,Feb)..  D(veg1,Feb) + D(veg2,Feb) - 2*D(oil3,Feb) =L= 0 ; (LHS = 0)
+     
+combination(oil1,Mar)..  D(veg1,Mar) + D(veg2,Mar) - 2*D(oil3,Mar) =L= 0 ; (LHS = 0)
+     
+combination(oil1,Apr)..  D(veg1,Apr) + D(veg2,Apr) - 2*D(oil3,Apr) =L= 0 ; (LHS = 0)
+     
+combination(oil1,May)..  D(veg1,May) + D(veg2,May) - 2*D(oil3,May) =L= 0 ; (LHS = 0)
+     
+combination(oil1,June)..  D(veg1,June) + D(veg2,June) - 2*D(oil3,June) =L= 0 ; (LHS = 0)
+     
+combination(oil2,Jan)..  D(veg1,Jan) + D(veg2,Jan) - 2*D(oil3,Jan) =L= 0 ; (LHS = 0)
+     
+combination(oil2,Feb)..  D(veg1,Feb) + D(veg2,Feb) - 2*D(oil3,Feb) =L= 0 ; (LHS = 0)
+     
+combination(oil2,Mar)..  D(veg1,Mar) + D(veg2,Mar) - 2*D(oil3,Mar) =L= 0 ; (LHS = 0)
+     
+combination(oil2,Apr)..  D(veg1,Apr) + D(veg2,Apr) - 2*D(oil3,Apr) =L= 0 ; (LHS = 0)
+     
+combination(oil2,May)..  D(veg1,May) + D(veg2,May) - 2*D(oil3,May) =L= 0 ; (LHS = 0)
+     
+combination(oil2,June)..  D(veg1,June) + D(veg2,June) - 2*D(oil3,June) =L= 0 ; (LHS = 0)
+     
+combination(oil3,Jan)..  D(veg1,Jan) + D(veg2,Jan) - 2*D(oil3,Jan) =L= 0 ; (LHS = 0)
+     
+combination(oil3,Feb)..  D(veg1,Feb) + D(veg2,Feb) - 2*D(oil3,Feb) =L= 0 ; (LHS = 0)
+     
+combination(oil3,Mar)..  D(veg1,Mar) + D(veg2,Mar) - 2*D(oil3,Mar) =L= 0 ; (LHS = 0)
+     
+combination(oil3,Apr)..  D(veg1,Apr) + D(veg2,Apr) - 2*D(oil3,Apr) =L= 0 ; (LHS = 0)
+     
+combination(oil3,May)..  D(veg1,May) + D(veg2,May) - 2*D(oil3,May) =L= 0 ; (LHS = 0)
+     
+combination(oil3,June)..  D(veg1,June) + D(veg2,June) - 2*D(oil3,June) =L= 0 ; (LHS = 0)
+     
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/10/18 17:19:19 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE food1 Using LP From line 78
+Column Listing      SOLVE food1 Using MIP From line 105
 
 
 ---- RMpur   amount of oil purchased each month
@@ -277,6 +435,7 @@ RMused(veg1,Jan)
         8.8     hardnessup(Jan)
         8.8     hardnesslow(Jan)
         1       refiningLimVeg(Jan)
+        1       minuse(veg1,Jan)
 
 RMused(veg1,Feb)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
@@ -285,6 +444,7 @@ RMused(veg1,Feb)
         8.8     hardnessup(Feb)
         8.8     hardnesslow(Feb)
         1       refiningLimVeg(Feb)
+        1       minuse(veg1,Feb)
 
 RMused(veg1,Mar)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
@@ -293,6 +453,7 @@ RMused(veg1,Mar)
         8.8     hardnessup(Mar)
         8.8     hardnesslow(Mar)
         1       refiningLimVeg(Mar)
+        1       minuse(veg1,Mar)
 
 REMAINING 27 ENTRIES SKIPPED
 
@@ -343,55 +504,98 @@ product(Mar)
 
 REMAINING 3 ENTRIES SKIPPED
 
+---- D  D to process a given oil of oil
+
+D(veg1,Jan)
+                (.LO, .L, .UP, .M = 0, 1, 1, 0)
+        1       threeoils
+      -20       minuse(veg1,Jan)
+        1       combination(veg1,Jan)
+        1       combination(veg2,Jan)
+        1       combination(oil1,Jan)
+        1       combination(oil2,Jan)
+        1       combination(oil3,Jan)
+
+D(veg1,Feb)
+                (.LO, .L, .UP, .M = 0, 1, 1, 0)
+        1       threeoils
+      -20       minuse(veg1,Feb)
+        1       combination(veg1,Feb)
+        1       combination(veg2,Feb)
+        1       combination(oil1,Feb)
+        1       combination(oil2,Feb)
+        1       combination(oil3,Feb)
+
+D(veg1,Mar)
+                (.LO, .L, .UP, .M = 0, 1, 1, 0)
+        1       threeoils
+      -20       minuse(veg1,Mar)
+        1       combination(veg1,Mar)
+        1       combination(veg2,Mar)
+        1       combination(oil1,Mar)
+        1       combination(oil2,Mar)
+        1       combination(oil3,Mar)
+
+REMAINING 27 ENTRIES SKIPPED
+
 ---- profit  profit overall
 
 profit
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       profitcalc
 
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/10/18 11:23:53 Page 4
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/10/18 17:19:19 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE food1 Using LP From line 78
+Model Statistics    SOLVE food1 Using MIP From line 105
 
 
 MODEL STATISTICS
 
-BLOCKS OF EQUATIONS           7     SINGLE EQUATIONS           61
-BLOCKS OF VARIABLES           5     SINGLE VARIABLES           97
-NON ZERO ELEMENTS           325
+BLOCKS OF EQUATIONS          10     SINGLE EQUATIONS          122
+BLOCKS OF VARIABLES           6     SINGLE VARIABLES          127
+NON ZERO ELEMENTS           505     DISCRETE VARIABLES         30
 
 
-GENERATION TIME      =        0.016 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
+GENERATION TIME      =        0.005 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
 
 
-EXECUTION TIME       =        0.016 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/10/18 11:23:53 Page 5
+EXECUTION TIME       =        0.005 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/10/18 17:19:19 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE food1 Using LP From line 78
+Solution Report     SOLVE food1 Using MIP From line 105
 
 
                S O L V E      S U M M A R Y
 
      MODEL   food1               OBJECTIVE  profit
-     TYPE    LP                  DIRECTION  MAXIMIZE
-     SOLVER  CPLEX               FROM LINE  78
+     TYPE    MIP                 DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  105
 
 **** SOLVER STATUS     1 Normal Completion         
 **** MODEL STATUS      1 Optimal                   
 **** OBJECTIVE VALUE           107842.5926
 
- RESOURCE USAGE, LIMIT          0.016      1000.000
- ITERATION COUNT, LIMIT        59    2000000000
+ RESOURCE USAGE, LIMIT          0.058      1000.000
+ ITERATION COUNT, LIMIT       111    2000000000
 
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
 Cplex 12.8.0.0
 
-Space for names approximately 0.00 Mb
+Space for names approximately 0.01 Mb
 Use option 'names no' to turn use of names off
-LP status(1): optimal
-Cplex Time: 0.00sec (det. 0.27 ticks)
-Optimal solution found.
-Objective :      107842.592593
+MIP status(101): integer optimal solution
+Cplex Time: 0.03sec (det. 0.53 ticks)
+Fixing integer variables, and solving final LP...
+Fixed MIP status(1): optimal
+Cplex Time: 0.00sec (det. 0.32 ticks)
+Proven optimal solution.
+
+MIP Solution:       107842.592593    (52 iterations, 0 nodes)
+Final Solve:        107842.592593    (59 iterations)
+
+Best possible:      107842.592593
+Absolute gap:            0.000000
+Relative gap:            0.000000
 
 
 ---- EQU stockcalc  stock calculation
@@ -487,8 +691,80 @@ June        -INF          250.0000       250.0000        76.6667
                            LOWER          LEVEL          UPPER         MARGINAL
 
 ---- EQU profitcalc          .              .              .             1.0000      
+---- EQU threeoils         -INF             .             3.0000          .          
 
   profitcalc  profit equation
+  threeoils  constraints of no more than 3 oils
+
+---- EQU minuse  minimum amount to be used 20 tonn
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+veg1.Jan           .            22.2222        +INF             .          
+veg1.Feb           .              .            +INF             .          
+veg1.Mar           .           159.2593        +INF             .          
+veg1.Apr           .           159.2593        +INF             .          
+veg1.May           .           159.2593        +INF             .          
+veg1.June          .           159.2593        +INF             .          
+veg2.Jan           .           177.7778        +INF             .          
+veg2.Feb           .           200.0000        +INF             .          
+veg2.Mar           .            40.7407        +INF             .          
+veg2.Apr           .            40.7407        +INF             .          
+veg2.May           .            40.7407        +INF             .          
+veg2.June          .            40.7407        +INF             .          
+oil1.Jan           .              .            +INF             .          
+oil1.Feb           .              .            +INF             .          
+oil1.Mar           .              .            +INF             .          
+oil1.Apr           .              .            +INF             .          
+oil1.May           .              .            +INF             .          
+oil1.June          .              .            +INF             .          
+oil2.Jan           .           250.0000        +INF             .          
+oil2.Feb           .           250.0000        +INF             .          
+oil2.Mar           .           250.0000        +INF             .          
+oil2.Apr           .           250.0000        +INF             .          
+oil2.May           .           250.0000        +INF             .          
+oil2.June          .           250.0000        +INF             .          
+oil3.Jan           .              .            +INF             .          
+oil3.Feb           .              .            +INF             .          
+oil3.Mar           .              .            +INF             .          
+oil3.Apr           .              .            +INF             .          
+oil3.May           .              .            +INF             .          
+oil3.June          .              .            +INF             .          
+
+---- EQU combination  
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+veg1.Jan         -INF             .              .              .          
+veg1.Feb         -INF             .              .              .          
+veg1.Mar         -INF             .              .              .          
+veg1.Apr         -INF             .              .              .          
+veg1.May         -INF             .              .              .          
+veg1.June        -INF             .              .              .          
+veg2.Jan         -INF             .              .              .          
+veg2.Feb         -INF             .              .              .          
+veg2.Mar         -INF             .              .              .          
+veg2.Apr         -INF             .              .              .          
+veg2.May         -INF             .              .              .          
+veg2.June        -INF             .              .              .          
+oil1.Jan         -INF             .              .              .          
+oil1.Feb         -INF             .              .              .          
+oil1.Mar         -INF             .              .              .          
+oil1.Apr         -INF             .              .              .          
+oil1.May         -INF             .              .              .          
+oil1.June        -INF             .              .              .          
+oil2.Jan         -INF             .              .              .          
+oil2.Feb         -INF             .              .              .          
+oil2.Mar         -INF             .              .              .          
+oil2.Apr         -INF             .              .              .          
+oil2.May         -INF             .              .              .          
+oil2.June        -INF             .              .              .          
+oil3.Jan         -INF             .              .              .          
+oil3.Feb         -INF             .              .              .          
+oil3.Mar         -INF             .              .              .          
+oil3.Apr         -INF             .              .              .          
+oil3.May         -INF             .              .              .          
+oil3.June        -INF             .              .              .          
 
 ---- VAR RMpur   amount of oil purchased each month
 
@@ -606,6 +882,41 @@ Apr           .           450.0000        +INF             .
 May           .           450.0000        +INF             .          
 June          .           450.0000        +INF             .          
 
+---- VAR D  D to process a given oil of oil
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+veg1.Jan           .              .             1.0000         EPS         
+veg1.Feb           .              .             1.0000         EPS         
+veg1.Mar           .              .             1.0000         EPS         
+veg1.Apr           .              .             1.0000         EPS         
+veg1.May           .              .             1.0000         EPS         
+veg1.June          .              .             1.0000         EPS         
+veg2.Jan           .              .             1.0000         EPS         
+veg2.Feb           .              .             1.0000         EPS         
+veg2.Mar           .              .             1.0000         EPS         
+veg2.Apr           .              .             1.0000         EPS         
+veg2.May           .              .             1.0000         EPS         
+veg2.June          .              .             1.0000         EPS         
+oil1.Jan           .              .             1.0000         EPS         
+oil1.Feb           .              .             1.0000         EPS         
+oil1.Mar           .              .             1.0000         EPS         
+oil1.Apr           .              .             1.0000         EPS         
+oil1.May           .              .             1.0000         EPS         
+oil1.June          .              .             1.0000         EPS         
+oil2.Jan           .              .             1.0000         EPS         
+oil2.Feb           .              .             1.0000         EPS         
+oil2.Mar           .              .             1.0000         EPS         
+oil2.Apr           .              .             1.0000         EPS         
+oil2.May           .              .             1.0000         EPS         
+oil2.June          .              .             1.0000         EPS         
+oil3.Jan           .              .             1.0000         EPS         
+oil3.Feb           .              .             1.0000         EPS         
+oil3.Mar           .              .             1.0000         EPS         
+oil3.Apr           .              .             1.0000         EPS         
+oil3.May           .              .             1.0000         EPS         
+oil3.June          .              .             1.0000         EPS         
+
                            LOWER          LEVEL          UPPER         MARGINAL
 
 ---- VAR profit            -INF       107842.5926        +INF             .          
@@ -618,7 +929,7 @@ June          .           450.0000        +INF             .
                              0  UNBOUNDED
 
 
-EXECUTION TIME       =        0.000 SECONDS      2 MB  25.1.1 r66732 WEX-WEI
+EXECUTION TIME       =        0.002 SECONDS      2 MB  25.1.1 r66732 DEX-DEG
 
 
 USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
@@ -627,5 +938,5 @@ USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
 
 **** FILE SUMMARY
 
-Input      C:\Users\cnbho\Documents\GAMSStudio\workspace\HPW\food1LP.gms
-Output     C:\Users\cnbho\Documents\GAMSStudio\workspace\HPW\food1LP.lst
+Input      /Users/cbhomia/Documents/GitHub/HPW/food2/food2LP.gms
+Output     /Users/cbhomia/Documents/GitHub/HPW/food2/food2LP.lst

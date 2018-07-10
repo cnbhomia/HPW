@@ -40,6 +40,11 @@ positive variables
     RMstock(oil,month) 'amount of oil in stock at the begining of each month'
     product(month) 'amount of final product each month'
     ;
+    
+binary variable
+    D(oil,month)  'D to process a given oil of oil'
+    ;
+
 variable
     profit 'profit overall'
     ;
@@ -55,7 +60,23 @@ equations
     hardnesslow(month) ' hardness more than 3'
     refiningLimVeg(month) 'refining limit of each month for veg oil'
     refiningLimNVeg(month) 'refining limit of each month for nonveg oil'
-    profitcalc 'profit equation';
+    profitcalc 'profit equation'
+    threeoils 'constraints of no more than 3 oils'
+    minuse(oil,month) 'minimum amount to be used 20 tonn'
+    combination(oil,month)
+    ;
+
+$ontext
+logic equations
+    combo(oil,month) 'combination of veg1,veg2, oil3'
+    ;
+    
+combo(oil,month).. D('veg1',month) or D('veg2',month) -> D('oil3',month) ;
+$offtext
+
+
+*initalization and nounds
+D.l(oil,month) = 1;
 
 
 stockcalc(oil,month).. RMstock(oil,month++1) =e= RMstock(oil,month) + RMpur(oil,month) - RMused(oil,month) ;
@@ -72,10 +93,16 @@ refiningLimNVeg(month).. sum(oil$nonveg(oil), RMused(oil,month)) =l= RefineLimNV
 
 profitcalc.. profit =e= sum(month,product(month)*sellprice) - sum((oil,month), RMpur(oil,month)*price(month,oil)) - sum((oil,month),RMstock(oil,month)*storecost);
 
+threeoils.. sum((oil,month), D(oil,month)) =l= 3;
+
+minuse(oil,month).. RMused(oil,month) =g= 20 *D(oil,month);
+
+combination(oil,month).. D('veg1',month) + D('veg2',month) -2*D('oil3',month) =l= 0; 
+
 
 model food1 /all/;
 option limrow=100
-solve food1 using LP maximizing profit;
+solve food1 using MIP maximizing profit;
 
    
         
