@@ -1,0 +1,29 @@
+B 2 C o m p i l a t i o n
+B 89 Equation Listing    SOLVE food1 Using LP From line 78
+D 90 stockcalc
+D 154 matbalance
+D 169 hardnessup
+D 184 hardnesslow
+D 199 refiningLimVeg
+D 214 refiningLimNVeg
+D 229 profitcalc
+B 248 Column Listing      SOLVE food1 Using LP From line 78
+E 249 RMpur
+E 269 RMused
+E 297 RMstock
+E 319 product
+E 344 profit
+B 353 Model Statistics    SOLVE food1 Using LP From line 78
+B 369 Solution Report     SOLVE food1 Using LP From line 78
+F 400 stockcalc
+F 435 matbalance
+F 446 hardnessup
+F 457 hardnesslow
+F 468 refiningLimVeg
+F 479 refiningLimNVeg
+F 488 profitcalc
+G 491 RMpur
+G 526 RMused
+G 561 RMstock
+G 596 product
+G 607 profit

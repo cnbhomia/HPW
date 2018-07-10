@@ -1,0 +1,29 @@
+B 2 C o m p i l a t i o n
+B 93 Equation Listing    SOLVE food1 Using NLP From line 82
+D 94 stockcalc
+D 158 matbalance
+D 173 specification
+D 188 refiningLimVeg
+D 203 refiningLimNVeg
+D 218 profitcalc
+B 237 Column Listing      SOLVE food1 Using NLP From line 82
+E 238 RMpur
+E 258 RMused
+E 283 RMstock
+E 306 product
+E 328 spec
+E 347 profit
+B 356 Model Statistics    SOLVE food1 Using NLP From line 82
+B 374 Solution Report     SOLVE food1 Using NLP From line 82
+F 421 stockcalc
+F 456 matbalance
+F 467 specification
+F 478 refiningLimVeg
+F 489 refiningLimNVeg
+F 498 profitcalc
+G 501 RMpur
+G 536 RMused
+G 571 RMstock
+G 606 product
+G 617 spec
+G 628 profit

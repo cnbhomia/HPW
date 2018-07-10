@@ -1,0 +1,631 @@
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/10/18 11:23:53 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+      following is the model from HP Williams book.
+      Focus is oil blennding, production, selling strategy. Model title is Food Manufacture 1
+   5   
+   6  sets
+   7      Oil 'oils' /veg1,veg2,oil1*oil3/
+   8      veg(oil) /veg1,veg2/
+   9      nonveg(oil)/oil1*oil3/
+  10      month 'mons in planning' / Jan,Feb, Mar, Apr,May, June/
+  11      ;
+  12   
+  13  table price(month,oil) 'cost price of veg oil in the future'
+  14        veg1      veg2    oil1    oil2    oil3
+  15  jan     110     120     130     110     115
+  16  feb     130     130     110     90      115
+  17  mar     110     140     130     100     95
+  18  apr     120     110     120     120     125
+  19  may     100     120     150     110     105
+  20  june    90      100     140     80      135
+  21  ;
+  22   
+  23  parameters
+  24      hardness(Oil) 'hardness of veg oils'
+  25      / veg1    8.8
+  26      veg2    6.1
+  27      oil1    2.0
+  28      oil2    4.2
+  29      oil3    5.0/
+  30   
+  31      storecost 'storage cost $/tonn' /5.0/
+  32      RefineLimVeg /200/
+  33      RefineLimNVeg /250/
+  34      sellprice ' selling price of product ' /150/
+  35      ;
+  36   
+  37  positive variables
+  38      RMpur(oil,month) ' amount of oil purchased each month'
+  39      RMused(oil,month) ' amount of oil used each month'
+  40      RMstock(oil,month) 'amount of oil in stock at the begining of each month'
+  41      product(month) 'amount of final product each month'
+  42      ;
+  43  variable
+  44      profit 'profit overall'
+  45      ;
+  46  *fixing stocks
+  47  RMstock.fx(oil,'Jan') = 500;
+  48  RMstock.up(oil,month) = 1000;
+  49   
+  50   
+  51  equations
+  52      stockcalc(oil,month) 'stock calculation'
+  53      matbalance(month) 'material balance each month'
+  54      hardnessup(month) ' hardness less than 6'
+  55      hardnesslow(month) ' hardness more than 3'
+  56      refiningLimVeg(month) 'refining limit of each month for veg oil'
+  57      refiningLimNVeg(month) 'refining limit of each month for nonveg oil'
+  58      profitcalc 'profit equation';
+  59   
+  60   
+  61  stockcalc(oil,month).. RMstock(oil,month++1) =e= RMstock(oil,month) + RMpur(oil,month) - RMused(oil,month) ;
+  62   
+  63  matbalance(month).. product(month) =e= sum(oil, RMused(oil,month));
+  64   
+  65  hardnessup(month).. sum(oil,RMused(oil,month)*hardness(oil)) - 6*product(month) =l=0 ;
+  66   
+  67  hardnesslow(month).. sum(oil,RMused(oil,month)*hardness(oil)) - 3*product(month) =g=0 ;
+  68   
+  69  refiningLimVeg(month).. sum(oil$veg(oil), RMused(oil,month)) =l= RefineLimVeg ;
+  70   
+  71  refiningLimNVeg(month).. sum(oil$nonveg(oil), RMused(oil,month)) =l= RefineLimNVeg ;
+  72   
+  73  profitcalc.. profit =e= sum(month,product(month)*sellprice) - sum((oil,month), RMpur(oil,month)*price(month,oil)) - sum((oil,month),RMstock(oil,month)*storecost);
+  74   
+  75   
+  76  model food1 /all/;
+  77  option limrow=100
+  78  solve food1 using LP maximizing profit;
+  79   
+  80   
+  81   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/10/18 11:23:53 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE food1 Using LP From line 78
+
+
+---- stockcalc  =E=  stock calculation
+
+stockcalc(veg1,Jan)..  - RMpur(veg1,Jan) + RMused(veg1,Jan) - RMstock(veg1,Jan) + RMstock(veg1,Feb) =E= 0 ; (LHS = -500, INFES = 500 ****)
+     
+stockcalc(veg1,Feb)..  - RMpur(veg1,Feb) + RMused(veg1,Feb) - RMstock(veg1,Feb) + RMstock(veg1,Mar) =E= 0 ; (LHS = 0)
+     
+stockcalc(veg1,Mar)..  - RMpur(veg1,Mar) + RMused(veg1,Mar) - RMstock(veg1,Mar) + RMstock(veg1,Apr) =E= 0 ; (LHS = 0)
+     
+stockcalc(veg1,Apr)..  - RMpur(veg1,Apr) + RMused(veg1,Apr) - RMstock(veg1,Apr) + RMstock(veg1,May) =E= 0 ; (LHS = 0)
+     
+stockcalc(veg1,May)..  - RMpur(veg1,May) + RMused(veg1,May) - RMstock(veg1,May) + RMstock(veg1,June) =E= 0 ; (LHS = 0)
+     
+stockcalc(veg1,June)..  - RMpur(veg1,June) + RMused(veg1,June) + RMstock(veg1,Jan) - RMstock(veg1,June) =E= 0 ; (LHS = 500, INFES = 500 ****)
+     
+stockcalc(veg2,Jan)..  - RMpur(veg2,Jan) + RMused(veg2,Jan) - RMstock(veg2,Jan) + RMstock(veg2,Feb) =E= 0 ; (LHS = -500, INFES = 500 ****)
+     
+stockcalc(veg2,Feb)..  - RMpur(veg2,Feb) + RMused(veg2,Feb) - RMstock(veg2,Feb) + RMstock(veg2,Mar) =E= 0 ; (LHS = 0)
+     
+stockcalc(veg2,Mar)..  - RMpur(veg2,Mar) + RMused(veg2,Mar) - RMstock(veg2,Mar) + RMstock(veg2,Apr) =E= 0 ; (LHS = 0)
+     
+stockcalc(veg2,Apr)..  - RMpur(veg2,Apr) + RMused(veg2,Apr) - RMstock(veg2,Apr) + RMstock(veg2,May) =E= 0 ; (LHS = 0)
+     
+stockcalc(veg2,May)..  - RMpur(veg2,May) + RMused(veg2,May) - RMstock(veg2,May) + RMstock(veg2,June) =E= 0 ; (LHS = 0)
+     
+stockcalc(veg2,June)..  - RMpur(veg2,June) + RMused(veg2,June) + RMstock(veg2,Jan) - RMstock(veg2,June) =E= 0 ; (LHS = 500, INFES = 500 ****)
+     
+stockcalc(oil1,Jan)..  - RMpur(oil1,Jan) + RMused(oil1,Jan) - RMstock(oil1,Jan) + RMstock(oil1,Feb) =E= 0 ; (LHS = -500, INFES = 500 ****)
+     
+stockcalc(oil1,Feb)..  - RMpur(oil1,Feb) + RMused(oil1,Feb) - RMstock(oil1,Feb) + RMstock(oil1,Mar) =E= 0 ; (LHS = 0)
+     
+stockcalc(oil1,Mar)..  - RMpur(oil1,Mar) + RMused(oil1,Mar) - RMstock(oil1,Mar) + RMstock(oil1,Apr) =E= 0 ; (LHS = 0)
+     
+stockcalc(oil1,Apr)..  - RMpur(oil1,Apr) + RMused(oil1,Apr) - RMstock(oil1,Apr) + RMstock(oil1,May) =E= 0 ; (LHS = 0)
+     
+stockcalc(oil1,May)..  - RMpur(oil1,May) + RMused(oil1,May) - RMstock(oil1,May) + RMstock(oil1,June) =E= 0 ; (LHS = 0)
+     
+stockcalc(oil1,June)..  - RMpur(oil1,June) + RMused(oil1,June) + RMstock(oil1,Jan) - RMstock(oil1,June) =E= 0 ; (LHS = 500, INFES = 500 ****)
+     
+stockcalc(oil2,Jan)..  - RMpur(oil2,Jan) + RMused(oil2,Jan) - RMstock(oil2,Jan) + RMstock(oil2,Feb) =E= 0 ; (LHS = -500, INFES = 500 ****)
+     
+stockcalc(oil2,Feb)..  - RMpur(oil2,Feb) + RMused(oil2,Feb) - RMstock(oil2,Feb) + RMstock(oil2,Mar) =E= 0 ; (LHS = 0)
+     
+stockcalc(oil2,Mar)..  - RMpur(oil2,Mar) + RMused(oil2,Mar) - RMstock(oil2,Mar) + RMstock(oil2,Apr) =E= 0 ; (LHS = 0)
+     
+stockcalc(oil2,Apr)..  - RMpur(oil2,Apr) + RMused(oil2,Apr) - RMstock(oil2,Apr) + RMstock(oil2,May) =E= 0 ; (LHS = 0)
+     
+stockcalc(oil2,May)..  - RMpur(oil2,May) + RMused(oil2,May) - RMstock(oil2,May) + RMstock(oil2,June) =E= 0 ; (LHS = 0)
+     
+stockcalc(oil2,June)..  - RMpur(oil2,June) + RMused(oil2,June) + RMstock(oil2,Jan) - RMstock(oil2,June) =E= 0 ; (LHS = 500, INFES = 500 ****)
+     
+stockcalc(oil3,Jan)..  - RMpur(oil3,Jan) + RMused(oil3,Jan) - RMstock(oil3,Jan) + RMstock(oil3,Feb) =E= 0 ; (LHS = -500, INFES = 500 ****)
+     
+stockcalc(oil3,Feb)..  - RMpur(oil3,Feb) + RMused(oil3,Feb) - RMstock(oil3,Feb) + RMstock(oil3,Mar) =E= 0 ; (LHS = 0)
+     
+stockcalc(oil3,Mar)..  - RMpur(oil3,Mar) + RMused(oil3,Mar) - RMstock(oil3,Mar) + RMstock(oil3,Apr) =E= 0 ; (LHS = 0)
+     
+stockcalc(oil3,Apr)..  - RMpur(oil3,Apr) + RMused(oil3,Apr) - RMstock(oil3,Apr) + RMstock(oil3,May) =E= 0 ; (LHS = 0)
+     
+stockcalc(oil3,May)..  - RMpur(oil3,May) + RMused(oil3,May) - RMstock(oil3,May) + RMstock(oil3,June) =E= 0 ; (LHS = 0)
+     
+stockcalc(oil3,June)..  - RMpur(oil3,June) + RMused(oil3,June) + RMstock(oil3,Jan) - RMstock(oil3,June) =E= 0 ; (LHS = 500, INFES = 500 ****)
+     
+
+---- matbalance  =E=  material balance each month
+
+matbalance(Jan)..  - RMused(veg1,Jan) - RMused(veg2,Jan) - RMused(oil1,Jan) - RMused(oil2,Jan) - RMused(oil3,Jan) + product(Jan) =E= 0 ; (LHS = 0)
+     
+matbalance(Feb)..  - RMused(veg1,Feb) - RMused(veg2,Feb) - RMused(oil1,Feb) - RMused(oil2,Feb) - RMused(oil3,Feb) + product(Feb) =E= 0 ; (LHS = 0)
+     
+matbalance(Mar)..  - RMused(veg1,Mar) - RMused(veg2,Mar) - RMused(oil1,Mar) - RMused(oil2,Mar) - RMused(oil3,Mar) + product(Mar) =E= 0 ; (LHS = 0)
+     
+matbalance(Apr)..  - RMused(veg1,Apr) - RMused(veg2,Apr) - RMused(oil1,Apr) - RMused(oil2,Apr) - RMused(oil3,Apr) + product(Apr) =E= 0 ; (LHS = 0)
+     
+matbalance(May)..  - RMused(veg1,May) - RMused(veg2,May) - RMused(oil1,May) - RMused(oil2,May) - RMused(oil3,May) + product(May) =E= 0 ; (LHS = 0)
+     
+matbalance(June)..  - RMused(veg1,June) - RMused(veg2,June) - RMused(oil1,June) - RMused(oil2,June) - RMused(oil3,June) + product(June) =E= 0 ; (LHS = 0)
+     
+
+---- hardnessup  =L=   hardness less than 6
+
+hardnessup(Jan)..  8.8*RMused(veg1,Jan) + 6.1*RMused(veg2,Jan) + 2*RMused(oil1,Jan) + 4.2*RMused(oil2,Jan) + 5*RMused(oil3,Jan) - 6*product(Jan) =L= 0 ; (LHS = 0)
+     
+hardnessup(Feb)..  8.8*RMused(veg1,Feb) + 6.1*RMused(veg2,Feb) + 2*RMused(oil1,Feb) + 4.2*RMused(oil2,Feb) + 5*RMused(oil3,Feb) - 6*product(Feb) =L= 0 ; (LHS = 0)
+     
+hardnessup(Mar)..  8.8*RMused(veg1,Mar) + 6.1*RMused(veg2,Mar) + 2*RMused(oil1,Mar) + 4.2*RMused(oil2,Mar) + 5*RMused(oil3,Mar) - 6*product(Mar) =L= 0 ; (LHS = 0)
+     
+hardnessup(Apr)..  8.8*RMused(veg1,Apr) + 6.1*RMused(veg2,Apr) + 2*RMused(oil1,Apr) + 4.2*RMused(oil2,Apr) + 5*RMused(oil3,Apr) - 6*product(Apr) =L= 0 ; (LHS = 0)
+     
+hardnessup(May)..  8.8*RMused(veg1,May) + 6.1*RMused(veg2,May) + 2*RMused(oil1,May) + 4.2*RMused(oil2,May) + 5*RMused(oil3,May) - 6*product(May) =L= 0 ; (LHS = 0)
+     
+hardnessup(June)..  8.8*RMused(veg1,June) + 6.1*RMused(veg2,June) + 2*RMused(oil1,June) + 4.2*RMused(oil2,June) + 5*RMused(oil3,June) - 6*product(June) =L= 0 ; (LHS = 0)
+     
+
+---- hardnesslow  =G=   hardness more than 3
+
+hardnesslow(Jan)..  8.8*RMused(veg1,Jan) + 6.1*RMused(veg2,Jan) + 2*RMused(oil1,Jan) + 4.2*RMused(oil2,Jan) + 5*RMused(oil3,Jan) - 3*product(Jan) =G= 0 ; (LHS = 0)
+     
+hardnesslow(Feb)..  8.8*RMused(veg1,Feb) + 6.1*RMused(veg2,Feb) + 2*RMused(oil1,Feb) + 4.2*RMused(oil2,Feb) + 5*RMused(oil3,Feb) - 3*product(Feb) =G= 0 ; (LHS = 0)
+     
+hardnesslow(Mar)..  8.8*RMused(veg1,Mar) + 6.1*RMused(veg2,Mar) + 2*RMused(oil1,Mar) + 4.2*RMused(oil2,Mar) + 5*RMused(oil3,Mar) - 3*product(Mar) =G= 0 ; (LHS = 0)
+     
+hardnesslow(Apr)..  8.8*RMused(veg1,Apr) + 6.1*RMused(veg2,Apr) + 2*RMused(oil1,Apr) + 4.2*RMused(oil2,Apr) + 5*RMused(oil3,Apr) - 3*product(Apr) =G= 0 ; (LHS = 0)
+     
+hardnesslow(May)..  8.8*RMused(veg1,May) + 6.1*RMused(veg2,May) + 2*RMused(oil1,May) + 4.2*RMused(oil2,May) + 5*RMused(oil3,May) - 3*product(May) =G= 0 ; (LHS = 0)
+     
+hardnesslow(June)..  8.8*RMused(veg1,June) + 6.1*RMused(veg2,June) + 2*RMused(oil1,June) + 4.2*RMused(oil2,June) + 5*RMused(oil3,June) - 3*product(June) =G= 0 ; (LHS = 0)
+     
+
+---- refiningLimVeg  =L=  refining limit of each month for veg oil
+
+refiningLimVeg(Jan)..  RMused(veg1,Jan) + RMused(veg2,Jan) =L= 200 ; (LHS = 0)
+     
+refiningLimVeg(Feb)..  RMused(veg1,Feb) + RMused(veg2,Feb) =L= 200 ; (LHS = 0)
+     
+refiningLimVeg(Mar)..  RMused(veg1,Mar) + RMused(veg2,Mar) =L= 200 ; (LHS = 0)
+     
+refiningLimVeg(Apr)..  RMused(veg1,Apr) + RMused(veg2,Apr) =L= 200 ; (LHS = 0)
+     
+refiningLimVeg(May)..  RMused(veg1,May) + RMused(veg2,May) =L= 200 ; (LHS = 0)
+     
+refiningLimVeg(June)..  RMused(veg1,June) + RMused(veg2,June) =L= 200 ; (LHS = 0)
+     
+
+---- refiningLimNVeg  =L=  refining limit of each month for nonveg oil
+
+refiningLimNVeg(Jan)..  RMused(oil1,Jan) + RMused(oil2,Jan) + RMused(oil3,Jan) =L= 250 ; (LHS = 0)
+     
+refiningLimNVeg(Feb)..  RMused(oil1,Feb) + RMused(oil2,Feb) + RMused(oil3,Feb) =L= 250 ; (LHS = 0)
+     
+refiningLimNVeg(Mar)..  RMused(oil1,Mar) + RMused(oil2,Mar) + RMused(oil3,Mar) =L= 250 ; (LHS = 0)
+     
+refiningLimNVeg(Apr)..  RMused(oil1,Apr) + RMused(oil2,Apr) + RMused(oil3,Apr) =L= 250 ; (LHS = 0)
+     
+refiningLimNVeg(May)..  RMused(oil1,May) + RMused(oil2,May) + RMused(oil3,May) =L= 250 ; (LHS = 0)
+     
+refiningLimNVeg(June)..  RMused(oil1,June) + RMused(oil2,June) + RMused(oil3,June) =L= 250 ; (LHS = 0)
+     
+
+---- profitcalc  =E=  profit equation
+
+profitcalc..  110*RMpur(veg1,Jan) + 130*RMpur(veg1,Feb) + 110*RMpur(veg1,Mar) + 120*RMpur(veg1,Apr) + 100*RMpur(veg1,May) + 90*RMpur(veg1,June) + 120*RMpur(veg2,Jan) + 130*RMpur(veg2,Feb) + 140*RMpur(veg2,Mar) + 110*RMpur(veg2,Apr) + 120*RMpur(veg2,May)
+     
+      + 100*RMpur(veg2,June) + 130*RMpur(oil1,Jan) + 110*RMpur(oil1,Feb) + 130*RMpur(oil1,Mar) + 120*RMpur(oil1,Apr) + 150*RMpur(oil1,May) + 140*RMpur(oil1,June) + 110*RMpur(oil2,Jan) + 90*RMpur(oil2,Feb) + 100*RMpur(oil2,Mar) + 120*RMpur(oil2,Apr)
+     
+      + 110*RMpur(oil2,May) + 80*RMpur(oil2,June) + 115*RMpur(oil3,Jan) + 115*RMpur(oil3,Feb) + 95*RMpur(oil3,Mar) + 125*RMpur(oil3,Apr) + 105*RMpur(oil3,May) + 135*RMpur(oil3,June) + 5*RMstock(veg1,Jan) + 5*RMstock(veg1,Feb) + 5*RMstock(veg1,Mar)
+     
+      + 5*RMstock(veg1,Apr) + 5*RMstock(veg1,May) + 5*RMstock(veg1,June) + 5*RMstock(veg2,Jan) + 5*RMstock(veg2,Feb) + 5*RMstock(veg2,Mar) + 5*RMstock(veg2,Apr) + 5*RMstock(veg2,May) + 5*RMstock(veg2,June) + 5*RMstock(oil1,Jan) + 5*RMstock(oil1,Feb)
+     
+      + 5*RMstock(oil1,Mar) + 5*RMstock(oil1,Apr) + 5*RMstock(oil1,May) + 5*RMstock(oil1,June) + 5*RMstock(oil2,Jan) + 5*RMstock(oil2,Feb) + 5*RMstock(oil2,Mar) + 5*RMstock(oil2,Apr) + 5*RMstock(oil2,May) + 5*RMstock(oil2,June) + 5*RMstock(oil3,Jan)
+     
+      + 5*RMstock(oil3,Feb) + 5*RMstock(oil3,Mar) + 5*RMstock(oil3,Apr) + 5*RMstock(oil3,May) + 5*RMstock(oil3,June) - 150*product(Jan) - 150*product(Feb) - 150*product(Mar) - 150*product(Apr) - 150*product(May) - 150*product(June) + profit =E= 0 ;
+     
+      (LHS = 12500, INFES = 12500 ****)
+     
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/10/18 11:23:53 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE food1 Using LP From line 78
+
+
+---- RMpur   amount of oil purchased each month
+
+RMpur(veg1,Jan)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       stockcalc(veg1,Jan)
+      110       profitcalc
+
+RMpur(veg1,Feb)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       stockcalc(veg1,Feb)
+      130       profitcalc
+
+RMpur(veg1,Mar)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       stockcalc(veg1,Mar)
+      110       profitcalc
+
+REMAINING 27 ENTRIES SKIPPED
+
+---- RMused   amount of oil used each month
+
+RMused(veg1,Jan)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       stockcalc(veg1,Jan)
+       -1       matbalance(Jan)
+        8.8     hardnessup(Jan)
+        8.8     hardnesslow(Jan)
+        1       refiningLimVeg(Jan)
+
+RMused(veg1,Feb)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       stockcalc(veg1,Feb)
+       -1       matbalance(Feb)
+        8.8     hardnessup(Feb)
+        8.8     hardnesslow(Feb)
+        1       refiningLimVeg(Feb)
+
+RMused(veg1,Mar)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       stockcalc(veg1,Mar)
+       -1       matbalance(Mar)
+        8.8     hardnessup(Mar)
+        8.8     hardnesslow(Mar)
+        1       refiningLimVeg(Mar)
+
+REMAINING 27 ENTRIES SKIPPED
+
+---- RMstock  amount of oil in stock at the begining of each month
+
+RMstock(veg1,Jan)
+                (.LO, .L, .UP, .M = 500, 500, 1000, 0)
+       -1       stockcalc(veg1,Jan)
+        1       stockcalc(veg1,June)
+        5       profitcalc
+
+RMstock(veg1,Feb)
+                (.LO, .L, .UP, .M = 0, 0, 1000, 0)
+        1       stockcalc(veg1,Jan)
+       -1       stockcalc(veg1,Feb)
+        5       profitcalc
+
+RMstock(veg1,Mar)
+                (.LO, .L, .UP, .M = 0, 0, 1000, 0)
+        1       stockcalc(veg1,Feb)
+       -1       stockcalc(veg1,Mar)
+        5       profitcalc
+
+REMAINING 27 ENTRIES SKIPPED
+
+---- product  amount of final product each month
+
+product(Jan)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       matbalance(Jan)
+       -6       hardnessup(Jan)
+       -3       hardnesslow(Jan)
+     -150       profitcalc
+
+product(Feb)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       matbalance(Feb)
+       -6       hardnessup(Feb)
+       -3       hardnesslow(Feb)
+     -150       profitcalc
+
+product(Mar)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       matbalance(Mar)
+       -6       hardnessup(Mar)
+       -3       hardnesslow(Mar)
+     -150       profitcalc
+
+REMAINING 3 ENTRIES SKIPPED
+
+---- profit  profit overall
+
+profit
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       profitcalc
+
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/10/18 11:23:53 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE food1 Using LP From line 78
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           7     SINGLE EQUATIONS           61
+BLOCKS OF VARIABLES           5     SINGLE VARIABLES           97
+NON ZERO ELEMENTS           325
+
+
+GENERATION TIME      =        0.016 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
+
+
+EXECUTION TIME       =        0.016 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/10/18 11:23:53 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE food1 Using LP From line 78
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   food1               OBJECTIVE  profit
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  78
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE           107842.5926
+
+ RESOURCE USAGE, LIMIT          0.016      1000.000
+ ITERATION COUNT, LIMIT        59    2000000000
+
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.00sec (det. 0.27 ticks)
+Optimal solution found.
+Objective :      107842.592593
+
+
+---- EQU stockcalc  stock calculation
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+veg1.Jan           .              .              .            75.0000      
+veg1.Feb           .              .              .            80.0000      
+veg1.Mar           .              .              .            85.0000      
+veg1.Apr           .              .              .            90.0000      
+veg1.May           .              .              .            95.0000      
+veg1.June          .              .              .            90.0000      
+veg2.Jan           .              .              .            75.0000      
+veg2.Feb           .              .              .            80.0000      
+veg2.Mar           .              .              .            85.0000      
+veg2.Apr           .              .              .            90.0000      
+veg2.May           .              .              .            95.0000      
+veg2.June          .              .              .           100.0000      
+oil1.Jan           .              .              .            85.0000      
+oil1.Feb           .              .              .            90.0000      
+oil1.Mar           .              .              .            95.0000      
+oil1.Apr           .              .              .           100.0000      
+oil1.May           .              .              .           105.0000      
+oil1.June          .              .              .           110.0000      
+oil2.Jan           .              .              .            85.0000      
+oil2.Feb           .              .              .            90.0000      
+oil2.Mar           .              .              .            95.0000      
+oil2.Apr           .              .              .           100.0000      
+oil2.May           .              .              .           105.0000      
+oil2.June          .              .              .            80.0000      
+oil3.Jan           .              .              .            85.0000      
+oil3.Feb           .              .              .            90.0000      
+oil3.Mar           .              .              .            95.0000      
+oil3.Apr           .              .              .           100.0000      
+oil3.May           .              .              .           105.0000      
+oil3.June          .              .              .           110.0000      
+
+---- EQU matbalance  material balance each month
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+Jan           .              .              .           150.0000      
+Feb           .              .              .           150.0000      
+Mar           .              .              .           150.0000      
+Apr           .              .              .           150.0000      
+May           .              .              .           150.0000      
+June          .              .              .           172.2222      
+
+---- EQU hardnessup   hardness less than 6
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+Jan         -INF         -370.0000          .              .          
+Feb         -INF         -430.0000          .              .          
+Mar         -INF             .              .             EPS         
+Apr         -INF             .              .             EPS         
+May         -INF             .              .             EPS         
+June        -INF             .              .             3.7037      
+
+---- EQU hardnesslow   hardness more than 3
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+Jan           .           980.0000        +INF             .          
+Feb           .           920.0000        +INF             .          
+Mar           .          1350.0000        +INF             .          
+Apr           .          1350.0000        +INF             .          
+May           .          1350.0000        +INF             .          
+June          .          1350.0000        +INF             .          
+
+---- EQU refiningLimVeg  refining limit of each month for veg oil
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+Jan         -INF          200.0000       200.0000        75.0000      
+Feb         -INF          200.0000       200.0000        70.0000      
+Mar         -INF          200.0000       200.0000        65.0000      
+Apr         -INF          200.0000       200.0000        60.0000      
+May         -INF          200.0000       200.0000        55.0000      
+June        -INF          200.0000       200.0000        49.6296      
+
+---- EQU refiningLimNVeg  refining limit of each month for nonveg oil
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+Jan         -INF          250.0000       250.0000        65.0000      
+Feb         -INF          250.0000       250.0000        60.0000      
+Mar         -INF          250.0000       250.0000        55.0000      
+Apr         -INF          250.0000       250.0000        50.0000      
+May         -INF          250.0000       250.0000        45.0000      
+June        -INF          250.0000       250.0000        76.6667      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU profitcalc          .              .              .             1.0000      
+
+  profitcalc  profit equation
+
+---- VAR RMpur   amount of oil purchased each month
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+veg1.Jan           .              .            +INF          -35.0000      
+veg1.Feb           .              .            +INF          -50.0000      
+veg1.Mar           .              .            +INF          -25.0000      
+veg1.Apr           .              .            +INF          -30.0000      
+veg1.May           .              .            +INF           -5.0000      
+veg1.June          .           659.2593        +INF             .          
+veg2.Jan           .              .            +INF          -45.0000      
+veg2.Feb           .              .            +INF          -50.0000      
+veg2.Mar           .              .            +INF          -55.0000      
+veg2.Apr           .              .            +INF          -20.0000      
+veg2.May           .              .            +INF          -25.0000      
+veg2.June          .           540.7407        +INF             .          
+oil1.Jan           .              .            +INF          -45.0000      
+oil1.Feb           .              .            +INF          -20.0000      
+oil1.Mar           .              .            +INF          -35.0000      
+oil1.Apr           .              .            +INF          -20.0000      
+oil1.May           .              .            +INF          -45.0000      
+oil1.June          .              .            +INF          -30.0000      
+oil2.Jan           .              .            +INF          -25.0000      
+oil2.Feb           .           750.0000        +INF             .          
+oil2.Mar           .              .            +INF           -5.0000      
+oil2.Apr           .              .            +INF          -20.0000      
+oil2.May           .              .            +INF           -5.0000      
+oil2.June          .           750.0000        +INF             .          
+oil3.Jan           .              .            +INF          -30.0000      
+oil3.Feb           .              .            +INF          -25.0000      
+oil3.Mar           .              .            +INF            EPS         
+oil3.Apr           .              .            +INF          -25.0000      
+oil3.May           .              .            +INF            EPS         
+oil3.June          .              .            +INF          -25.0000      
+
+---- VAR RMused   amount of oil used each month
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+veg1.Jan           .            22.2222        +INF             .          
+veg1.Feb           .              .            +INF            EPS         
+veg1.Mar           .           159.2593        +INF             .          
+veg1.Apr           .           159.2593        +INF             .          
+veg1.May           .           159.2593        +INF             .          
+veg1.June          .           159.2593        +INF             .          
+veg2.Jan           .           177.7778        +INF             .          
+veg2.Feb           .           200.0000        +INF             .          
+veg2.Mar           .            40.7407        +INF             .          
+veg2.Apr           .            40.7407        +INF             .          
+veg2.May           .            40.7407        +INF             .          
+veg2.June          .            40.7407        +INF             .          
+oil1.Jan           .              .            +INF            EPS         
+oil1.Feb           .              .            +INF            EPS         
+oil1.Mar           .              .            +INF            EPS         
+oil1.Apr           .              .            +INF            EPS         
+oil1.May           .              .            +INF             .          
+oil1.June          .              .            +INF          -21.8519      
+oil2.Jan           .           250.0000        +INF             .          
+oil2.Feb           .           250.0000        +INF             .          
+oil2.Mar           .           250.0000        +INF             .          
+oil2.Apr           .           250.0000        +INF             .          
+oil2.May           .           250.0000        +INF             .          
+oil2.June          .           250.0000        +INF             .          
+oil3.Jan           .              .            +INF             .          
+oil3.Feb           .              .            +INF            EPS         
+oil3.Mar           .              .            +INF            EPS         
+oil3.Apr           .              .            +INF            EPS         
+oil3.May           .              .            +INF            EPS         
+oil3.June          .              .            +INF          -32.9630      
+
+---- VAR RMstock  amount of oil in stock at the begining of each month
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+veg1.Jan        500.0000       500.0000      1000.0000       -20.0000      
+veg1.Feb           .           477.7778      1000.0000          .          
+veg1.Mar           .           477.7778      1000.0000          .          
+veg1.Apr           .           318.5185      1000.0000          .          
+veg1.May           .           159.2593      1000.0000          .          
+veg1.June          .              .          1000.0000       -10.0000      
+veg2.Jan        500.0000       500.0000      1000.0000       -30.0000      
+veg2.Feb           .           322.2222      1000.0000          .          
+veg2.Mar           .           122.2222      1000.0000          .          
+veg2.Apr           .            81.4815      1000.0000          .          
+veg2.May           .            40.7407      1000.0000          .          
+veg2.June          .              .          1000.0000          .          
+oil1.Jan        500.0000       500.0000      1000.0000       -30.0000      
+oil1.Feb           .           500.0000      1000.0000          .          
+oil1.Mar           .           500.0000      1000.0000          .          
+oil1.Apr           .           500.0000      1000.0000          .          
+oil1.May           .           500.0000      1000.0000          .          
+oil1.June          .           500.0000      1000.0000          .          
+oil2.Jan        500.0000       500.0000      1000.0000         EPS         
+oil2.Feb           .           250.0000      1000.0000          .          
+oil2.Mar           .           750.0000      1000.0000          .          
+oil2.Apr           .           500.0000      1000.0000          .          
+oil2.May           .           250.0000      1000.0000          .          
+oil2.June          .              .          1000.0000       -30.0000      
+oil3.Jan        500.0000       500.0000      1000.0000       -30.0000      
+oil3.Feb           .           500.0000      1000.0000          .          
+oil3.Mar           .           500.0000      1000.0000          .          
+oil3.Apr           .           500.0000      1000.0000          .          
+oil3.May           .           500.0000      1000.0000          .          
+oil3.June          .           500.0000      1000.0000          .          
+
+---- VAR product  amount of final product each month
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+Jan           .           450.0000        +INF             .          
+Feb           .           450.0000        +INF             .          
+Mar           .           450.0000        +INF             .          
+Apr           .           450.0000        +INF             .          
+May           .           450.0000        +INF             .          
+June          .           450.0000        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR profit            -INF       107842.5926        +INF             .          
+
+  profit  profit overall
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+
+
+EXECUTION TIME       =        0.000 SECONDS      2 MB  25.1.1 r66732 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GAMSStudio\workspace\HPW\food1LP.gms
+Output     C:\Users\cnbho\Documents\GAMSStudio\workspace\HPW\food1LP.lst
