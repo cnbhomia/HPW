@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/11/18 12:27:05 Page 1
+=======
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/11/18 17:50:42 Page 1
+>>>>>>> 9448e4a35c5d899c00f9451856a58d71afb34c76
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -77,15 +81,20 @@ C o m p i l a t i o n
   74   
   75   
   76  model food1 /all/;
-  77  option limrow=100
+  77  *option limrow=100
   78  solve food1 using LP maximizing profit;
   79   
   80   
   81   
 
 
+<<<<<<< HEAD
 COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
 GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/11/18 12:27:05 Page 2
+=======
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 DEX-DEG
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/11/18 17:50:42 Page 2
+>>>>>>> 9448e4a35c5d899c00f9451856a58d71afb34c76
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE food1 Using LP From line 78
 
@@ -98,60 +107,8 @@ stockcalc(veg1,Feb)..  - RMpur(veg1,Feb) + RMused(veg1,Feb) - RMstock(veg1,Feb) 
      
 stockcalc(veg1,Mar)..  - RMpur(veg1,Mar) + RMused(veg1,Mar) - RMstock(veg1,Mar) + RMstock(veg1,Apr) =E= 0 ; (LHS = 0)
      
-stockcalc(veg1,Apr)..  - RMpur(veg1,Apr) + RMused(veg1,Apr) - RMstock(veg1,Apr) + RMstock(veg1,May) =E= 0 ; (LHS = 0)
-     
-stockcalc(veg1,May)..  - RMpur(veg1,May) + RMused(veg1,May) - RMstock(veg1,May) + RMstock(veg1,June) =E= 0 ; (LHS = 0)
-     
-stockcalc(veg1,June)..  - RMpur(veg1,June) + RMused(veg1,June) + RMstock(veg1,Jan) - RMstock(veg1,June) =E= 0 ; (LHS = 500, INFES = 500 ****)
-     
-stockcalc(veg2,Jan)..  - RMpur(veg2,Jan) + RMused(veg2,Jan) - RMstock(veg2,Jan) + RMstock(veg2,Feb) =E= 0 ; (LHS = -500, INFES = 500 ****)
-     
-stockcalc(veg2,Feb)..  - RMpur(veg2,Feb) + RMused(veg2,Feb) - RMstock(veg2,Feb) + RMstock(veg2,Mar) =E= 0 ; (LHS = 0)
-     
-stockcalc(veg2,Mar)..  - RMpur(veg2,Mar) + RMused(veg2,Mar) - RMstock(veg2,Mar) + RMstock(veg2,Apr) =E= 0 ; (LHS = 0)
-     
-stockcalc(veg2,Apr)..  - RMpur(veg2,Apr) + RMused(veg2,Apr) - RMstock(veg2,Apr) + RMstock(veg2,May) =E= 0 ; (LHS = 0)
-     
-stockcalc(veg2,May)..  - RMpur(veg2,May) + RMused(veg2,May) - RMstock(veg2,May) + RMstock(veg2,June) =E= 0 ; (LHS = 0)
-     
-stockcalc(veg2,June)..  - RMpur(veg2,June) + RMused(veg2,June) + RMstock(veg2,Jan) - RMstock(veg2,June) =E= 0 ; (LHS = 500, INFES = 500 ****)
-     
-stockcalc(oil1,Jan)..  - RMpur(oil1,Jan) + RMused(oil1,Jan) - RMstock(oil1,Jan) + RMstock(oil1,Feb) =E= 0 ; (LHS = -500, INFES = 500 ****)
-     
-stockcalc(oil1,Feb)..  - RMpur(oil1,Feb) + RMused(oil1,Feb) - RMstock(oil1,Feb) + RMstock(oil1,Mar) =E= 0 ; (LHS = 0)
-     
-stockcalc(oil1,Mar)..  - RMpur(oil1,Mar) + RMused(oil1,Mar) - RMstock(oil1,Mar) + RMstock(oil1,Apr) =E= 0 ; (LHS = 0)
-     
-stockcalc(oil1,Apr)..  - RMpur(oil1,Apr) + RMused(oil1,Apr) - RMstock(oil1,Apr) + RMstock(oil1,May) =E= 0 ; (LHS = 0)
-     
-stockcalc(oil1,May)..  - RMpur(oil1,May) + RMused(oil1,May) - RMstock(oil1,May) + RMstock(oil1,June) =E= 0 ; (LHS = 0)
-     
-stockcalc(oil1,June)..  - RMpur(oil1,June) + RMused(oil1,June) + RMstock(oil1,Jan) - RMstock(oil1,June) =E= 0 ; (LHS = 500, INFES = 500 ****)
-     
-stockcalc(oil2,Jan)..  - RMpur(oil2,Jan) + RMused(oil2,Jan) - RMstock(oil2,Jan) + RMstock(oil2,Feb) =E= 0 ; (LHS = -500, INFES = 500 ****)
-     
-stockcalc(oil2,Feb)..  - RMpur(oil2,Feb) + RMused(oil2,Feb) - RMstock(oil2,Feb) + RMstock(oil2,Mar) =E= 0 ; (LHS = 0)
-     
-stockcalc(oil2,Mar)..  - RMpur(oil2,Mar) + RMused(oil2,Mar) - RMstock(oil2,Mar) + RMstock(oil2,Apr) =E= 0 ; (LHS = 0)
-     
-stockcalc(oil2,Apr)..  - RMpur(oil2,Apr) + RMused(oil2,Apr) - RMstock(oil2,Apr) + RMstock(oil2,May) =E= 0 ; (LHS = 0)
-     
-stockcalc(oil2,May)..  - RMpur(oil2,May) + RMused(oil2,May) - RMstock(oil2,May) + RMstock(oil2,June) =E= 0 ; (LHS = 0)
-     
-stockcalc(oil2,June)..  - RMpur(oil2,June) + RMused(oil2,June) + RMstock(oil2,Jan) - RMstock(oil2,June) =E= 0 ; (LHS = 500, INFES = 500 ****)
-     
-stockcalc(oil3,Jan)..  - RMpur(oil3,Jan) + RMused(oil3,Jan) - RMstock(oil3,Jan) + RMstock(oil3,Feb) =E= 0 ; (LHS = -500, INFES = 500 ****)
-     
-stockcalc(oil3,Feb)..  - RMpur(oil3,Feb) + RMused(oil3,Feb) - RMstock(oil3,Feb) + RMstock(oil3,Mar) =E= 0 ; (LHS = 0)
-     
-stockcalc(oil3,Mar)..  - RMpur(oil3,Mar) + RMused(oil3,Mar) - RMstock(oil3,Mar) + RMstock(oil3,Apr) =E= 0 ; (LHS = 0)
-     
-stockcalc(oil3,Apr)..  - RMpur(oil3,Apr) + RMused(oil3,Apr) - RMstock(oil3,Apr) + RMstock(oil3,May) =E= 0 ; (LHS = 0)
-     
-stockcalc(oil3,May)..  - RMpur(oil3,May) + RMused(oil3,May) - RMstock(oil3,May) + RMstock(oil3,June) =E= 0 ; (LHS = 0)
-     
-stockcalc(oil3,June)..  - RMpur(oil3,June) + RMused(oil3,June) + RMstock(oil3,Jan) - RMstock(oil3,June) =E= 0 ; (LHS = 500, INFES = 500 ****)
-     
+REMAINING 27 ENTRIES SKIPPED
+
 
 ---- matbalance  =E=  material balance each month
 
@@ -161,12 +118,8 @@ matbalance(Feb)..  - RMused(veg1,Feb) - RMused(veg2,Feb) - RMused(oil1,Feb) - RM
      
 matbalance(Mar)..  - RMused(veg1,Mar) - RMused(veg2,Mar) - RMused(oil1,Mar) - RMused(oil2,Mar) - RMused(oil3,Mar) + product(Mar) =E= 0 ; (LHS = 0)
      
-matbalance(Apr)..  - RMused(veg1,Apr) - RMused(veg2,Apr) - RMused(oil1,Apr) - RMused(oil2,Apr) - RMused(oil3,Apr) + product(Apr) =E= 0 ; (LHS = 0)
-     
-matbalance(May)..  - RMused(veg1,May) - RMused(veg2,May) - RMused(oil1,May) - RMused(oil2,May) - RMused(oil3,May) + product(May) =E= 0 ; (LHS = 0)
-     
-matbalance(June)..  - RMused(veg1,June) - RMused(veg2,June) - RMused(oil1,June) - RMused(oil2,June) - RMused(oil3,June) + product(June) =E= 0 ; (LHS = 0)
-     
+REMAINING 3 ENTRIES SKIPPED
+
 
 ---- hardnessup  =L=   hardness less than 6
 
@@ -176,12 +129,8 @@ hardnessup(Feb)..  8.8*RMused(veg1,Feb) + 6.1*RMused(veg2,Feb) + 2*RMused(oil1,F
      
 hardnessup(Mar)..  8.8*RMused(veg1,Mar) + 6.1*RMused(veg2,Mar) + 2*RMused(oil1,Mar) + 4.2*RMused(oil2,Mar) + 5*RMused(oil3,Mar) - 6*product(Mar) =L= 0 ; (LHS = 0)
      
-hardnessup(Apr)..  8.8*RMused(veg1,Apr) + 6.1*RMused(veg2,Apr) + 2*RMused(oil1,Apr) + 4.2*RMused(oil2,Apr) + 5*RMused(oil3,Apr) - 6*product(Apr) =L= 0 ; (LHS = 0)
-     
-hardnessup(May)..  8.8*RMused(veg1,May) + 6.1*RMused(veg2,May) + 2*RMused(oil1,May) + 4.2*RMused(oil2,May) + 5*RMused(oil3,May) - 6*product(May) =L= 0 ; (LHS = 0)
-     
-hardnessup(June)..  8.8*RMused(veg1,June) + 6.1*RMused(veg2,June) + 2*RMused(oil1,June) + 4.2*RMused(oil2,June) + 5*RMused(oil3,June) - 6*product(June) =L= 0 ; (LHS = 0)
-     
+REMAINING 3 ENTRIES SKIPPED
+
 
 ---- hardnesslow  =G=   hardness more than 3
 
@@ -191,12 +140,8 @@ hardnesslow(Feb)..  8.8*RMused(veg1,Feb) + 6.1*RMused(veg2,Feb) + 2*RMused(oil1,
      
 hardnesslow(Mar)..  8.8*RMused(veg1,Mar) + 6.1*RMused(veg2,Mar) + 2*RMused(oil1,Mar) + 4.2*RMused(oil2,Mar) + 5*RMused(oil3,Mar) - 3*product(Mar) =G= 0 ; (LHS = 0)
      
-hardnesslow(Apr)..  8.8*RMused(veg1,Apr) + 6.1*RMused(veg2,Apr) + 2*RMused(oil1,Apr) + 4.2*RMused(oil2,Apr) + 5*RMused(oil3,Apr) - 3*product(Apr) =G= 0 ; (LHS = 0)
-     
-hardnesslow(May)..  8.8*RMused(veg1,May) + 6.1*RMused(veg2,May) + 2*RMused(oil1,May) + 4.2*RMused(oil2,May) + 5*RMused(oil3,May) - 3*product(May) =G= 0 ; (LHS = 0)
-     
-hardnesslow(June)..  8.8*RMused(veg1,June) + 6.1*RMused(veg2,June) + 2*RMused(oil1,June) + 4.2*RMused(oil2,June) + 5*RMused(oil3,June) - 3*product(June) =G= 0 ; (LHS = 0)
-     
+REMAINING 3 ENTRIES SKIPPED
+
 
 ---- refiningLimVeg  =L=  refining limit of each month for veg oil
 
@@ -206,12 +151,8 @@ refiningLimVeg(Feb)..  RMused(veg1,Feb) + RMused(veg2,Feb) =L= 200 ; (LHS = 0)
      
 refiningLimVeg(Mar)..  RMused(veg1,Mar) + RMused(veg2,Mar) =L= 200 ; (LHS = 0)
      
-refiningLimVeg(Apr)..  RMused(veg1,Apr) + RMused(veg2,Apr) =L= 200 ; (LHS = 0)
-     
-refiningLimVeg(May)..  RMused(veg1,May) + RMused(veg2,May) =L= 200 ; (LHS = 0)
-     
-refiningLimVeg(June)..  RMused(veg1,June) + RMused(veg2,June) =L= 200 ; (LHS = 0)
-     
+REMAINING 3 ENTRIES SKIPPED
+
 
 ---- refiningLimNVeg  =L=  refining limit of each month for nonveg oil
 
@@ -221,12 +162,8 @@ refiningLimNVeg(Feb)..  RMused(oil1,Feb) + RMused(oil2,Feb) + RMused(oil3,Feb) =
      
 refiningLimNVeg(Mar)..  RMused(oil1,Mar) + RMused(oil2,Mar) + RMused(oil3,Mar) =L= 250 ; (LHS = 0)
      
-refiningLimNVeg(Apr)..  RMused(oil1,Apr) + RMused(oil2,Apr) + RMused(oil3,Apr) =L= 250 ; (LHS = 0)
-     
-refiningLimNVeg(May)..  RMused(oil1,May) + RMused(oil2,May) + RMused(oil3,May) =L= 250 ; (LHS = 0)
-     
-refiningLimNVeg(June)..  RMused(oil1,June) + RMused(oil2,June) + RMused(oil3,June) =L= 250 ; (LHS = 0)
-     
+REMAINING 3 ENTRIES SKIPPED
+
 
 ---- profitcalc  =E=  profit equation
 
@@ -244,7 +181,11 @@ profitcalc..  110*RMpur(veg1,Jan) + 130*RMpur(veg1,Feb) + 110*RMpur(veg1,Mar) + 
      
       (LHS = 12500, INFES = 12500 ****)
      
+<<<<<<< HEAD
 GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/11/18 12:27:05 Page 3
+=======
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/11/18 17:50:42 Page 3
+>>>>>>> 9448e4a35c5d899c00f9451856a58d71afb34c76
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE food1 Using LP From line 78
 
@@ -349,7 +290,11 @@ profit
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       profitcalc
 
+<<<<<<< HEAD
 GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/11/18 12:27:05 Page 4
+=======
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/11/18 17:50:42 Page 4
+>>>>>>> 9448e4a35c5d899c00f9451856a58d71afb34c76
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE food1 Using LP From line 78
 
@@ -361,11 +306,19 @@ BLOCKS OF VARIABLES           5     SINGLE VARIABLES           97
 NON ZERO ELEMENTS           325
 
 
+<<<<<<< HEAD
 GENERATION TIME      =        0.000 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
 
 
 EXECUTION TIME       =        0.000 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
 GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/11/18 12:27:05 Page 5
+=======
+GENERATION TIME      =        0.004 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
+
+
+EXECUTION TIME       =        0.005 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/11/18 17:50:42 Page 5
+>>>>>>> 9448e4a35c5d899c00f9451856a58d71afb34c76
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE food1 Using LP From line 78
 
@@ -380,10 +333,14 @@ Solution Report     SOLVE food1 Using LP From line 78
 **** MODEL STATUS      1 Optimal                   
 **** OBJECTIVE VALUE           107842.5926
 
+<<<<<<< HEAD
  RESOURCE USAGE, LIMIT          0.047      1000.000
+=======
+ RESOURCE USAGE, LIMIT          0.008      1000.000
+>>>>>>> 9448e4a35c5d899c00f9451856a58d71afb34c76
  ITERATION COUNT, LIMIT        59    2000000000
 
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
 Cplex 12.8.0.0
 
 Space for names approximately 0.00 Mb
@@ -618,7 +575,7 @@ June          .           450.0000        +INF             .
                              0  UNBOUNDED
 
 
-EXECUTION TIME       =        0.000 SECONDS      2 MB  25.1.1 r66732 WEX-WEI
+EXECUTION TIME       =        0.001 SECONDS      2 MB  25.1.1 r66732 DEX-DEG
 
 
 USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
@@ -627,5 +584,10 @@ USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
 
 **** FILE SUMMARY
 
+<<<<<<< HEAD
 Input      C:\Users\cnbho\Documents\GitHub\HPW\food1\food1LP.gms
 Output     C:\Users\cnbho\Documents\GitHub\HPW\food1\food1LP.lst
+=======
+Input      /Users/cbhomia/Documents/GitHub/HPW/food1/food1LP.gms
+Output     /Users/cbhomia/Documents/GitHub/HPW/food1/food1LP.lst
+>>>>>>> 9448e4a35c5d899c00f9451856a58d71afb34c76
