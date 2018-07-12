@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/11/18 12:27:05 Page 1
-=======
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/11/18 17:50:42 Page 1
->>>>>>> 9448e4a35c5d899c00f9451856a58d71afb34c76
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 11:27:24 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -88,13 +84,8 @@ C o m p i l a t i o n
   81   
 
 
-<<<<<<< HEAD
-COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/11/18 12:27:05 Page 2
-=======
-COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 DEX-DEG
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/11/18 17:50:42 Page 2
->>>>>>> 9448e4a35c5d899c00f9451856a58d71afb34c76
+COMPILATION TIME     =        0.001 SECONDS      3 MB  25.1.1 r66732 DEX-DEG
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 11:27:24 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE food1 Using LP From line 78
 
@@ -181,11 +172,7 @@ profitcalc..  110*RMpur(veg1,Jan) + 130*RMpur(veg1,Feb) + 110*RMpur(veg1,Mar) + 
      
       (LHS = 12500, INFES = 12500 ****)
      
-<<<<<<< HEAD
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/11/18 12:27:05 Page 3
-=======
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/11/18 17:50:42 Page 3
->>>>>>> 9448e4a35c5d899c00f9451856a58d71afb34c76
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 11:27:24 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE food1 Using LP From line 78
 
@@ -290,11 +277,7 @@ profit
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       profitcalc
 
-<<<<<<< HEAD
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/11/18 12:27:05 Page 4
-=======
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/11/18 17:50:42 Page 4
->>>>>>> 9448e4a35c5d899c00f9451856a58d71afb34c76
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 11:27:24 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE food1 Using LP From line 78
 
@@ -306,19 +289,11 @@ BLOCKS OF VARIABLES           5     SINGLE VARIABLES           97
 NON ZERO ELEMENTS           325
 
 
-<<<<<<< HEAD
-GENERATION TIME      =        0.000 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
-
-
-EXECUTION TIME       =        0.000 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/11/18 12:27:05 Page 5
-=======
-GENERATION TIME      =        0.004 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
+GENERATION TIME      =        0.005 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
 
 
 EXECUTION TIME       =        0.005 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/11/18 17:50:42 Page 5
->>>>>>> 9448e4a35c5d899c00f9451856a58d71afb34c76
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 11:27:24 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE food1 Using LP From line 78
 
@@ -333,11 +308,7 @@ Solution Report     SOLVE food1 Using LP From line 78
 **** MODEL STATUS      1 Optimal                   
 **** OBJECTIVE VALUE           107842.5926
 
-<<<<<<< HEAD
- RESOURCE USAGE, LIMIT          0.047      1000.000
-=======
- RESOURCE USAGE, LIMIT          0.008      1000.000
->>>>>>> 9448e4a35c5d899c00f9451856a58d71afb34c76
+ RESOURCE USAGE, LIMIT          0.006      1000.000
  ITERATION COUNT, LIMIT        59    2000000000
 
 IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
@@ -346,7 +317,7 @@ Cplex 12.8.0.0
 Space for names approximately 0.00 Mb
 Use option 'names no' to turn use of names off
 LP status(1): optimal
-Cplex Time: 0.02sec (det. 0.27 ticks)
+Cplex Time: 0.00sec (det. 0.27 ticks)
 Optimal solution found.
 Objective :      107842.592593
 
@@ -575,7 +546,7 @@ June          .           450.0000        +INF             .
                              0  UNBOUNDED
 
 
-EXECUTION TIME       =        0.001 SECONDS      2 MB  25.1.1 r66732 DEX-DEG
+EXECUTION TIME       =        0.002 SECONDS      2 MB  25.1.1 r66732 DEX-DEG
 
 
 USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
@@ -584,10 +555,5 @@ USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
 
 **** FILE SUMMARY
 
-<<<<<<< HEAD
-Input      C:\Users\cnbho\Documents\GitHub\HPW\food1\food1LP.gms
-Output     C:\Users\cnbho\Documents\GitHub\HPW\food1\food1LP.lst
-=======
 Input      /Users/cbhomia/Documents/GitHub/HPW/food1/food1LP.gms
 Output     /Users/cbhomia/Documents/GitHub/HPW/food1/food1LP.lst
->>>>>>> 9448e4a35c5d899c00f9451856a58d71afb34c76

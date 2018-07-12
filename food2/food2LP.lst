@@ -1,4 +1,4 @@
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/10/18 22:12:05 Page 1
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 11:07:44 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -113,8 +113,8 @@ C o m p i l a t i o n
  110   
 
 
-COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/10/18 22:12:05 Page 2
+COMPILATION TIME     =        0.001 SECONDS      3 MB  25.1.1 r66732 DEX-DEG
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 11:07:44 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE food1 Using MINLP From line 107
 
@@ -366,7 +366,7 @@ combo(oil3,May)..  (0)*D(veg1,May) + (0)*D(veg2,May) + (0)*D(oil3,May) =B= 1 ; (
      
 combo(oil3,June)..  (0)*D(veg1,June) + (0)*D(veg2,June) + (0)*D(oil3,June) =B= 1 ; (LHS = 1)
      
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/10/18 22:12:05 Page 3
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 11:07:44 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE food1 Using MINLP From line 107
 
@@ -517,7 +517,7 @@ profit
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       profitcalc
 
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/10/18 22:12:05 Page 4
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 11:07:44 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE food1 Using MINLP From line 107
 
@@ -531,11 +531,11 @@ DERIVATIVE POOL              20     CONSTANT POOL              19
 CODE LENGTH                 739     DISCRETE VARIABLES         30
 
 
-GENERATION TIME      =        0.015 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
+GENERATION TIME      =        0.007 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
 
 
-EXECUTION TIME       =        0.015 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/10/18 22:12:05 Page 5
+EXECUTION TIME       =        0.007 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 11:07:44 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE food1 Using MINLP From line 107
 
@@ -550,18 +550,18 @@ Solution Report     SOLVE food1 Using MINLP From line 107
 **** MODEL STATUS      2 Locally Optimal           
 **** OBJECTIVE VALUE           -75000.0000
 
- RESOURCE USAGE, LIMIT          0.016      1000.000
+ RESOURCE USAGE, LIMIT          0.002      1000.000
  ITERATION COUNT, LIMIT         4    2000000000
  EVALUATION ERRORS              0             0
 -------------------------------------------------------------------------------
-Dicopt 2         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+Dicopt 2         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
 -------------------------------------------------------------------------------
 by Aldo Vecchietti, Director del Instituto INGAR,
    CONICET, UTN, Santa Fe, Argentina
 by Ignacio E. Grossmann, Chemical Engineering Faculty,
    Carnegie Mellon University, Pittsburgh, PA, USA
 -------------------------------------------------------------------------------
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
  
  
     C O N O P T 3   version 3.17I
@@ -898,7 +898,7 @@ oil3.June          .              .             1.0000         EPS
                              1  PROJECTED
 
 
-EXECUTION TIME       =        0.000 SECONDS      2 MB  25.1.1 r66732 WEX-WEI
+EXECUTION TIME       =        0.002 SECONDS      2 MB  25.1.1 r66732 DEX-DEG
 
 
 USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
@@ -907,5 +907,5 @@ USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
 
 **** FILE SUMMARY
 
-Input      C:\Users\cnbho\Documents\GitHub\HPW\food2\food2LP.gms
-Output     C:\Users\cnbho\Documents\GitHub\HPW\food2\food2LP.lst
+Input      /Users/cbhomia/Documents/GitHub/HPW/food2/food2LP.gms
+Output     /Users/cbhomia/Documents/GitHub/HPW/food2/food2LP.lst
