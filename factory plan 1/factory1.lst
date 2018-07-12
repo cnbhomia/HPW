@@ -1,0 +1,202 @@
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/12/18 18:43:29 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+      This code is for the problem 12.3 from H P William book
+       
+   5   
+   6  sets
+   7      p 'ps'                  /p1*p7/
+   8      process                 /grinding, vdrill,hdrill,boring,planing/
+   9      mac 'machines'          /G1*G4 , VD1*VD2 , HD1*HD3, borer, planer/
+  10      equipment(process,mac)  /grinding.(G1*G4) , vdrill.(VD1*VD2) ,hdrill.(HD1*HD3), boring.borer , planing.planer /
+  11      month 'months'          /Jan, Feb, Mar, Apr, May, Jun/
+  12   
+  13      ;
+  14   
+  15  table processtime(process,p)  'time required for each process per unit product'
+  16              p1       p2     p3      p4      p5      p6      p7
+  17  grinding   0.5      0.7      0       0      0.3     0.2     0.5
+  18  vdrill      0.1     0.2     0       0.3     0       0.6     0
+  19  hdrill      0.2       0     0.8     0       0       0       0.6
+  20  boring     0.05    0.03            0.07    0.1             0.08
+  21  planing                    0.01            0.05            0.05
+  22  ;
+  23   
+  24  table marketlim(p,month) 'marketing constraints of each product each month'
+  25          Jan     Feb     Mar     Apr     May     Jun
+  26  p1      500     600     300     200     0       500
+  27  p2      1000    500     600     300     100     500
+  28  p3      300     200     0       400     500     100
+  29  p4      300     0       0       500     100     300
+  30  p5      800     400     500     200     1000    1100
+  31  p6      200     300     400     0       300     500
+  32  p7      100     150     100     100     0       60
+  33  ;
+  34   
+  35  table maintain(mac,month) 'maintenance schedule. 0 = downtime'
+  36         Jan  Feb Mar Apr May Jun
+  37  G1      0   1   1   1   0   1
+  38  G2      1   1   1   1   1   1
+  39  G3      1   1   1   1   1   1
+  40  G4      1   1   1   1   1   1
+  41  VD1     1   1   1   0   0   1
+  42  VD2     1   1   1   1   1   1
+  43  HD1     1   0   1   1   1   0
+  44  HD2     1   0   1   1   1   1
+  45  HD3     1   1   1   1   1   1
+  46  borer   1   1   0   1   1   1
+  47  planer  1   1   1   1   1   0
+  48  ;
+  49   
+  50  parameter processexists(process,month);
+  51  processexists(process,month) $ [sum(mac$equipment(process,mac), maintain(mac,month))] =1  ;
+  52   
+  53  parameter processexists(process,month);
+  54  processexists(process,month) $ [sum(mac$equipment(process,mac), maintain(mac,month))] =1  ;
+  55   
+  56   
+  57   
+  58  variables
+  59      produced(p,month) 'units of ech product produced'
+  60      profit
+  61      ;
+  62  *variable bounds
+  63  produced.up(p,month) = marketlim(p,month);
+  64   
+  65  equations
+  66   
+  67      machrslimit(process,month) 'total limit on machine hours of a process of 24*8*2*N per month,N represents total no. of machines available '
+  68  *    marketlimit(p,month) 'market limit on each product each month'
+  69      objfunc
+  70      ;
+  71   
+  72  machrslimit(process,month).. sum(p, produced(p,month)*processtime(process,p)) =l= 384*sum(mac$equipment(process,mac),maintain(mac,month));
+  73  * total machine hours under the given process catagories. 28*8*2* (no. of machine avaiable for the process)
+  74  *marketlimit(p,month).. produced(p,month) =l= marketlim(p,month) ;
+  75   
+  76   
+  77   
+  78  objfunc.. profit =e= sum((p,month),produced(p,month));
+  79   
+  80   
+  81   
+  82   
+  83   
+  84   
+  85   
+      This code is for the problem 12.3 from H P William book
+       
+       
+       
+      sets
+          p 'ps' /p1*p7/
+          mac 'machines'  /G1*G4, VD1,VD2, HD1*HD3,borer,planer/
+          grind(mac)      / G1*G4/
+          vdrill(mac)     /VD1,VD2/
+          hdrill(mac)     /HD1*HD3/
+          bor(mac)        /borer/
+          pln(mac)       /planer/
+          month 'months' /Jan, Feb, Mar, Apr, May, Jun/
+          ;
+       
+      table time(mac,p)  'time required'
+                  p1       p2     p3      p4      p5      p6      p7
+      G1*G4       0.5     0.7     0       0       0.3     0.2     0.5
+      VD1*VD2     0.1     0.2     0       0.3     0       0.6     0
+      HD1*HD3     0.2     0       0.8     0       0       0       0.6
+      borer       0.05    0.03            0.07    0.1             0.08
+      planer                      0.01            0.05            0.05
+      ;
+       
+      display time
+       
+       
+      table avail(mac,month) 'machine availability'
+             Jan  Feb Mar Apr May Jun
+      G1      0   1   1   1   0   1
+      G2      1   1   1   1   1   1
+      G3      1   1   1   1   1   1
+      G4      1   1   1   1   1   1
+      VD1     1   1   1   0   0   1
+      VD2     1   1   1   1   1   1
+      HD1     1   0   1   1   1   0
+      HD2     1   0   1   1   1   1
+      HD3     1   1   1   1   1   1
+      borer   1   1   0   1   1   1
+      planer  1   1   1   1   1   0
+      ;
+      table marketing(p,month) 'marketing constraints of each product each month'
+              Jan     Feb     Mar     Apr     May     Jun
+      p1      500     600     300     200     0       500
+      p2      1000    500     600     300     100     500
+      p3      300     200     0       400     500     100
+      p4      300     0       0       500     100     300
+      p5      800     400     500     200     1000    1100
+      p6      200     300     400     0       300     500
+      p7      100     150     100     100     0       60
+      ;
+       
+       
+      parameter profit(p)
+          /   p1   10
+              p2   6
+              p3   8
+              p4   4
+              p5   11
+              p6   9
+              p7   3/;
+       
+      parameter tgrind(grind,p);
+      tgrind(grind,p)=time(grind,p);
+       
+      parameter process(mac,p) 'whether process applies or not';
+      process(mac,p)$(time(mac,p)) = 1;
+       
+      parameter storecost 'storage cost /unit / month' /0.5/ ;
+       
+       
+      variables
+          storage(p,month) 'amount to be stored'
+          produce(p,month) 'units of ech product produced'
+          ;
+      storage.up(p,month) = 100;
+      storage.fx(p,'Jun') = 50;
+       
+      equations
+          maclim(mac,month) 'machine usage each month limited to 24*2*8 if available'
+          objfunc 'profit calculation equation'
+          production (p,month) 'production of p ech month'
+          ;
+       
+      maclim(mac,month).. sum(p, time(mac,p)*avail(mac,month)) =l= 24*2*8 ;
+       
+      production(p,month).. sum(mac, time(mac,p))*produce(p,month)
+       
+      objfunc.. profit = sum((month,p),produce(p,month)*profit(p) -storage(p,month)*storecost );
+       
+       
+      model plan1 /all/;
+      solve model using LP maximizing profit;
+ 181   
+ 182   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/12/18 18:43:29 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+EXECUTION TIME       =        0.000 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\factory plan 1\factory1.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\factory plan 1\factory1.lst
