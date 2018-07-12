@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 sets
 <<<<<<< HEAD
     p 'ps'                  /p1*p7/
@@ -87,6 +88,9 @@ This code is for the problem 12.3 from H P William book
 sets
 =======
 >>>>>>> 7e65abad2e7582fdeaa1f88b2b877a42dc1c71cf
+=======
+sets
+>>>>>>> 7e65abad2e7582fdeaa1f88b2b877a42dc1c71cf
     p 'ps' /p1*p7/
     mac 'machines'  /G1*G4, VD1,VD2, HD1*HD3,borer,planer/
     grind(mac)      / G1*G4/
@@ -95,8 +99,12 @@ sets
     bor(mac)        /borer/
     pln(mac)       /planer/
 <<<<<<< HEAD
+<<<<<<< HEAD
     month 'months' /Jan, Feb, Mar, Apr, May, Jun/
     ;
+=======
+    month 'months' /Jan Feb Mar Apr May Jun/;
+>>>>>>> 7e65abad2e7582fdeaa1f88b2b877a42dc1c71cf
 
 table time(mac,p)  'time required'
             p1       p2     p3      p4      p5      p6      p7
@@ -105,6 +113,7 @@ VD1*VD2     0.1     0.2     0       0.3     0       0.6     0
 HD1*HD3     0.2     0       0.8     0       0       0       0.6
 borer       0.05    0.03            0.07    0.1             0.08
 planer                      0.01            0.05            0.05
+<<<<<<< HEAD
 ;
 
 display time
@@ -189,5 +198,8 @@ VD1*VD2     0.1     0.2     0       0.3     0       0.6     0
 HD1*HD3     0.2     0       0.8     0       0       0       0.6
 borer       0.05    0.03            0.07    0.1             0.08
 planer                      0.01            0.05            0.05
+;
+>>>>>>> 7e65abad2e7582fdeaa1f88b2b877a42dc1c71cf
+=======
 ;
 >>>>>>> 7e65abad2e7582fdeaa1f88b2b877a42dc1c71cf
