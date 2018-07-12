@@ -43,28 +43,53 @@ positive variables
 variable
     profit 'profit overall'
     ;
+
+integer variable
+    D(oil,month)
+    ;
+
+
+
+
 *fixing stocks
 RMstock.fx(oil,'Jan') = 500;
-RMstock.up(oil,month) = 1000;
+*RMstock.up(oil,month) = 1000;
 
+D.up(oil,month) = 1 ;
+D.l(oil,month) =1;
 
 equations
     stockcalc(oil,month) 'stock calculation'
+    stocklast(oil,month) 'stock for last month'
     matbalance(month) 'material balance each month'
     hardnessup(month) ' hardness less than 6'
     hardnesslow(month) ' hardness more than 3'
+    indirefiningLimVeg(oil,month) 'refining limit of each month for veg oil'
+    indirefiningLimNVeg(oil,month) 'refining limit of each month for nonveg oil'
     refiningLimVeg(month) 'refining limit of each month for veg oil'
     refiningLimNVeg(month) 'refining limit of each month for nonveg oil'
-    profitcalc 'profit equation';
 
+    profitcalc 'profit equation'
+    threeoil(month) 'limit of three oils each month'
+*    combo1(month) 'select oil 3 if veg 1 is used'
+*    combo2(month)  'select oil 3 if veg 2 is used'
+    combo3(month) 'select oil3 if veg1 or veg2'
+    minuse(oil,month)
+    ;
 
-stockcalc(oil,month).. RMstock(oil,month++1) =e= RMstock(oil,month) + RMpur(oil,month) - RMused(oil,month) ;
+stockcalc(oil,month)$ (ord(month)<6).. RMstock(oil,month+1) =e= RMstock(oil,month) + RMpur(oil,month) - RMused(oil,month) ;
+
+stocklast(oil,month)$(ord(month)=6).. RMstock(oil,month) + RMpur(oil,month) - RMused(oil,month) =e= 500 ;
 
 matbalance(month).. product(month) =e= sum(oil, RMused(oil,month));
 
 hardnessup(month).. sum(oil,RMused(oil,month)*hardness(oil)) - 6*product(month) =l=0 ;
 
 hardnesslow(month).. sum(oil,RMused(oil,month)*hardness(oil)) - 3*product(month) =g=0 ;
+
+indirefiningLimVeg(oil,month)$veg(oil).. RMused(oil,month) =l= RefineLimVeg*D(oil,month) ;
+
+indirefiningLimNVeg(oil,month)$nonveg(oil).. RMused(oil,month) =l= D(oil,month)* RefineLimNVeg ;
 
 refiningLimVeg(month).. sum(oil$veg(oil), RMused(oil,month)) =l= RefineLimVeg ;
 
@@ -73,9 +98,21 @@ refiningLimNVeg(month).. sum(oil$nonveg(oil), RMused(oil,month)) =l= RefineLimNV
 profitcalc.. profit =e= sum(month,product(month)*sellprice) - sum((oil,month), RMpur(oil,month)*price(month,oil)) - sum((oil,month),RMstock(oil,month)*storecost);
 
 
+threeoil(month).. sum(oil,D(oil,month)) =l= 3;
+
+*combo1(month).. D('veg1',month) - D('oil3',month) =l= 0;
+
+*combo2(month).. D('veg2',month) - D('oil3',month) =l= 0;
+
+combo3(month).. D('veg1',month) + D('veg2',month) -2* D('oil3',month) =l= 0;
+
+minuse(oil,month).. RMused(oil,month) - 20*D(oil,month) =g= 0;
+
+
 model food1 /all/;
-*option limrow=100
-solve food1 using LP maximizing profit;
+option MIP=BARON;
+option limrow=100
+solve food1 using MIP maximizing profit;
 
    
         

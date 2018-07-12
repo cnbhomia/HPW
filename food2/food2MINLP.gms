@@ -43,10 +43,20 @@ positive variables
 variable
     profit 'profit overall'
     ;
+
+integer variable
+    D(oil,month)
+    ;
+
+
+
+
 *fixing stocks
 RMstock.fx(oil,'Jan') = 500;
 RMstock.up(oil,month) = 1000;
-
+D.lo(oil,month) = 0 ;
+D.up(oil,month) = 1 ;
+D.l(oil,month) =1;
 
 equations
     stockcalc(oil,month) 'stock calculation'
@@ -55,27 +65,37 @@ equations
     hardnesslow(month) ' hardness more than 3'
     refiningLimVeg(month) 'refining limit of each month for veg oil'
     refiningLimNVeg(month) 'refining limit of each month for nonveg oil'
-    profitcalc 'profit equation';
+    profitcalc 'profit equation'
+    threeoil(month) 'limit of three oils each month'
+    combo1(month)
+    combo2(month)
+    ;
+
+threeoil(month).. sum(oil,D(oil,month)) =l= 5;
+
+combo1(month).. D('veg1',month) - D('oil3',month) =l= 1;
+
+combo2(month).. D('veg2',month) - D('oil3',month) =l= 1;
 
 
-stockcalc(oil,month).. RMstock(oil,month++1) =e= RMstock(oil,month) + RMpur(oil,month) - RMused(oil,month) ;
+stockcalc(oil,month).. RMstock(oil,month++1) =e= RMstock(oil,month) + RMpur(oil,month) - RMused(oil,month)*D(oil,month) ;
 
-matbalance(month).. product(month) =e= sum(oil, RMused(oil,month));
+matbalance(month).. product(month) =e= sum(oil, RMused(oil,month)*D(oil,month));
 
-hardnessup(month).. sum(oil,RMused(oil,month)*hardness(oil)) - 6*product(month) =l=0 ;
+hardnessup(month).. sum(oil,D(oil,month)*RMused(oil,month)*hardness(oil)) - 6*product(month) =l=0 ;
 
-hardnesslow(month).. sum(oil,RMused(oil,month)*hardness(oil)) - 3*product(month) =g=0 ;
+hardnesslow(month).. sum(oil,D(oil,month)*RMused(oil,month)*hardness(oil)) - 3*product(month) =g=0 ;
 
-refiningLimVeg(month).. sum(oil$veg(oil), RMused(oil,month)) =l= RefineLimVeg ;
+refiningLimVeg(month).. sum(oil$veg(oil), D(oil,month)*RMused(oil,month)) =l= RefineLimVeg ;
 
-refiningLimNVeg(month).. sum(oil$nonveg(oil), RMused(oil,month)) =l= RefineLimNVeg ;
+refiningLimNVeg(month).. sum(oil$nonveg(oil), D(oil,month)* RMused(oil,month)) =l= RefineLimNVeg ;
 
 profitcalc.. profit =e= sum(month,product(month)*sellprice) - sum((oil,month), RMpur(oil,month)*price(month,oil)) - sum((oil,month),RMstock(oil,month)*storecost);
 
 
 model food1 /all/;
-*option limrow=100
-solve food1 using LP maximizing profit;
+option limrow=100
+solve food1 using MINLP maximizing profit;
 
    
         
