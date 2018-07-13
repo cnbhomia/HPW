@@ -1,4 +1,4 @@
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/12/18 19:11:08 Page 1
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 11:43:22 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -104,7 +104,7 @@ C o m p i l a t i o n
 
 
 COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/12/18 19:11:08 Page 2
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 11:43:22 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE eqchk Using LP From line 98
 
@@ -280,7 +280,7 @@ objfunc..  - 10*produced(p1,Jan) - 10*produced(p1,Feb) - 10*produced(p1,Mar) - 1
      
       + 0.5*storage(p6,Jun) + 0.5*storage(p7,Jan) + 0.5*storage(p7,Feb) + 0.5*storage(p7,Mar) + 0.5*storage(p7,Apr) + 0.5*storage(p7,May) + 0.5*storage(p7,Jun) + profit =E= 0 ; (LHS = 175, INFES = 175 ****)
      
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/12/18 19:11:08 Page 3
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 11:43:22 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE eqchk Using LP From line 98
 
@@ -360,7 +360,7 @@ profit
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       objfunc
 
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/12/18 19:11:08 Page 4
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 11:43:22 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE eqchk Using LP From line 98
 
@@ -372,11 +372,11 @@ BLOCKS OF VARIABLES           4     SINGLE VARIABLES          127
 NON ZERO ELEMENTS           366
 
 
-GENERATION TIME      =        0.000 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
+GENERATION TIME      =        0.016 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
 
 
-EXECUTION TIME       =        0.000 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/12/18 19:11:08 Page 5
+EXECUTION TIME       =        0.016 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 11:43:22 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE eqchk Using LP From line 98
 
@@ -391,7 +391,7 @@ Solution Report     SOLVE eqchk Using LP From line 98
 **** MODEL STATUS      1 Optimal                   
 **** OBJECTIVE VALUE           114196.4286
 
- RESOURCE USAGE, LIMIT          0.000      1000.000
+ RESOURCE USAGE, LIMIT          0.015      1000.000
  ITERATION COUNT, LIMIT        45    2000000000
 
 IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
@@ -645,7 +645,7 @@ p7.Jun        50.0000        50.0000        50.0000         2.0000
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/12/18 19:11:08 Page 6
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 11:43:22 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 

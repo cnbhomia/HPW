@@ -70,9 +70,9 @@ equations
 
     profitcalc 'profit equation'
     threeoil(month) 'limit of three oils each month'
-*    combo1(month) 'select oil 3 if veg 1 is used'
-*    combo2(month)  'select oil 3 if veg 2 is used'
-    combo3(month) 'select oil3 if veg1 or veg2'
+    combo1(month) 'select oil 3 if veg 1 is used'
+    combo2(month)  'select oil 3 if veg 2 is used'
+*    combo3(month) 'select oil3 if veg1 or veg2'
     minuse(oil,month)
     ;
 
@@ -97,11 +97,11 @@ profitcalc.. profit =e= sum(month,product(month)*sellprice) - sum((oil,month), R
 
 threeoil(month).. sum(oil,D(oil,month)) =l= 3;
 
-*combo1(month).. D('veg1',month) - D('oil3',month) =l= 0;
+combo1(month).. D('veg1',month) - D('oil3',month) =l= 0;
 
-*combo2(month).. D('veg2',month) - D('oil3',month) =l= 0;
+combo2(month).. D('veg2',month) - D('oil3',month) =l= 0;
 
-combo3(month).. D('veg1',month) + D('veg2',month) -2* D('oil3',month) =l= 0;
+*combo3(month).. D('veg1',month) + D('veg2',month) -2* D('oil3',month) =l= 0;
 
 minuse(oil,month).. RMused(oil,month) - 20*D(oil,month) =g= 0;
 
@@ -109,7 +109,7 @@ minuse(oil,month).. RMused(oil,month) - 20*D(oil,month) =g= 0;
 model food1 /all/;
 *option MIP=BARON;
 option limrow=100
-solve food1 using MIP maximizing profit;
+solve food1 using RMIP maximizing profit;
 
    
         

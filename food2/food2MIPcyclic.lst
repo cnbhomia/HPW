@@ -1,4 +1,4 @@
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 11:25:54 Page 1
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 12:05:13 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -73,9 +73,9 @@ C o m p i l a t i o n
   70   
   71      profitcalc 'profit equation'
   72      threeoil(month) 'limit of three oils each month'
-  73  *    combo1(month) 'select oil 3 if veg 1 is used'
-  74  *    combo2(month)  'select oil 3 if veg 2 is used'
-  75      combo3(month) 'select oil3 if veg1 or veg2'
+  73      combo1(month) 'select oil 3 if veg 1 is used'
+  74      combo2(month)  'select oil 3 if veg 2 is used'
+  75  *    combo3(month) 'select oil3 if veg1 or veg2'
   76      minuse(oil,month)
   77      ;
   78   
@@ -100,11 +100,11 @@ C o m p i l a t i o n
   97   
   98  threeoil(month).. sum(oil,D(oil,month)) =l= 3;
   99   
- 100  *combo1(month).. D('veg1',month) - D('oil3',month) =l= 0;
+ 100  combo1(month).. D('veg1',month) - D('oil3',month) =l= 0;
  101   
- 102  *combo2(month).. D('veg2',month) - D('oil3',month) =l= 0;
+ 102  combo2(month).. D('veg2',month) - D('oil3',month) =l= 0;
  103   
- 104  combo3(month).. D('veg1',month) + D('veg2',month) -2* D('oil3',month) =l= 0;
+ 104  *combo3(month).. D('veg1',month) + D('veg2',month) -2* D('oil3',month) =l= 0;
  105   
  106  minuse(oil,month).. RMused(oil,month) - 20*D(oil,month) =g= 0;
  107   
@@ -112,16 +112,16 @@ C o m p i l a t i o n
  109  model food1 /all/;
  110  *option MIP=BARON;
  111  option limrow=100
- 112  solve food1 using MIP maximizing profit;
+ 112  solve food1 using RMIP maximizing profit;
  113   
  114   
  115   
 
 
-COMPILATION TIME     =        0.001 SECONDS      3 MB  25.1.1 r66732 DEX-DEG
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 11:25:54 Page 2
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 12:05:13 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE food1 Using MIP From line 112
+Equation Listing    SOLVE food1 Using RMIP From line 112
 
 
 ---- stockcalc  =E=  stock calculation
@@ -360,19 +360,34 @@ threeoil(May)..  D(veg1,May) + D(veg2,May) + D(oil1,May) + D(oil2,May) + D(oil3,
 threeoil(June)..  D(veg1,June) + D(veg2,June) + D(oil1,June) + D(oil2,June) + D(oil3,June) =L= 3 ; (LHS = 5, INFES = 2 ****)
      
 
----- combo3  =L=  select oil3 if veg1 or veg2
+---- combo1  =L=  select oil 3 if veg 1 is used
 
-combo3(Jan)..  D(veg1,Jan) + D(veg2,Jan) - 2*D(oil3,Jan) =L= 0 ; (LHS = 0)
+combo1(Jan)..  D(veg1,Jan) - D(oil3,Jan) =L= 0 ; (LHS = 0)
      
-combo3(Feb)..  D(veg1,Feb) + D(veg2,Feb) - 2*D(oil3,Feb) =L= 0 ; (LHS = 0)
+combo1(Feb)..  D(veg1,Feb) - D(oil3,Feb) =L= 0 ; (LHS = 0)
      
-combo3(Mar)..  D(veg1,Mar) + D(veg2,Mar) - 2*D(oil3,Mar) =L= 0 ; (LHS = 0)
+combo1(Mar)..  D(veg1,Mar) - D(oil3,Mar) =L= 0 ; (LHS = 0)
      
-combo3(Apr)..  D(veg1,Apr) + D(veg2,Apr) - 2*D(oil3,Apr) =L= 0 ; (LHS = 0)
+combo1(Apr)..  D(veg1,Apr) - D(oil3,Apr) =L= 0 ; (LHS = 0)
      
-combo3(May)..  D(veg1,May) + D(veg2,May) - 2*D(oil3,May) =L= 0 ; (LHS = 0)
+combo1(May)..  D(veg1,May) - D(oil3,May) =L= 0 ; (LHS = 0)
      
-combo3(June)..  D(veg1,June) + D(veg2,June) - 2*D(oil3,June) =L= 0 ; (LHS = 0)
+combo1(June)..  D(veg1,June) - D(oil3,June) =L= 0 ; (LHS = 0)
+     
+
+---- combo2  =L=  select oil 3 if veg 2 is used
+
+combo2(Jan)..  D(veg2,Jan) - D(oil3,Jan) =L= 0 ; (LHS = 0)
+     
+combo2(Feb)..  D(veg2,Feb) - D(oil3,Feb) =L= 0 ; (LHS = 0)
+     
+combo2(Mar)..  D(veg2,Mar) - D(oil3,Mar) =L= 0 ; (LHS = 0)
+     
+combo2(Apr)..  D(veg2,Apr) - D(oil3,Apr) =L= 0 ; (LHS = 0)
+     
+combo2(May)..  D(veg2,May) - D(oil3,May) =L= 0 ; (LHS = 0)
+     
+combo2(June)..  D(veg2,June) - D(oil3,June) =L= 0 ; (LHS = 0)
      
 
 ---- minuse  =G=  
@@ -437,9 +452,9 @@ minuse(oil3,May)..  RMused(oil3,May) - 20*D(oil3,May) =G= 0 ; (LHS = -20, INFES 
      
 minuse(oil3,June)..  RMused(oil3,June) - 20*D(oil3,June) =G= 0 ; (LHS = -20, INFES = 20 ****)
      
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 11:25:54 Page 3
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 12:05:13 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE food1 Using MIP From line 112
+Column Listing      SOLVE food1 Using RMIP From line 112
 
 
 ---- RMpur   amount of oil purchased each month
@@ -555,100 +570,91 @@ D(veg1,Jan)
                 (.LO, .L, .UP, .M = 0, 1, 1, 0)
      -200       indirefiningLimVeg(veg1,Jan)
         1       threeoil(Jan)
-        1       combo3(Jan)
+        1       combo1(Jan)
       -20       minuse(veg1,Jan)
 
 D(veg1,Feb)
                 (.LO, .L, .UP, .M = 0, 1, 1, 0)
      -200       indirefiningLimVeg(veg1,Feb)
         1       threeoil(Feb)
-        1       combo3(Feb)
+        1       combo1(Feb)
       -20       minuse(veg1,Feb)
 
 D(veg1,Mar)
                 (.LO, .L, .UP, .M = 0, 1, 1, 0)
      -200       indirefiningLimVeg(veg1,Mar)
         1       threeoil(Mar)
-        1       combo3(Mar)
+        1       combo1(Mar)
       -20       minuse(veg1,Mar)
 
 REMAINING 27 ENTRIES SKIPPED
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 11:25:54 Page 4
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 12:05:13 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE food1 Using MIP From line 112
+Model Statistics    SOLVE food1 Using RMIP From line 112
 
 
 MODEL STATISTICS
 
-BLOCKS OF EQUATIONS          12     SINGLE EQUATIONS          133
+BLOCKS OF EQUATIONS          13     SINGLE EQUATIONS          139
 BLOCKS OF VARIABLES           6     SINGLE VARIABLES          127
-NON ZERO ELEMENTS           493     DISCRETE VARIABLES         30
+NON ZERO ELEMENTS           499     DISCRETE VARIABLES         30
 
 
-GENERATION TIME      =        0.006 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
+GENERATION TIME      =        0.016 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
 
 
-EXECUTION TIME       =        0.006 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 11:25:54 Page 5
+EXECUTION TIME       =        0.016 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 12:05:13 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE food1 Using MIP From line 112
+Solution Report     SOLVE food1 Using RMIP From line 112
 
 
                S O L V E      S U M M A R Y
 
      MODEL   food1               OBJECTIVE  profit
-     TYPE    MIP                 DIRECTION  MAXIMIZE
+     TYPE    RMIP                DIRECTION  MAXIMIZE
      SOLVER  CPLEX               FROM LINE  112
 
 **** SOLVER STATUS     1 Normal Completion         
-**** MODEL STATUS      8 Integer Solution          
-**** OBJECTIVE VALUE            96175.0000
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE           107332.7338
 
- RESOURCE USAGE, LIMIT          0.013      1000.000
- ITERATION COUNT, LIMIT       133    2000000000
+ RESOURCE USAGE, LIMIT          0.016      1000.000
+ ITERATION COUNT, LIMIT        76    2000000000
 
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
 Cplex 12.8.0.0
 
 Space for names approximately 0.01 Mb
 Use option 'names no' to turn use of names off
-MIP status(102): integer optimal, tolerance
-Cplex Time: 0.01sec (det. 2.82 ticks)
-Fixing integer variables, and solving final LP...
-Fixed MIP status(1): optimal
-Cplex Time: 0.00sec (det. 0.22 ticks)
-Solution satisfies tolerances.
-
-MIP Solution:        96175.000000    (94 iterations, 0 nodes)
-Final Solve:         96175.000000    (39 iterations)
-
-Best possible:      105774.511278
-Absolute gap:         9599.511278
-Relative gap:            0.090754
+LP status(1): optimal
+Cplex Time: 0.00sec (det. 0.45 ticks)
+Optimal solution found.
+Objective :      107332.733813
 
 
 ---- EQU stockcalc  stock calculation
 
                  LOWER          LEVEL          UPPER         MARGINAL
 
-veg1.Jan           .              .              .            75.0000      
-veg1.Feb           .              .              .            80.0000      
-veg1.Mar           .              .              .            85.0000      
-veg1.Apr           .              .              .            90.0000      
-veg1.May           .              .              .            95.0000      
+veg1.Jan           .              .              .            80.0000      
+veg1.Feb           .              .              .            85.0000      
+veg1.Mar           .              .              .            90.0000      
+veg1.Apr           .              .              .            95.0000      
+veg1.May           .              .              .           100.0000      
 veg1.June          .              .              .            90.0000      
-veg2.Jan           .              .              .            75.0000      
-veg2.Feb           .              .              .            80.0000      
-veg2.Mar           .              .              .            85.0000      
-veg2.Apr           .              .              .            90.0000      
-veg2.May           .              .              .            95.0000      
+veg2.Jan           .              .              .            80.0000      
+veg2.Feb           .              .              .            85.0000      
+veg2.Mar           .              .              .            90.0000      
+veg2.Apr           .              .              .            95.0000      
+veg2.May           .              .              .           100.0000      
 veg2.June          .              .              .           100.0000      
-oil1.Jan           .              .              .            -5.0000      
-oil1.Feb           .              .              .              .          
-oil1.Mar           .              .              .             5.0000      
-oil1.Apr           .              .              .            10.0000      
-oil1.May           .              .              .            15.0000      
-oil1.June          .              .              .            20.0000      
+oil1.Jan           .              .              .            85.0000      
+oil1.Feb           .              .              .            90.0000      
+oil1.Mar           .              .              .            95.0000      
+oil1.Apr           .              .              .           100.0000      
+oil1.May           .              .              .           105.0000      
+oil1.June          .              .              .           110.0000      
 oil2.Jan           .              .              .            85.0000      
 oil2.Feb           .              .              .            90.0000      
 oil2.Mar           .              .              .            95.0000      
@@ -666,96 +672,96 @@ oil3.June          .              .              .           110.0000
 
             LOWER          LEVEL          UPPER         MARGINAL
 
-Jan           .              .              .           310.7143      
+Jan           .              .              .           150.0000      
 Feb           .              .              .           150.0000      
-Mar           .              .              .           289.2857      
+Mar           .              .              .           150.0000      
 Apr           .              .              .           150.0000      
-May           .              .              .           267.8571      
-June          .              .              .           278.5714      
+May           .              .              .           150.0000      
+June          .              .              .           165.1079      
 
 ---- EQU hardnessup   hardness less than 6
 
             LOWER          LEVEL          UPPER         MARGINAL
 
-Jan         -INF             .              .            26.7857      
-Feb         -INF         -246.0000          .              .          
-Mar         -INF             .              .            23.2143      
-Apr         -INF         -135.5000          .              .          
-May         -INF             .              .            19.6429      
-June        -INF             .              .            21.4286      
+Jan         -INF             .              .       3.552714E-15      
+Feb         -INF         -414.0000          .              .          
+Mar         -INF             .              .             EPS         
+Apr         -INF         -176.5036          .              .          
+May         -INF         -152.0000          .              .          
+June        -INF             .              .             2.5180      
 
 ---- EQU hardnesslow   hardness more than 3
 
             LOWER          LEVEL          UPPER         MARGINAL
 
-Jan           .          1215.0000        +INF             .          
-Feb           .          1104.0000        +INF             .          
-Mar           .          1215.0000        +INF             .          
-Apr           .          1214.5000        +INF             .          
-May           .          1215.0000        +INF             .          
-June          .          1215.0000        +INF             .          
+Jan           .          1350.0000        +INF             .          
+Feb           .           936.0000        +INF             .          
+Mar           .          1350.0000        +INF             .          
+Apr           .          1173.4964        +INF             .          
+May           .          1198.0000        +INF             .          
+June          .          1350.0000        +INF             .          
 
 ---- EQU indirefiningLimVeg  refining limit of each month for veg oil
 
                  LOWER          LEVEL          UPPER         MARGINAL
 
-veg1.Jan         -INF          -45.0000          .              .          
-veg1.Feb         -INF             .              .            70.0000      
-veg1.Mar         -INF          -45.0000          .              .          
-veg1.Apr         -INF         -165.0000          .              .          
-veg1.May         -INF          -45.0000          .              .          
-veg1.June        -INF          -45.0000          .              .          
-veg2.Jan         -INF             .              .            72.3214      
-veg2.Feb         -INF             .              .            70.0000      
-veg2.Mar         -INF             .              .            62.6786      
-veg2.Apr         -INF          -35.0000          .              .          
-veg2.May         -INF             .              .            53.0357      
-veg2.June        -INF             .              .            47.8571      
+veg1.Jan         -INF             .              .             EPS         
+veg1.Feb         -INF             .              .             EPS         
+veg1.Mar         -INF             .              .             EPS         
+veg1.Apr         -INF             .              .             EPS         
+veg1.May         -INF             .              .             EPS         
+veg1.June        -INF             .              .             3.2014      
+veg2.Jan         -INF             .              .             EPS         
+veg2.Feb         -INF             .              .             EPS         
+veg2.Mar         -INF             .              .             EPS         
+veg2.Apr         -INF             .              .             EPS         
+veg2.May         -INF             .              .             EPS         
+veg2.June        -INF             .              .             EPS         
 
 ---- EQU indirefiningLimNVeg  refining limit of each month for nonveg oil
 
                  LOWER          LEVEL          UPPER         MARGINAL
 
-oil1.Jan         -INF             .              .           148.9286      
-oil1.Feb         -INF             .              .            90.0000      
-oil1.Mar         -INF             .              .           141.0714      
-oil1.Apr         -INF             .              .           140.0000      
-oil1.May         -INF             .              .           133.2143      
-oil1.June        -INF             .              .           107.1429      
-oil2.Jan         -INF          -20.0000          .              .          
-oil2.Feb         -INF         -230.0000          .              .          
-oil2.Mar         -INF          -20.0000          .              .          
-oil2.Apr         -INF             .              .            50.0000      
-oil2.May         -INF          -20.0000          .              .          
-oil2.June        -INF          -20.0000          .              .          
-oil3.Jan         -INF         -230.0000          .              .          
-oil3.Feb         -INF          -20.0000          .              .          
-oil3.Mar         -INF         -230.0000          .              .          
-oil3.Apr         -INF             .              .            50.0000      
-oil3.May         -INF         -230.0000          .              .          
-oil3.June        -INF         -230.0000          .              .          
+oil1.Jan         -INF             .              .             EPS         
+oil1.Feb         -INF             .              .             EPS         
+oil1.Mar         -INF             .              .             EPS         
+oil1.Apr         -INF             .              .             EPS         
+oil1.May         -INF             .              .             EPS         
+oil1.June        -INF             .              .             EPS         
+oil2.Jan         -INF             .              .             EPS         
+oil2.Feb         -INF             .              .             EPS         
+oil2.Mar         -INF             .              .             EPS         
+oil2.Apr         -INF             .              .             EPS         
+oil2.May         -INF             .              .             EPS         
+oil2.June        -INF             .              .             EPS         
+oil3.Jan         -INF         -177.8777          .              .          
+oil3.Feb         -INF         -230.0000          .              .          
+oil3.Mar         -INF         -177.8777          .              .          
+oil3.Apr         -INF         -125.7554          .              .          
+oil3.May         -INF         -115.0000          .              .          
+oil3.June        -INF         -177.8777          .              .          
 
 ---- EQU refiningLimVeg  refining limit of each month for veg oil
 
             LOWER          LEVEL          UPPER         MARGINAL
 
-Jan         -INF          155.0000       200.0000          .          
-Feb         -INF          200.0000       200.0000          .          
-Mar         -INF          155.0000       200.0000          .          
-Apr         -INF          200.0000       200.0000        60.0000      
-May         -INF          155.0000       200.0000          .          
-June        -INF          155.0000       200.0000          .          
+Jan         -INF          200.0000       200.0000        70.0000      
+Feb         -INF          200.0000       200.0000        65.0000      
+Mar         -INF          200.0000       200.0000        60.0000      
+Apr         -INF          200.0000       200.0000        55.0000      
+May         -INF          200.0000       200.0000        50.0000      
+June        -INF          200.0000       200.0000        49.7482      
 
 ---- EQU refiningLimNVeg  refining limit of each month for nonveg oil
 
             LOWER          LEVEL          UPPER         MARGINAL
 
-Jan         -INF          250.0000       250.0000       113.2143      
+Jan         -INF          250.0000       250.0000        65.0000      
 Feb         -INF          250.0000       250.0000        60.0000      
-Mar         -INF          250.0000       250.0000        96.7857      
-Apr         -INF          250.0000       250.0000          .          
-May         -INF          250.0000       250.0000        80.3571      
-June        -INF          250.0000       250.0000       108.5714      
+Mar         -INF          250.0000       250.0000        55.0000      
+Apr         -INF          250.0000       250.0000        50.0000      
+May         -INF          250.0000       250.0000        45.0000      
+June        -INF          250.0000       250.0000        74.5324      
 
                            LOWER          LEVEL          UPPER         MARGINAL
 
@@ -767,90 +773,101 @@ June        -INF          250.0000       250.0000       108.5714
 
             LOWER          LEVEL          UPPER         MARGINAL
 
-Jan         -INF            3.0000         3.0000          .          
-Feb         -INF            3.0000         3.0000          .          
-Mar         -INF            3.0000         3.0000          .          
-Apr         -INF            3.0000         3.0000          .          
-May         -INF            3.0000         3.0000          .          
-June        -INF            3.0000         3.0000          .          
+Jan         -INF            2.7115         3.0000          .          
+Feb         -INF            2.9200         3.0000          .          
+Mar         -INF            2.7115         3.0000          .          
+Apr         -INF            2.5030         3.0000          .          
+May         -INF            2.4600         3.0000          .          
+June        -INF            2.7115         3.0000          .          
 
----- EQU combo3  select oil3 if veg1 or veg2
+---- EQU combo1  select oil 3 if veg 1 is used
 
             LOWER          LEVEL          UPPER         MARGINAL
 
-Jan         -INF           -1.0000          .              .          
+Jan         -INF             .              .             EPS         
 Feb         -INF           -1.0000          .              .          
-Mar         -INF           -1.0000          .              .          
-Apr         -INF             .              .              .          
-May         -INF           -1.0000          .              .          
-June        -INF           -1.0000          .              .          
+Mar         -INF             .              .             EPS         
+Apr         -INF           -0.0935          .              .          
+May         -INF             .              .             EPS         
+June        -INF             .              .           640.2878      
+
+---- EQU combo2  select oil 3 if veg 2 is used
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+Jan         -INF           -0.5468          .              .          
+Feb         -INF             .              .             EPS         
+Mar         -INF           -0.5468          .              .          
+Apr         -INF             .              .             EPS         
+May         -INF             .              .             EPS         
+June        -INF           -0.5468          .              .          
 
 ---- EQU minuse  
 
                  LOWER          LEVEL          UPPER         MARGINAL
 
-veg1.Jan           .           135.0000        +INF             .          
+veg1.Jan           .           139.2086        +INF             .          
 veg1.Feb           .              .            +INF             .          
-veg1.Mar           .           135.0000        +INF             .          
-veg1.Apr           .            15.0000        +INF             .          
-veg1.May           .           135.0000        +INF             .          
-veg1.June          .           135.0000        +INF             .          
-veg2.Jan           .              .            +INF             .          
+veg1.Mar           .           139.2086        +INF             .          
+veg1.Apr           .            81.5827        +INF             .          
+veg1.May           .            90.0000        +INF             .          
+veg1.June          .           139.2086        +INF             .          
+veg2.Jan           .            40.7914        +INF             .          
 veg2.Feb           .           180.0000        +INF             .          
-veg2.Mar           .              .            +INF             .          
-veg2.Apr           .           145.0000        +INF             .          
-veg2.May           .              .            +INF             .          
-veg2.June          .              .            +INF             .          
+veg2.Mar           .            40.7914        +INF             .          
+veg2.Apr           .            98.4173        +INF             .          
+veg2.May           .            90.0000        +INF             .          
+veg2.June          .            40.7914        +INF             .          
 oil1.Jan           .              .            +INF             .          
 oil1.Feb           .              .            +INF             .          
 oil1.Mar           .              .            +INF             .          
 oil1.Apr           .              .            +INF             .          
 oil1.May           .              .            +INF             .          
 oil1.June          .              .            +INF             .          
-oil2.Jan           .           210.0000        +INF             .          
-oil2.Feb           .              .            +INF            EPS         
-oil2.Mar           .           210.0000        +INF             .          
-oil2.Apr           .              .            +INF             .          
-oil2.May           .           210.0000        +INF             .          
-oil2.June          .           210.0000        +INF             .          
-oil3.Jan           .              .            +INF          -21.4286      
-oil3.Feb           .           210.0000        +INF             .          
-oil3.Mar           .              .            +INF          -18.5714      
-oil3.Apr           .           230.0000        +INF             .          
-oil3.May           .              .            +INF          -15.7143      
-oil3.June          .              .            +INF          -47.1429      
+oil2.Jan           .           215.7698        +INF             .          
+oil2.Feb           .           211.6000        +INF             .          
+oil2.Mar           .           215.7698        +INF             .          
+oil2.Apr           .           219.9396        +INF             .          
+oil2.May           .           220.8000        +INF             .          
+oil2.June          .           215.7698        +INF             .          
+oil3.Jan           .              .            +INF            EPS         
+oil3.Feb           .              .            +INF            EPS         
+oil3.Mar           .              .            +INF            EPS         
+oil3.Apr           .              .            +INF            EPS         
+oil3.May           .              .            +INF            EPS         
+oil3.June          .              .            +INF          -32.0144      
 
 ---- VAR RMpur   amount of oil purchased each month
 
                  LOWER          LEVEL          UPPER         MARGINAL
 
-veg1.Jan           .              .            +INF          -35.0000      
-veg1.Feb           .              .            +INF          -50.0000      
-veg1.Mar           .              .            +INF          -25.0000      
-veg1.Apr           .              .            +INF          -30.0000      
-veg1.May           .              .            +INF           -5.0000      
-veg1.June          .           655.0000        +INF             .          
-veg2.Jan           .              .            +INF          -45.0000      
-veg2.Feb           .              .            +INF          -50.0000      
-veg2.Mar           .              .            +INF          -55.0000      
-veg2.Apr           .              .            +INF          -20.0000      
-veg2.May           .              .            +INF          -25.0000      
-veg2.June          .           365.0000        +INF             .          
-oil1.Jan           .              .            +INF         -135.0000      
-oil1.Feb           .              .            +INF         -110.0000      
-oil1.Mar           .              .            +INF         -125.0000      
-oil1.Apr           .              .            +INF         -110.0000      
-oil1.May           .              .            +INF         -135.0000      
-oil1.June          .              .            +INF         -120.0000      
+veg1.Jan           .              .            +INF          -30.0000      
+veg1.Feb           .              .            +INF          -45.0000      
+veg1.Mar           .              .            +INF          -20.0000      
+veg1.Apr           .              .            +INF          -25.0000      
+veg1.May           .              .            +INF             .          
+veg1.June          .           654.6763        +INF             .          
+veg2.Jan           .              .            +INF          -40.0000      
+veg2.Feb           .              .            +INF          -45.0000      
+veg2.Mar           .              .            +INF          -50.0000      
+veg2.Apr           .              .            +INF          -15.0000      
+veg2.May           .              .            +INF          -20.0000      
+veg2.June          .           545.3237        +INF             .          
+oil1.Jan           .              .            +INF          -45.0000      
+oil1.Feb           .              .            +INF          -20.0000      
+oil1.Mar           .              .            +INF          -35.0000      
+oil1.Apr           .              .            +INF          -20.0000      
+oil1.May           .              .            +INF          -45.0000      
+oil1.June          .              .            +INF          -30.0000      
 oil2.Jan           .              .            +INF          -25.0000      
-oil2.Feb           .           210.0000        +INF             .          
+oil2.Feb           .           678.1295        +INF             .          
 oil2.Mar           .              .            +INF           -5.0000      
 oil2.Apr           .              .            +INF          -20.0000      
 oil2.May           .              .            +INF           -5.0000      
-oil2.June          .           730.0000        +INF             .          
+oil2.June          .           734.5324        +INF             .          
 oil3.Jan           .              .            +INF          -30.0000      
 oil3.Feb           .              .            +INF          -25.0000      
-oil3.Mar           .           560.0000        +INF             .          
+oil3.Mar           .            87.3381        +INF             .          
 oil3.Apr           .              .            +INF          -25.0000      
 oil3.May           .              .            +INF            EPS         
 oil3.June          .              .            +INF          -25.0000      
@@ -859,53 +876,53 @@ oil3.June          .              .            +INF          -25.0000
 
                  LOWER          LEVEL          UPPER         MARGINAL
 
-veg1.Jan           .           155.0000        +INF             .          
-veg1.Feb           .              .            +INF             .          
-veg1.Mar           .           155.0000        +INF             .          
-veg1.Apr           .            35.0000        +INF             .          
-veg1.May           .           155.0000        +INF             .          
-veg1.June          .           155.0000        +INF             .          
-veg2.Jan           .              .            +INF             .          
+veg1.Jan           .           154.6763        +INF             .          
+veg1.Feb           .              .            +INF            EPS         
+veg1.Mar           .           154.6763        +INF             .          
+veg1.Apr           .            90.6475        +INF             .          
+veg1.May           .           100.0000        +INF             .          
+veg1.June          .           154.6763        +INF             .          
+veg2.Jan           .            45.3237        +INF             .          
 veg2.Feb           .           200.0000        +INF             .          
-veg2.Mar           .              .            +INF             .          
-veg2.Apr           .           165.0000        +INF             .          
-veg2.May           .              .            +INF             .          
-veg2.June          .              .            +INF             .          
+veg2.Mar           .            45.3237        +INF             .          
+veg2.Apr           .           109.3525        +INF             .          
+veg2.May           .           100.0000        +INF             .          
+veg2.June          .            45.3237        +INF             .          
 oil1.Jan           .              .            +INF             .          
-oil1.Feb           .              .            +INF             .          
-oil1.Mar           .              .            +INF             .          
-oil1.Apr           .              .            +INF             .          
-oil1.May           .              .            +INF             .          
-oil1.June          .              .            +INF             .          
-oil2.Jan           .           230.0000        +INF             .          
-oil2.Feb           .            20.0000        +INF             .          
-oil2.Mar           .           230.0000        +INF             .          
-oil2.Apr           .              .            +INF             .          
-oil2.May           .           230.0000        +INF             .          
-oil2.June          .           230.0000        +INF             .          
-oil3.Jan           .            20.0000        +INF             .          
-oil3.Feb           .           230.0000        +INF             .          
-oil3.Mar           .            20.0000        +INF             .          
-oil3.Apr           .           250.0000        +INF             .          
-oil3.May           .            20.0000        +INF             .          
-oil3.June          .            20.0000        +INF             .          
+oil1.Feb           .              .            +INF      -1.42109E-14      
+oil1.Mar           .              .            +INF      -1.42109E-14      
+oil1.Apr           .              .            +INF      -1.42109E-14      
+oil1.May           .              .            +INF      -1.42109E-14      
+oil1.June          .              .            +INF          -24.4604      
+oil2.Jan           .           234.5324        +INF             .          
+oil2.Feb           .           230.0000        +INF             .          
+oil2.Mar           .           234.5324        +INF             .          
+oil2.Apr           .           239.0647        +INF             .          
+oil2.May           .           240.0000        +INF             .          
+oil2.June          .           234.5324        +INF             .          
+oil3.Jan           .            15.4676        +INF             .          
+oil3.Feb           .            20.0000        +INF             .          
+oil3.Mar           .            15.4676        +INF             .          
+oil3.Apr           .            10.9353        +INF             .          
+oil3.May           .            10.0000        +INF             .          
+oil3.June          .            15.4676        +INF             .          
 
 ---- VAR RMstock  amount of oil in stock at the begining of each month
 
                  LOWER          LEVEL          UPPER         MARGINAL
 
-veg1.Jan        500.0000       500.0000      1000.0000       -20.0000      
-veg1.Feb           .           345.0000      1000.0000          .          
-veg1.Mar           .           345.0000      1000.0000          .          
-veg1.Apr           .           190.0000      1000.0000          .          
-veg1.May           .           155.0000      1000.0000          .          
-veg1.June          .              .          1000.0000       -10.0000      
-veg2.Jan        500.0000       500.0000      1000.0000       -30.0000      
-veg2.Feb           .           500.0000      1000.0000          .          
-veg2.Mar           .           300.0000      1000.0000          .          
-veg2.Apr           .           300.0000      1000.0000          .          
-veg2.May           .           135.0000      1000.0000          .          
-veg2.June          .           135.0000      1000.0000          .          
+veg1.Jan        500.0000       500.0000      1000.0000       -15.0000      
+veg1.Feb           .           345.3237      1000.0000          .          
+veg1.Mar           .           345.3237      1000.0000          .          
+veg1.Apr           .           190.6475      1000.0000          .          
+veg1.May           .           100.0000      1000.0000          .          
+veg1.June          .              .          1000.0000       -15.0000      
+veg2.Jan        500.0000       500.0000      1000.0000       -25.0000      
+veg2.Feb           .           454.6763      1000.0000          .          
+veg2.Mar           .           254.6763      1000.0000          .          
+veg2.Apr           .           209.3525      1000.0000          .          
+veg2.May           .           100.0000      1000.0000          .          
+veg2.June          .              .          1000.0000        -5.0000      
 oil1.Jan        500.0000       500.0000      1000.0000       -30.0000      
 oil1.Feb           .           500.0000      1000.0000          .          
 oil1.Mar           .           500.0000      1000.0000          .          
@@ -913,32 +930,32 @@ oil1.Apr           .           500.0000      1000.0000          .
 oil1.May           .           500.0000      1000.0000          .          
 oil1.June          .           500.0000      1000.0000          .          
 oil2.Jan        500.0000       500.0000      1000.0000         EPS         
-oil2.Feb           .           270.0000      1000.0000          .          
-oil2.Mar           .           460.0000      1000.0000          .          
-oil2.Apr           .           230.0000      1000.0000          .          
-oil2.May           .           230.0000      1000.0000          .          
+oil2.Feb           .           265.4676      1000.0000          .          
+oil2.Mar           .           713.5971      1000.0000          .          
+oil2.Apr           .           479.0647      1000.0000          .          
+oil2.May           .           240.0000      1000.0000          .          
 oil2.June          .              .          1000.0000       -30.0000      
 oil3.Jan        500.0000       500.0000      1000.0000       -30.0000      
-oil3.Feb           .           480.0000      1000.0000          .          
-oil3.Mar           .           250.0000      1000.0000          .          
-oil3.Apr           .           790.0000      1000.0000          .          
-oil3.May           .           540.0000      1000.0000          .          
-oil3.June          .           520.0000      1000.0000          .          
+oil3.Feb           .           484.5324      1000.0000          .          
+oil3.Mar           .           464.5324      1000.0000          .          
+oil3.Apr           .           536.4029      1000.0000          .          
+oil3.May           .           525.4676      1000.0000          .          
+oil3.June          .           515.4676      1000.0000          .          
 
 ---- VAR product  amount of final product each month
 
             LOWER          LEVEL          UPPER         MARGINAL
 
-Jan           .           405.0000        +INF             .          
+Jan           .           450.0000        +INF             .          
 Feb           .           450.0000        +INF             .          
-Mar           .           405.0000        +INF             .          
+Mar           .           450.0000        +INF             .          
 Apr           .           450.0000        +INF             .          
-May           .           405.0000        +INF             .          
-June          .           405.0000        +INF             .          
+May           .           450.0000        +INF             .          
+June          .           450.0000        +INF             .          
 
                            LOWER          LEVEL          UPPER         MARGINAL
 
----- VAR profit            -INF        96175.0000        +INF             .          
+---- VAR profit            -INF       107332.7338        +INF             .          
 
   profit  profit overall
 
@@ -946,36 +963,36 @@ June          .           405.0000        +INF             .
 
                  LOWER          LEVEL          UPPER         MARGINAL
 
-veg1.Jan           .             1.0000         1.0000         EPS         
-veg1.Feb           .              .             1.0000     14000.0000      
-veg1.Mar           .             1.0000         1.0000         EPS         
-veg1.Apr           .             1.0000         1.0000         EPS         
-veg1.May           .             1.0000         1.0000         EPS         
-veg1.June          .             1.0000         1.0000         EPS         
-veg2.Jan           .              .             1.0000     14464.2857      
-veg2.Feb           .             1.0000         1.0000     14000.0000      
-veg2.Mar           .              .             1.0000     12535.7143      
-veg2.Apr           .             1.0000         1.0000         EPS         
-veg2.May           .              .             1.0000     10607.1429      
-veg2.June          .              .             1.0000      9571.4286      
-oil1.Jan           .              .             1.0000     37232.1429      
-oil1.Feb           .              .             1.0000     22500.0000      
-oil1.Mar           .              .             1.0000     35267.8571      
-oil1.Apr           .              .             1.0000     35000.0000      
-oil1.May           .              .             1.0000     33303.5714      
-oil1.June          .              .             1.0000     26785.7143      
-oil2.Jan           .             1.0000         1.0000         EPS         
-oil2.Feb           .             1.0000         1.0000         EPS         
-oil2.Mar           .             1.0000         1.0000         EPS         
-oil2.Apr           .              .             1.0000     12500.0000      
-oil2.May           .             1.0000         1.0000         EPS         
-oil2.June          .             1.0000         1.0000         EPS         
-oil3.Jan           .             1.0000         1.0000      -428.5714      
-oil3.Feb           .             1.0000         1.0000         EPS         
-oil3.Mar           .             1.0000         1.0000      -371.4286      
-oil3.Apr           .             1.0000         1.0000     12500.0000      
-oil3.May           .             1.0000         1.0000      -314.2857      
-oil3.June          .             1.0000         1.0000      -942.8571      
+veg1.Jan           .             0.7734         1.0000          .          
+veg1.Feb           .              .             1.0000          .          
+veg1.Mar           .             0.7734         1.0000          .          
+veg1.Apr           .             0.4532         1.0000          .          
+veg1.May           .             0.5000         1.0000          .          
+veg1.June          .             0.7734         1.0000          .          
+veg2.Jan           .             0.2266         1.0000          .          
+veg2.Feb           .             1.0000         1.0000          .          
+veg2.Mar           .             0.2266         1.0000          .          
+veg2.Apr           .             0.5468         1.0000          .          
+veg2.May           .             0.5000         1.0000          .          
+veg2.June          .             0.2266         1.0000          .          
+oil1.Jan           .              .             1.0000          .          
+oil1.Feb           .              .             1.0000          .          
+oil1.Mar           .              .             1.0000          .          
+oil1.Apr           .              .             1.0000          .          
+oil1.May           .              .             1.0000          .          
+oil1.June          .              .             1.0000          .          
+oil2.Jan           .             0.9381         1.0000          .          
+oil2.Feb           .             0.9200         1.0000          .          
+oil2.Mar           .             0.9381         1.0000          .          
+oil2.Apr           .             0.9563         1.0000          .          
+oil2.May           .             0.9600         1.0000          .          
+oil2.June          .             0.9381         1.0000          .          
+oil3.Jan           .             0.7734         1.0000          .          
+oil3.Feb           .             1.0000         1.0000          .          
+oil3.Mar           .             0.7734         1.0000          .          
+oil3.Apr           .             0.5468         1.0000          .          
+oil3.May           .             0.5000         1.0000          .          
+oil3.June          .             0.7734         1.0000          .          
 
 
 **** REPORT SUMMARY :        0     NONOPT
@@ -983,7 +1000,7 @@ oil3.June          .             1.0000         1.0000      -942.8571
                              0  UNBOUNDED
 
 
-EXECUTION TIME       =        0.003 SECONDS      2 MB  25.1.1 r66732 DEX-DEG
+EXECUTION TIME       =        0.000 SECONDS      2 MB  25.1.1 r66732 WEX-WEI
 
 
 USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
@@ -992,5 +1009,5 @@ USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
 
 **** FILE SUMMARY
 
-Input      /Users/cbhomia/Documents/GitHub/HPW/food2/food2MIPcyclic.gms
-Output     /Users/cbhomia/Documents/GitHub/HPW/food2/food2MIPcyclic.lst
+Input      C:\Users\cnbho\Documents\GitHub\HPW\food2\food2MIPcyclic.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\food2\food2MIPcyclic.lst

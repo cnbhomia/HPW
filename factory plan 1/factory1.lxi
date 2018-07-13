@@ -1,2 +1,24 @@
 B 2 C o m p i l a t i o n
-B 188 E x e c u t i o n
+B 108 Equation Listing    SOLVE eqchk Using LP From line 98
+D 109 machrslimit
+D 173 stock
+D 246 stockjan
+D 263 objfunc
+B 284 Column Listing      SOLVE eqchk Using LP From line 98
+E 285 produced
+E 317 prodsold
+E 333 storage
+E 355 profit
+B 364 Model Statistics    SOLVE eqchk Using LP From line 98
+B 380 Solution Report     SOLVE eqchk Using LP From line 98
+F 411 machrslimit
+F 446 stock
+F 486 stockjan
+F 496 objfunc
+G 497 produced
+G 544 prodsold
+G 591 storage
+G 638 profit
+B 649 E x e c u t i o n
+I 650 storage
+I 665 profit
