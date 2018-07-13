@@ -48,9 +48,6 @@ integer variable
     D(oil,month)
     ;
 
-
-
-
 *fixing stocks
 RMstock.fx(oil,'Jan') = 500;
 RMstock.up(oil,month) = 1000;
@@ -109,7 +106,7 @@ minuse(oil,month).. RMused(oil,month) - 20*D(oil,month) =g= 0;
 model food1 /all/;
 option MIP=BARON;
 option limrow=100
-solve food1 using RMIP maximizing profit;
+solve food1 using MIP maximizing profit;
 
    
         
