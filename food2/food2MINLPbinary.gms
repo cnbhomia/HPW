@@ -40,18 +40,26 @@ positive variables
     RMstock(oil,month) 'amount of oil in stock at the begining of each month'
     product(month) 'amount of final product each month'
     ;
-    
-binary variable
-    D(oil,month)  'D to process a given oil of oil' 
-    ;
-
 variable
     profit 'profit overall'
     ;
+
+binary variable
+    D(oil,month)
+    ;
+
+
+
+
 *fixing stocks
 RMstock.fx(oil,'Jan') = 500;
 RMstock.up(oil,month) = 1000;
-
+$ontext
+D.lo(oil,month) = 0 ;
+D.up(oil,month) = 1 ;
+$offtext
+D.l(oil,month) = 0.5;
+RMused.lo(oil,month) $D.l(oil,month) = 20;
 
 equations
     stockcalc(oil,month) 'stock calculation'
@@ -61,31 +69,26 @@ equations
     refiningLimVeg(month) 'refining limit of each month for veg oil'
     refiningLimNVeg(month) 'refining limit of each month for nonveg oil'
     profitcalc 'profit equation'
-    threeoils 'constraints of no more than 3 oils'
-*8    minuse(oil,month) 'minimum amount to be used 20 tonn'
-*    combination(oil,month)
+    threeoil(month) 'limit of three oils each month'
+    combo1(month)
+    combo2(month)
     ;
 
+threeoil(month).. sum(oil,D(oil,month)) =l= 3;
 
-logic equations
-    combo(oil,month) 'combination of veg1,veg2, oil3'
-    ;
-    
-combo(oil,month).. D('veg1',month) or D('veg2',month) -> D('oil3',month) ;
+combo1(month).. D('veg1',month) - D('oil3',month) =l= 1;
 
-
-
-*initalization and nounds
+combo2(month).. D('veg2',month) - D('oil3',month) =l= 1;
 
 
 
-stockcalc(oil,month).. RMstock(oil,month++1) =e= RMstock(oil,month) + RMpur(oil,month) - D(oil,month)*RMused(oil,month) ;
+stockcalc(oil,month).. RMstock(oil,month++1) =e= RMstock(oil,month) + RMpur(oil,month) - RMused(oil,month)*D(oil,month) ;
 
 matbalance(month).. product(month) =e= sum(oil, RMused(oil,month)*D(oil,month));
 
-hardnessup(month).. sum(oil,RMused(oil,month)*D(oil,month)*hardness(oil)) - 6*product(month) =l=0 ;
+hardnessup(month).. sum(oil,D(oil,month)*RMused(oil,month)*hardness(oil)) - 6*product(month) =l=0 ;
 
-hardnesslow(month).. sum(oil,RMused(oil,month)*D(oil,month)*hardness(oil)) - 3*product(month) =g=0 ;
+hardnesslow(month).. sum(oil,D(oil,month)*RMused(oil,month)*hardness(oil)) - 3*product(month) =g=0 ;
 
 refiningLimVeg(month).. sum(oil$veg(oil), D(oil,month)*RMused(oil,month)) =l= RefineLimVeg ;
 
@@ -93,17 +96,17 @@ refiningLimNVeg(month).. sum(oil$nonveg(oil), D(oil,month)* RMused(oil,month)) =
 
 profitcalc.. profit =e= sum(month,product(month)*sellprice) - sum((oil,month), RMpur(oil,month)*price(month,oil)) - sum((oil,month),RMstock(oil,month)*storecost);
 
-threeoils.. sum((oil,month), D(oil,month)) =l= 3;
-
-*RMused.lo(oil,month) =20 $ (D.l(oil,month));
-*minuse(oil,month).. RMused(oil,month) =g= 20;
-*minuse(oil,month).. RMused(oil,month)*D(oil,month) =g= 20 ;
-
-*combination(oil,month).. D('veg1',month) + D('veg2',month) -2*D('oil3',month) =l= 0; 
-
 
 model food1 /all/;
 option limrow=100
+*food1.optfile =1 ;
+$onecho >dicopt.opt
+maxcycles = 1000
+mipitermlim = 3000
+nlpiterlim = 3000
+infeasder = 1
+$offecho
+
 solve food1 using MINLP maximizing profit;
 
    

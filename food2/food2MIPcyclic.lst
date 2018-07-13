@@ -1,4 +1,4 @@
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 12:05:13 Page 1
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 14:34:58 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -110,7 +110,7 @@ C o m p i l a t i o n
  107   
  108   
  109  model food1 /all/;
- 110  *option MIP=BARON;
+ 110  option MIP=BARON;
  111  option limrow=100
  112  solve food1 using RMIP maximizing profit;
  113   
@@ -119,7 +119,7 @@ C o m p i l a t i o n
 
 
 COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 12:05:13 Page 2
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 14:34:58 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE food1 Using RMIP From line 112
 
@@ -452,7 +452,7 @@ minuse(oil3,May)..  RMused(oil3,May) - 20*D(oil3,May) =G= 0 ; (LHS = -20, INFES 
      
 minuse(oil3,June)..  RMused(oil3,June) - 20*D(oil3,June) =G= 0 ; (LHS = -20, INFES = 20 ****)
      
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 12:05:13 Page 3
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 14:34:58 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE food1 Using RMIP From line 112
 
@@ -588,7 +588,7 @@ D(veg1,Mar)
       -20       minuse(veg1,Mar)
 
 REMAINING 27 ENTRIES SKIPPED
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 12:05:13 Page 4
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 14:34:58 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE food1 Using RMIP From line 112
 
@@ -600,11 +600,11 @@ BLOCKS OF VARIABLES           6     SINGLE VARIABLES          127
 NON ZERO ELEMENTS           499     DISCRETE VARIABLES         30
 
 
-GENERATION TIME      =        0.016 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
+GENERATION TIME      =        0.000 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
 
 
-EXECUTION TIME       =        0.016 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 12:05:13 Page 5
+EXECUTION TIME       =        0.000 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 14:34:58 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE food1 Using RMIP From line 112
 
@@ -619,7 +619,7 @@ Solution Report     SOLVE food1 Using RMIP From line 112
 **** MODEL STATUS      1 Optimal                   
 **** OBJECTIVE VALUE           107332.7338
 
- RESOURCE USAGE, LIMIT          0.016      1000.000
+ RESOURCE USAGE, LIMIT          0.000      1000.000
  ITERATION COUNT, LIMIT        76    2000000000
 
 IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 

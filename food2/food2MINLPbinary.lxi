@@ -1,0 +1,37 @@
+B 2 C o m p i l a t i o n
+B 113 Equation Listing    SOLVE food1 Using MINLP From line 110
+D 114 stockcalc
+D 178 matbalance
+D 200 hardnessup
+D 222 hardnesslow
+D 249 refiningLimVeg
+D 264 refiningLimNVeg
+D 279 profitcalc
+D 296 threeoil
+D 311 combo1
+D 326 combo2
+B 343 Column Listing      SOLVE food1 Using MINLP From line 110
+E 344 RMpur
+E 364 RMused
+E 395 RMstock
+E 417 product
+E 442 profit
+E 449 D
+B 485 Model Statistics    SOLVE food1 Using MINLP From line 110
+B 503 Solution Report     SOLVE food1 Using MINLP From line 110
+F 1626 stockcalc
+F 1661 matbalance
+F 1672 hardnessup
+F 1683 hardnesslow
+F 1694 refiningLimVeg
+F 1705 refiningLimNVeg
+F 1714 profitcalc
+F 1722 threeoil
+F 1733 combo1
+F 1744 combo2
+G 1750 RMpur
+G 1785 RMused
+G 1820 RMstock
+G 1855 product
+G 1866 profit
+G 1872 D

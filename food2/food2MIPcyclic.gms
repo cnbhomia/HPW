@@ -107,7 +107,7 @@ minuse(oil,month).. RMused(oil,month) - 20*D(oil,month) =g= 0;
 
 
 model food1 /all/;
-*option MIP=BARON;
+option MIP=BARON;
 option limrow=100
 solve food1 using RMIP maximizing profit;
 
