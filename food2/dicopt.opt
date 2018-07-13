@@ -1,4 +1,0 @@
-maxcycles = 1000
-mipitermlim = 3000
-nlpiterlim = 3000
-infeasder = 1
