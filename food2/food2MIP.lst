@@ -1,4 +1,4 @@
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 09:36:46 Page 1
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/13/18 14:35:02 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -121,8 +121,8 @@ C o m p i l a t i o n
  118   
 
 
-COMPILATION TIME     =        0.001 SECONDS      3 MB  25.1.1 r66732 DEX-DEG
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 09:36:46 Page 2
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 DEX-DEG
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/13/18 14:35:02 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE food1 Using MIP From line 115
 
@@ -443,7 +443,7 @@ minuse(oil3,May)..  RMused(oil3,May) - 20*D(oil3,May) =G= 0 ; (LHS = -20, INFES 
      
 minuse(oil3,June)..  RMused(oil3,June) - 20*D(oil3,June) =G= 0 ; (LHS = -20, INFES = 20 ****)
      
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 09:36:46 Page 3
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/13/18 14:35:02 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE food1 Using MIP From line 115
 
@@ -578,7 +578,7 @@ D(veg1,Mar)
       -20       minuse(veg1,Mar)
 
 REMAINING 27 ENTRIES SKIPPED
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 09:36:46 Page 4
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/13/18 14:35:02 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE food1 Using MIP From line 115
 
@@ -590,11 +590,11 @@ BLOCKS OF VARIABLES           6     SINGLE VARIABLES          127
 NON ZERO ELEMENTS           488     DISCRETE VARIABLES         30
 
 
-GENERATION TIME      =        0.006 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
+GENERATION TIME      =        0.007 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
 
 
-EXECUTION TIME       =        0.006 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 09:36:46 Page 5
+EXECUTION TIME       =        0.007 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/13/18 14:35:02 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE food1 Using MIP From line 115
 
