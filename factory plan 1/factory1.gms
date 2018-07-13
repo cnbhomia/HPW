@@ -1,9 +1,12 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 $ontext
 This code is for the problem 12.3 from H P William book
 
 $offtext
 
+=======
+>>>>>>> parent of 3be8cad... Merge branch 'master' of https://github.com/cnbhomia/HPW
 =======
 >>>>>>> parent of 3be8cad... Merge branch 'master' of https://github.com/cnbhomia/HPW
 sets
@@ -215,4 +218,7 @@ borer       0.05    0.03            0.07    0.1             0.08
 planer                      0.01            0.05            0.05
 ;
 >>>>>>> 7e65abad2e7582fdeaa1f88b2b877a42dc1c71cf
+<<<<<<< HEAD
+>>>>>>> parent of 3be8cad... Merge branch 'master' of https://github.com/cnbhomia/HPW
+=======
 >>>>>>> parent of 3be8cad... Merge branch 'master' of https://github.com/cnbhomia/HPW
