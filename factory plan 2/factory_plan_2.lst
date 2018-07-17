@@ -1,0 +1,1020 @@
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/16/18 17:25:23 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+      This code is for the problem 12.3 from H P William book
+       
+   5   
+   6   
+   7  sets
+   8      p 'ps'                  /p1*p7/
+   9      process                 /grinding, vdrill,hdrill,boring,planing/
+  10      gprocess(process)       /grinding/
+  11      mac 'machines'          /G1*G4 , VD1*VD2 , HD1*HD3, borer, planer/
+  12      equipment(process,mac)  /grinding.(G1*G4) , vdrill.(VD1*VD2) ,hdrill.(HD1*HD3), boring.borer , planing.planer /
+  13      month 'months'          /Jan, Feb, Mar, Apr, May, Jun/
+  14   
+  15      ;
+  16   
+  17  table processtime(process,p)  'time required for each process per unit product'
+  18              p1       p2     p3      p4      p5      p6      p7
+  19  grinding   0.5      0.7      0       0      0.3     0.2     0.5
+  20  vdrill      0.1     0.2     0       0.3     0       0.6     0
+  21  hdrill      0.2       0     0.8     0       0       0       0.6
+  22  boring     0.05    0.03            0.07    0.1             0.08
+  23  planing                    0.01            0.05            0.05
+  24  ;
+  25   
+  26  table marketlim(p,month) 'marketing constraints of each product each month'
+  27          Jan     Feb     Mar     Apr     May     Jun
+  28  p1      500     600     300     200     0       500
+  29  p2      1000    500     600     300     100     500
+  30  p3      300     200     0       400     500     100
+  31  p4      300     0       0       500     100     300
+  32  p5      800     400     500     200     1000    1100
+  33  p6      200     300     400     0       300     500
+  34  p7      100     150     100     100     0       60
+  35  ;
+  36   
+  37  parameter profitcon(p) 'profit contribution of each PROD'
+  38      /   p1   10
+  39          p2   6
+  40          p3   8
+  41          p4   4
+  42          p5   11
+  43          p6   9
+  44          p7   3/;
+  45   
+  46  parameter storecost /0.5/;
+  47   
+  48  variables
+  49      produced(p,month) 'units of ech product produced'
+  50      prodsold(p,month)
+  51      maccount(process,month) 'number of machines active for a process in a month'
+  52      storage(p,month) 'units stored at the end of each month'
+  53      profit
+  54      ;
+  55  *variable bounds
+  56   
+  57  integer variable avail(mac,month) ;
+  58  avail.up(mac,month) = 1;
+  59   
+  60   
+  61  positive variable produced(p,month);
+  62  prodsold.up(p,month) = marketlim(p,month);
+  63   
+  64  storage.up(p,month)  = 100;
+  65  storage.lo(p,month)  = 0;
+  66  storage.fx(p,'Jun') = 50;
+  67   
+  68  equations
+  69   
+  70      machrslimit(process,month) 'total limit on machine hours of a process of 24*8*2*N per month,N (maccount) represents total no. of machines available '
+  71      stock(p,month) 'storage balance'
+  72      stockjan(p) 'storage balance for jan'
+  73      macactive(process,month)  'calclating active machines for each process each month'
+  74      objfunc
+  75   
+  76      nonGschedule(process,mac) ' Maintenance of machines atleast once in 6 month'
+  77      Gschedule 'Maintenance of 2 grinders in 6 months'
+  78      ;
+  79  macactive(process,month).. maccount(process,month) =e= sum(mac$equipment(process,mac),avail(mac,month)) ;
+  80  machrslimit(process,month).. sum(p, produced(p,month)*processtime(process,p)) =l= 384*maccount(process,month);
+  81  * total machine hours under the given process catagories. 28*8*2* (no. of machine avaiable for the process)
+  82   
+  83  stock(p,month)$[ord(month)>1].. storage(p,month) =e= storage(p,month-1) + produced(p,month) - prodsold(p,month);
+  84  stockjan(p).. storage(p,'Jan') =e= produced(p,'Jan') - prodsold(p,'Jan');
+  85   
+  86  objfunc.. profit =e= sum((p,month),prodsold(p,month)*profitcon(p)) - sum((p,month), storage(p,month))*storecost;
+  87   
+  88   
+  89  nonGschedule(equipment(process,mac))$[[not gprocess(process)]].. sum(month, avail(mac,month)) =e= 5;
+  90  Gschedule .. sum((equipment(gprocess,mac),month),avail(mac,month)) =e= 22;
+  91   
+  92  *maintenance2 .. sum((gprocess,mac,month)$[equipment(gprocess,mac)],avail(mac,month)) =e= 22;
+  93   
+  94  *maintenance1(mac,process)$[equipment(process,mac)$[ord(process)>1]].. sum(month, avail(mac,month)) =e= 5;
+  95  *maintenance2(process)$(ord(process)=1).. sum((mac,month)$[equipment(process,mac)],avail(mac,month)) =e= 22;
+  96   
+  97  model eqchk /all/;
+  98  option limrow =100;
+  99   
+ 100  eqchk.optcr=0;
+ 101  solve eqchk using MIP maximizing profit;
+ 102   
+ 103  display storage.l, profit.l ;
+ 104  display produced.l, prodsold.l, avail.l;
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/16/18 17:25:23 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE eqchk Using MIP From line 101
+
+
+---- machrslimit  =L=  total limit on machine hours of a process of 24*8*2*N per month,N (maccount) represents total no. of machines available 
+
+machrslimit(grinding,Jan)..  0.5*produced(p1,Jan) + 0.7*produced(p2,Jan) + 0.3*produced(p5,Jan) + 0.2*produced(p6,Jan) + 0.5*produced(p7,Jan) - 384*maccount(grinding,Jan) =L= 0 ; (LHS = 0)
+     
+machrslimit(grinding,Feb)..  0.5*produced(p1,Feb) + 0.7*produced(p2,Feb) + 0.3*produced(p5,Feb) + 0.2*produced(p6,Feb) + 0.5*produced(p7,Feb) - 384*maccount(grinding,Feb) =L= 0 ; (LHS = 0)
+     
+machrslimit(grinding,Mar)..  0.5*produced(p1,Mar) + 0.7*produced(p2,Mar) + 0.3*produced(p5,Mar) + 0.2*produced(p6,Mar) + 0.5*produced(p7,Mar) - 384*maccount(grinding,Mar) =L= 0 ; (LHS = 0)
+     
+machrslimit(grinding,Apr)..  0.5*produced(p1,Apr) + 0.7*produced(p2,Apr) + 0.3*produced(p5,Apr) + 0.2*produced(p6,Apr) + 0.5*produced(p7,Apr) - 384*maccount(grinding,Apr) =L= 0 ; (LHS = 0)
+     
+machrslimit(grinding,May)..  0.5*produced(p1,May) + 0.7*produced(p2,May) + 0.3*produced(p5,May) + 0.2*produced(p6,May) + 0.5*produced(p7,May) - 384*maccount(grinding,May) =L= 0 ; (LHS = 0)
+     
+machrslimit(grinding,Jun)..  0.5*produced(p1,Jun) + 0.7*produced(p2,Jun) + 0.3*produced(p5,Jun) + 0.2*produced(p6,Jun) + 0.5*produced(p7,Jun) - 384*maccount(grinding,Jun) =L= 0 ; (LHS = 0)
+     
+machrslimit(vdrill,Jan)..  0.1*produced(p1,Jan) + 0.2*produced(p2,Jan) + 0.3*produced(p4,Jan) + 0.6*produced(p6,Jan) - 384*maccount(vdrill,Jan) =L= 0 ; (LHS = 0)
+     
+machrslimit(vdrill,Feb)..  0.1*produced(p1,Feb) + 0.2*produced(p2,Feb) + 0.3*produced(p4,Feb) + 0.6*produced(p6,Feb) - 384*maccount(vdrill,Feb) =L= 0 ; (LHS = 0)
+     
+machrslimit(vdrill,Mar)..  0.1*produced(p1,Mar) + 0.2*produced(p2,Mar) + 0.3*produced(p4,Mar) + 0.6*produced(p6,Mar) - 384*maccount(vdrill,Mar) =L= 0 ; (LHS = 0)
+     
+machrslimit(vdrill,Apr)..  0.1*produced(p1,Apr) + 0.2*produced(p2,Apr) + 0.3*produced(p4,Apr) + 0.6*produced(p6,Apr) - 384*maccount(vdrill,Apr) =L= 0 ; (LHS = 0)
+     
+machrslimit(vdrill,May)..  0.1*produced(p1,May) + 0.2*produced(p2,May) + 0.3*produced(p4,May) + 0.6*produced(p6,May) - 384*maccount(vdrill,May) =L= 0 ; (LHS = 0)
+     
+machrslimit(vdrill,Jun)..  0.1*produced(p1,Jun) + 0.2*produced(p2,Jun) + 0.3*produced(p4,Jun) + 0.6*produced(p6,Jun) - 384*maccount(vdrill,Jun) =L= 0 ; (LHS = 0)
+     
+machrslimit(hdrill,Jan)..  0.2*produced(p1,Jan) + 0.8*produced(p3,Jan) + 0.6*produced(p7,Jan) - 384*maccount(hdrill,Jan) =L= 0 ; (LHS = 0)
+     
+machrslimit(hdrill,Feb)..  0.2*produced(p1,Feb) + 0.8*produced(p3,Feb) + 0.6*produced(p7,Feb) - 384*maccount(hdrill,Feb) =L= 0 ; (LHS = 0)
+     
+machrslimit(hdrill,Mar)..  0.2*produced(p1,Mar) + 0.8*produced(p3,Mar) + 0.6*produced(p7,Mar) - 384*maccount(hdrill,Mar) =L= 0 ; (LHS = 0)
+     
+machrslimit(hdrill,Apr)..  0.2*produced(p1,Apr) + 0.8*produced(p3,Apr) + 0.6*produced(p7,Apr) - 384*maccount(hdrill,Apr) =L= 0 ; (LHS = 0)
+     
+machrslimit(hdrill,May)..  0.2*produced(p1,May) + 0.8*produced(p3,May) + 0.6*produced(p7,May) - 384*maccount(hdrill,May) =L= 0 ; (LHS = 0)
+     
+machrslimit(hdrill,Jun)..  0.2*produced(p1,Jun) + 0.8*produced(p3,Jun) + 0.6*produced(p7,Jun) - 384*maccount(hdrill,Jun) =L= 0 ; (LHS = 0)
+     
+machrslimit(boring,Jan)..  0.05*produced(p1,Jan) + 0.03*produced(p2,Jan) + 0.07*produced(p4,Jan) + 0.1*produced(p5,Jan) + 0.08*produced(p7,Jan) - 384*maccount(boring,Jan) =L= 0 ; (LHS = 0)
+     
+machrslimit(boring,Feb)..  0.05*produced(p1,Feb) + 0.03*produced(p2,Feb) + 0.07*produced(p4,Feb) + 0.1*produced(p5,Feb) + 0.08*produced(p7,Feb) - 384*maccount(boring,Feb) =L= 0 ; (LHS = 0)
+     
+machrslimit(boring,Mar)..  0.05*produced(p1,Mar) + 0.03*produced(p2,Mar) + 0.07*produced(p4,Mar) + 0.1*produced(p5,Mar) + 0.08*produced(p7,Mar) - 384*maccount(boring,Mar) =L= 0 ; (LHS = 0)
+     
+machrslimit(boring,Apr)..  0.05*produced(p1,Apr) + 0.03*produced(p2,Apr) + 0.07*produced(p4,Apr) + 0.1*produced(p5,Apr) + 0.08*produced(p7,Apr) - 384*maccount(boring,Apr) =L= 0 ; (LHS = 0)
+     
+machrslimit(boring,May)..  0.05*produced(p1,May) + 0.03*produced(p2,May) + 0.07*produced(p4,May) + 0.1*produced(p5,May) + 0.08*produced(p7,May) - 384*maccount(boring,May) =L= 0 ; (LHS = 0)
+     
+machrslimit(boring,Jun)..  0.05*produced(p1,Jun) + 0.03*produced(p2,Jun) + 0.07*produced(p4,Jun) + 0.1*produced(p5,Jun) + 0.08*produced(p7,Jun) - 384*maccount(boring,Jun) =L= 0 ; (LHS = 0)
+     
+machrslimit(planing,Jan)..  0.01*produced(p3,Jan) + 0.05*produced(p5,Jan) + 0.05*produced(p7,Jan) - 384*maccount(planing,Jan) =L= 0 ; (LHS = 0)
+     
+machrslimit(planing,Feb)..  0.01*produced(p3,Feb) + 0.05*produced(p5,Feb) + 0.05*produced(p7,Feb) - 384*maccount(planing,Feb) =L= 0 ; (LHS = 0)
+     
+machrslimit(planing,Mar)..  0.01*produced(p3,Mar) + 0.05*produced(p5,Mar) + 0.05*produced(p7,Mar) - 384*maccount(planing,Mar) =L= 0 ; (LHS = 0)
+     
+machrslimit(planing,Apr)..  0.01*produced(p3,Apr) + 0.05*produced(p5,Apr) + 0.05*produced(p7,Apr) - 384*maccount(planing,Apr) =L= 0 ; (LHS = 0)
+     
+machrslimit(planing,May)..  0.01*produced(p3,May) + 0.05*produced(p5,May) + 0.05*produced(p7,May) - 384*maccount(planing,May) =L= 0 ; (LHS = 0)
+     
+machrslimit(planing,Jun)..  0.01*produced(p3,Jun) + 0.05*produced(p5,Jun) + 0.05*produced(p7,Jun) - 384*maccount(planing,Jun) =L= 0 ; (LHS = 0)
+     
+
+---- stock  =E=  storage balance
+
+stock(p1,Feb)..  - produced(p1,Feb) + prodsold(p1,Feb) - storage(p1,Jan) + storage(p1,Feb) =E= 0 ; (LHS = 0)
+     
+stock(p1,Mar)..  - produced(p1,Mar) + prodsold(p1,Mar) - storage(p1,Feb) + storage(p1,Mar) =E= 0 ; (LHS = 0)
+     
+stock(p1,Apr)..  - produced(p1,Apr) + prodsold(p1,Apr) - storage(p1,Mar) + storage(p1,Apr) =E= 0 ; (LHS = 0)
+     
+stock(p1,May)..  - produced(p1,May) + prodsold(p1,May) - storage(p1,Apr) + storage(p1,May) =E= 0 ; (LHS = 0)
+     
+stock(p1,Jun)..  - produced(p1,Jun) + prodsold(p1,Jun) - storage(p1,May) + storage(p1,Jun) =E= 0 ; (LHS = 50, INFES = 50 ****)
+     
+stock(p2,Feb)..  - produced(p2,Feb) + prodsold(p2,Feb) - storage(p2,Jan) + storage(p2,Feb) =E= 0 ; (LHS = 0)
+     
+stock(p2,Mar)..  - produced(p2,Mar) + prodsold(p2,Mar) - storage(p2,Feb) + storage(p2,Mar) =E= 0 ; (LHS = 0)
+     
+stock(p2,Apr)..  - produced(p2,Apr) + prodsold(p2,Apr) - storage(p2,Mar) + storage(p2,Apr) =E= 0 ; (LHS = 0)
+     
+stock(p2,May)..  - produced(p2,May) + prodsold(p2,May) - storage(p2,Apr) + storage(p2,May) =E= 0 ; (LHS = 0)
+     
+stock(p2,Jun)..  - produced(p2,Jun) + prodsold(p2,Jun) - storage(p2,May) + storage(p2,Jun) =E= 0 ; (LHS = 50, INFES = 50 ****)
+     
+stock(p3,Feb)..  - produced(p3,Feb) + prodsold(p3,Feb) - storage(p3,Jan) + storage(p3,Feb) =E= 0 ; (LHS = 0)
+     
+stock(p3,Mar)..  - produced(p3,Mar) + prodsold(p3,Mar) - storage(p3,Feb) + storage(p3,Mar) =E= 0 ; (LHS = 0)
+     
+stock(p3,Apr)..  - produced(p3,Apr) + prodsold(p3,Apr) - storage(p3,Mar) + storage(p3,Apr) =E= 0 ; (LHS = 0)
+     
+stock(p3,May)..  - produced(p3,May) + prodsold(p3,May) - storage(p3,Apr) + storage(p3,May) =E= 0 ; (LHS = 0)
+     
+stock(p3,Jun)..  - produced(p3,Jun) + prodsold(p3,Jun) - storage(p3,May) + storage(p3,Jun) =E= 0 ; (LHS = 50, INFES = 50 ****)
+     
+stock(p4,Feb)..  - produced(p4,Feb) + prodsold(p4,Feb) - storage(p4,Jan) + storage(p4,Feb) =E= 0 ; (LHS = 0)
+     
+stock(p4,Mar)..  - produced(p4,Mar) + prodsold(p4,Mar) - storage(p4,Feb) + storage(p4,Mar) =E= 0 ; (LHS = 0)
+     
+stock(p4,Apr)..  - produced(p4,Apr) + prodsold(p4,Apr) - storage(p4,Mar) + storage(p4,Apr) =E= 0 ; (LHS = 0)
+     
+stock(p4,May)..  - produced(p4,May) + prodsold(p4,May) - storage(p4,Apr) + storage(p4,May) =E= 0 ; (LHS = 0)
+     
+stock(p4,Jun)..  - produced(p4,Jun) + prodsold(p4,Jun) - storage(p4,May) + storage(p4,Jun) =E= 0 ; (LHS = 50, INFES = 50 ****)
+     
+stock(p5,Feb)..  - produced(p5,Feb) + prodsold(p5,Feb) - storage(p5,Jan) + storage(p5,Feb) =E= 0 ; (LHS = 0)
+     
+stock(p5,Mar)..  - produced(p5,Mar) + prodsold(p5,Mar) - storage(p5,Feb) + storage(p5,Mar) =E= 0 ; (LHS = 0)
+     
+stock(p5,Apr)..  - produced(p5,Apr) + prodsold(p5,Apr) - storage(p5,Mar) + storage(p5,Apr) =E= 0 ; (LHS = 0)
+     
+stock(p5,May)..  - produced(p5,May) + prodsold(p5,May) - storage(p5,Apr) + storage(p5,May) =E= 0 ; (LHS = 0)
+     
+stock(p5,Jun)..  - produced(p5,Jun) + prodsold(p5,Jun) - storage(p5,May) + storage(p5,Jun) =E= 0 ; (LHS = 50, INFES = 50 ****)
+     
+stock(p6,Feb)..  - produced(p6,Feb) + prodsold(p6,Feb) - storage(p6,Jan) + storage(p6,Feb) =E= 0 ; (LHS = 0)
+     
+stock(p6,Mar)..  - produced(p6,Mar) + prodsold(p6,Mar) - storage(p6,Feb) + storage(p6,Mar) =E= 0 ; (LHS = 0)
+     
+stock(p6,Apr)..  - produced(p6,Apr) + prodsold(p6,Apr) - storage(p6,Mar) + storage(p6,Apr) =E= 0 ; (LHS = 0)
+     
+stock(p6,May)..  - produced(p6,May) + prodsold(p6,May) - storage(p6,Apr) + storage(p6,May) =E= 0 ; (LHS = 0)
+     
+stock(p6,Jun)..  - produced(p6,Jun) + prodsold(p6,Jun) - storage(p6,May) + storage(p6,Jun) =E= 0 ; (LHS = 50, INFES = 50 ****)
+     
+stock(p7,Feb)..  - produced(p7,Feb) + prodsold(p7,Feb) - storage(p7,Jan) + storage(p7,Feb) =E= 0 ; (LHS = 0)
+     
+stock(p7,Mar)..  - produced(p7,Mar) + prodsold(p7,Mar) - storage(p7,Feb) + storage(p7,Mar) =E= 0 ; (LHS = 0)
+     
+stock(p7,Apr)..  - produced(p7,Apr) + prodsold(p7,Apr) - storage(p7,Mar) + storage(p7,Apr) =E= 0 ; (LHS = 0)
+     
+stock(p7,May)..  - produced(p7,May) + prodsold(p7,May) - storage(p7,Apr) + storage(p7,May) =E= 0 ; (LHS = 0)
+     
+stock(p7,Jun)..  - produced(p7,Jun) + prodsold(p7,Jun) - storage(p7,May) + storage(p7,Jun) =E= 0 ; (LHS = 50, INFES = 50 ****)
+     
+
+---- stockjan  =E=  storage balance for jan
+
+stockjan(p1)..  - produced(p1,Jan) + prodsold(p1,Jan) + storage(p1,Jan) =E= 0 ; (LHS = 0)
+     
+stockjan(p2)..  - produced(p2,Jan) + prodsold(p2,Jan) + storage(p2,Jan) =E= 0 ; (LHS = 0)
+     
+stockjan(p3)..  - produced(p3,Jan) + prodsold(p3,Jan) + storage(p3,Jan) =E= 0 ; (LHS = 0)
+     
+stockjan(p4)..  - produced(p4,Jan) + prodsold(p4,Jan) + storage(p4,Jan) =E= 0 ; (LHS = 0)
+     
+stockjan(p5)..  - produced(p5,Jan) + prodsold(p5,Jan) + storage(p5,Jan) =E= 0 ; (LHS = 0)
+     
+stockjan(p6)..  - produced(p6,Jan) + prodsold(p6,Jan) + storage(p6,Jan) =E= 0 ; (LHS = 0)
+     
+stockjan(p7)..  - produced(p7,Jan) + prodsold(p7,Jan) + storage(p7,Jan) =E= 0 ; (LHS = 0)
+     
+
+---- macactive  =E=  calclating active machines for each process each month
+
+macactive(grinding,Jan)..  maccount(grinding,Jan) - avail(G1,Jan) - avail(G2,Jan) - avail(G3,Jan) - avail(G4,Jan) =E= 0 ; (LHS = 0)
+     
+macactive(grinding,Feb)..  maccount(grinding,Feb) - avail(G1,Feb) - avail(G2,Feb) - avail(G3,Feb) - avail(G4,Feb) =E= 0 ; (LHS = 0)
+     
+macactive(grinding,Mar)..  maccount(grinding,Mar) - avail(G1,Mar) - avail(G2,Mar) - avail(G3,Mar) - avail(G4,Mar) =E= 0 ; (LHS = 0)
+     
+macactive(grinding,Apr)..  maccount(grinding,Apr) - avail(G1,Apr) - avail(G2,Apr) - avail(G3,Apr) - avail(G4,Apr) =E= 0 ; (LHS = 0)
+     
+macactive(grinding,May)..  maccount(grinding,May) - avail(G1,May) - avail(G2,May) - avail(G3,May) - avail(G4,May) =E= 0 ; (LHS = 0)
+     
+macactive(grinding,Jun)..  maccount(grinding,Jun) - avail(G1,Jun) - avail(G2,Jun) - avail(G3,Jun) - avail(G4,Jun) =E= 0 ; (LHS = 0)
+     
+macactive(vdrill,Jan)..  maccount(vdrill,Jan) - avail(VD1,Jan) - avail(VD2,Jan) =E= 0 ; (LHS = 0)
+     
+macactive(vdrill,Feb)..  maccount(vdrill,Feb) - avail(VD1,Feb) - avail(VD2,Feb) =E= 0 ; (LHS = 0)
+     
+macactive(vdrill,Mar)..  maccount(vdrill,Mar) - avail(VD1,Mar) - avail(VD2,Mar) =E= 0 ; (LHS = 0)
+     
+macactive(vdrill,Apr)..  maccount(vdrill,Apr) - avail(VD1,Apr) - avail(VD2,Apr) =E= 0 ; (LHS = 0)
+     
+macactive(vdrill,May)..  maccount(vdrill,May) - avail(VD1,May) - avail(VD2,May) =E= 0 ; (LHS = 0)
+     
+macactive(vdrill,Jun)..  maccount(vdrill,Jun) - avail(VD1,Jun) - avail(VD2,Jun) =E= 0 ; (LHS = 0)
+     
+macactive(hdrill,Jan)..  maccount(hdrill,Jan) - avail(HD1,Jan) - avail(HD2,Jan) - avail(HD3,Jan) =E= 0 ; (LHS = 0)
+     
+macactive(hdrill,Feb)..  maccount(hdrill,Feb) - avail(HD1,Feb) - avail(HD2,Feb) - avail(HD3,Feb) =E= 0 ; (LHS = 0)
+     
+macactive(hdrill,Mar)..  maccount(hdrill,Mar) - avail(HD1,Mar) - avail(HD2,Mar) - avail(HD3,Mar) =E= 0 ; (LHS = 0)
+     
+macactive(hdrill,Apr)..  maccount(hdrill,Apr) - avail(HD1,Apr) - avail(HD2,Apr) - avail(HD3,Apr) =E= 0 ; (LHS = 0)
+     
+macactive(hdrill,May)..  maccount(hdrill,May) - avail(HD1,May) - avail(HD2,May) - avail(HD3,May) =E= 0 ; (LHS = 0)
+     
+macactive(hdrill,Jun)..  maccount(hdrill,Jun) - avail(HD1,Jun) - avail(HD2,Jun) - avail(HD3,Jun) =E= 0 ; (LHS = 0)
+     
+macactive(boring,Jan)..  maccount(boring,Jan) - avail(borer,Jan) =E= 0 ; (LHS = 0)
+     
+macactive(boring,Feb)..  maccount(boring,Feb) - avail(borer,Feb) =E= 0 ; (LHS = 0)
+     
+macactive(boring,Mar)..  maccount(boring,Mar) - avail(borer,Mar) =E= 0 ; (LHS = 0)
+     
+macactive(boring,Apr)..  maccount(boring,Apr) - avail(borer,Apr) =E= 0 ; (LHS = 0)
+     
+macactive(boring,May)..  maccount(boring,May) - avail(borer,May) =E= 0 ; (LHS = 0)
+     
+macactive(boring,Jun)..  maccount(boring,Jun) - avail(borer,Jun) =E= 0 ; (LHS = 0)
+     
+macactive(planing,Jan)..  maccount(planing,Jan) - avail(planer,Jan) =E= 0 ; (LHS = 0)
+     
+macactive(planing,Feb)..  maccount(planing,Feb) - avail(planer,Feb) =E= 0 ; (LHS = 0)
+     
+macactive(planing,Mar)..  maccount(planing,Mar) - avail(planer,Mar) =E= 0 ; (LHS = 0)
+     
+macactive(planing,Apr)..  maccount(planing,Apr) - avail(planer,Apr) =E= 0 ; (LHS = 0)
+     
+macactive(planing,May)..  maccount(planing,May) - avail(planer,May) =E= 0 ; (LHS = 0)
+     
+macactive(planing,Jun)..  maccount(planing,Jun) - avail(planer,Jun) =E= 0 ; (LHS = 0)
+     
+
+---- objfunc  =E=  
+
+objfunc..  - 10*prodsold(p1,Jan) - 10*prodsold(p1,Feb) - 10*prodsold(p1,Mar) - 10*prodsold(p1,Apr) - 10*prodsold(p1,May) - 10*prodsold(p1,Jun) - 6*prodsold(p2,Jan) - 6*prodsold(p2,Feb) - 6*prodsold(p2,Mar) - 6*prodsold(p2,Apr) - 6*prodsold(p2,May)
+     
+      - 6*prodsold(p2,Jun) - 8*prodsold(p3,Jan) - 8*prodsold(p3,Feb) - 8*prodsold(p3,Mar) - 8*prodsold(p3,Apr) - 8*prodsold(p3,May) - 8*prodsold(p3,Jun) - 4*prodsold(p4,Jan) - 4*prodsold(p4,Feb) - 4*prodsold(p4,Mar) - 4*prodsold(p4,Apr)
+     
+      - 4*prodsold(p4,May) - 4*prodsold(p4,Jun) - 11*prodsold(p5,Jan) - 11*prodsold(p5,Feb) - 11*prodsold(p5,Mar) - 11*prodsold(p5,Apr) - 11*prodsold(p5,May) - 11*prodsold(p5,Jun) - 9*prodsold(p6,Jan) - 9*prodsold(p6,Feb) - 9*prodsold(p6,Mar)
+     
+      - 9*prodsold(p6,Apr) - 9*prodsold(p6,May) - 9*prodsold(p6,Jun) - 3*prodsold(p7,Jan) - 3*prodsold(p7,Feb) - 3*prodsold(p7,Mar) - 3*prodsold(p7,Apr) - 3*prodsold(p7,May) - 3*prodsold(p7,Jun) + 0.5*storage(p1,Jan) + 0.5*storage(p1,Feb)
+     
+      + 0.5*storage(p1,Mar) + 0.5*storage(p1,Apr) + 0.5*storage(p1,May) + 0.5*storage(p1,Jun) + 0.5*storage(p2,Jan) + 0.5*storage(p2,Feb) + 0.5*storage(p2,Mar) + 0.5*storage(p2,Apr) + 0.5*storage(p2,May) + 0.5*storage(p2,Jun) + 0.5*storage(p3,Jan)
+     
+      + 0.5*storage(p3,Feb) + 0.5*storage(p3,Mar) + 0.5*storage(p3,Apr) + 0.5*storage(p3,May) + 0.5*storage(p3,Jun) + 0.5*storage(p4,Jan) + 0.5*storage(p4,Feb) + 0.5*storage(p4,Mar) + 0.5*storage(p4,Apr) + 0.5*storage(p4,May) + 0.5*storage(p4,Jun)
+     
+      + 0.5*storage(p5,Jan) + 0.5*storage(p5,Feb) + 0.5*storage(p5,Mar) + 0.5*storage(p5,Apr) + 0.5*storage(p5,May) + 0.5*storage(p5,Jun) + 0.5*storage(p6,Jan) + 0.5*storage(p6,Feb) + 0.5*storage(p6,Mar) + 0.5*storage(p6,Apr) + 0.5*storage(p6,May)
+     
+      + 0.5*storage(p6,Jun) + 0.5*storage(p7,Jan) + 0.5*storage(p7,Feb) + 0.5*storage(p7,Mar) + 0.5*storage(p7,Apr) + 0.5*storage(p7,May) + 0.5*storage(p7,Jun) + profit =E= 0 ; (LHS = 175, INFES = 175 ****)
+     
+
+---- nonGschedule  =E=   Maintenance of machines atleast once in 6 month
+
+nonGschedule(vdrill,VD1)..  avail(VD1,Jan) + avail(VD1,Feb) + avail(VD1,Mar) + avail(VD1,Apr) + avail(VD1,May) + avail(VD1,Jun) =E= 5 ; (LHS = 0, INFES = 5 ****)
+     
+nonGschedule(vdrill,VD2)..  avail(VD2,Jan) + avail(VD2,Feb) + avail(VD2,Mar) + avail(VD2,Apr) + avail(VD2,May) + avail(VD2,Jun) =E= 5 ; (LHS = 0, INFES = 5 ****)
+     
+nonGschedule(hdrill,HD1)..  avail(HD1,Jan) + avail(HD1,Feb) + avail(HD1,Mar) + avail(HD1,Apr) + avail(HD1,May) + avail(HD1,Jun) =E= 5 ; (LHS = 0, INFES = 5 ****)
+     
+nonGschedule(hdrill,HD2)..  avail(HD2,Jan) + avail(HD2,Feb) + avail(HD2,Mar) + avail(HD2,Apr) + avail(HD2,May) + avail(HD2,Jun) =E= 5 ; (LHS = 0, INFES = 5 ****)
+     
+nonGschedule(hdrill,HD3)..  avail(HD3,Jan) + avail(HD3,Feb) + avail(HD3,Mar) + avail(HD3,Apr) + avail(HD3,May) + avail(HD3,Jun) =E= 5 ; (LHS = 0, INFES = 5 ****)
+     
+nonGschedule(boring,borer)..  avail(borer,Jan) + avail(borer,Feb) + avail(borer,Mar) + avail(borer,Apr) + avail(borer,May) + avail(borer,Jun) =E= 5 ; (LHS = 0, INFES = 5 ****)
+     
+nonGschedule(planing,planer)..  avail(planer,Jan) + avail(planer,Feb) + avail(planer,Mar) + avail(planer,Apr) + avail(planer,May) + avail(planer,Jun) =E= 5 ; (LHS = 0, INFES = 5 ****)
+     
+
+---- Gschedule  =E=  Maintenance of 2 grinders in 6 months
+
+Gschedule..  avail(G1,Jan) + avail(G1,Feb) + avail(G1,Mar) + avail(G1,Apr) + avail(G1,May) + avail(G1,Jun) + avail(G2,Jan) + avail(G2,Feb) + avail(G2,Mar) + avail(G2,Apr) + avail(G2,May) + avail(G2,Jun) + avail(G3,Jan) + avail(G3,Feb) + avail(G3,Mar)
+     
+      + avail(G3,Apr) + avail(G3,May) + avail(G3,Jun) + avail(G4,Jan) + avail(G4,Feb) + avail(G4,Mar) + avail(G4,Apr) + avail(G4,May) + avail(G4,Jun) =E= 22 ; (LHS = 0, INFES = 22 ****)
+     
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/16/18 17:25:23 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE eqchk Using MIP From line 101
+
+
+---- produced  units of ech product produced
+
+produced(p1,Jan)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.5     machrslimit(grinding,Jan)
+        0.1     machrslimit(vdrill,Jan)
+        0.2     machrslimit(hdrill,Jan)
+        0.05    machrslimit(boring,Jan)
+       -1       stockjan(p1)
+
+produced(p1,Feb)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.5     machrslimit(grinding,Feb)
+        0.1     machrslimit(vdrill,Feb)
+        0.2     machrslimit(hdrill,Feb)
+        0.05    machrslimit(boring,Feb)
+       -1       stock(p1,Feb)
+
+produced(p1,Mar)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.5     machrslimit(grinding,Mar)
+        0.1     machrslimit(vdrill,Mar)
+        0.2     machrslimit(hdrill,Mar)
+        0.05    machrslimit(boring,Mar)
+       -1       stock(p1,Mar)
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- prodsold  
+
+prodsold(p1,Jan)
+                (.LO, .L, .UP, .M = -INF, 0, 500, 0)
+        1       stockjan(p1)
+      -10       objfunc
+
+prodsold(p1,Feb)
+                (.LO, .L, .UP, .M = -INF, 0, 600, 0)
+        1       stock(p1,Feb)
+      -10       objfunc
+
+prodsold(p1,Mar)
+                (.LO, .L, .UP, .M = -INF, 0, 300, 0)
+        1       stock(p1,Mar)
+      -10       objfunc
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- maccount  number of machines active for a process in a month
+
+maccount(grinding,Jan)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+     -384       machrslimit(grinding,Jan)
+        1       macactive(grinding,Jan)
+
+maccount(grinding,Feb)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+     -384       machrslimit(grinding,Feb)
+        1       macactive(grinding,Feb)
+
+maccount(grinding,Mar)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+     -384       machrslimit(grinding,Mar)
+        1       macactive(grinding,Mar)
+
+REMAINING 27 ENTRIES SKIPPED
+
+---- storage  units stored at the end of each month
+
+storage(p1,Jan)
+                (.LO, .L, .UP, .M = 0, 0, 100, 0)
+       -1       stock(p1,Feb)
+        1       stockjan(p1)
+        0.5     objfunc
+
+storage(p1,Feb)
+                (.LO, .L, .UP, .M = 0, 0, 100, 0)
+        1       stock(p1,Feb)
+       -1       stock(p1,Mar)
+        0.5     objfunc
+
+storage(p1,Mar)
+                (.LO, .L, .UP, .M = 0, 0, 100, 0)
+        1       stock(p1,Mar)
+       -1       stock(p1,Apr)
+        0.5     objfunc
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- profit  
+
+profit
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       objfunc
+
+
+---- avail  
+
+avail(G1,Jan)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       macactive(grinding,Jan)
+        1       Gschedule
+
+avail(G1,Feb)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       macactive(grinding,Feb)
+        1       Gschedule
+
+avail(G1,Mar)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       macactive(grinding,Mar)
+        1       Gschedule
+
+REMAINING 63 ENTRIES SKIPPED
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/16/18 17:25:23 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE eqchk Using MIP From line 101
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           7     SINGLE EQUATIONS          111
+BLOCKS OF VARIABLES           6     SINGLE VARIABLES          223
+NON ZERO ELEMENTS           558     DISCRETE VARIABLES         66
+
+
+GENERATION TIME      =        0.015 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
+
+
+EXECUTION TIME       =        0.015 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/16/18 17:25:23 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE eqchk Using MIP From line 101
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   eqchk               OBJECTIVE  profit
+     TYPE    MIP                 DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  101
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE           108855.0000
+
+ RESOURCE USAGE, LIMIT          0.015      1000.000
+ ITERATION COUNT, LIMIT        62    2000000000
+
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+--- GAMS/Cplex licensed for continuous and discrete problems.
+Cplex 12.8.0.0
+
+Space for names approximately 0.01 Mb
+Use option 'names no' to turn use of names off
+MIP status(101): integer optimal solution
+Cplex Time: 0.01sec (det. 3.17 ticks)
+Fixing integer variables, and solving final LP...
+Fixed MIP status(1): optimal
+Cplex Time: 0.00sec (det. 0.15 ticks)
+Proven optimal solution.
+
+MIP Solution:       108855.000000    (62 iterations, 0 nodes)
+Final Solve:        108855.000000    (0 iterations)
+
+Best possible:      108855.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+---- EQU machrslimit  total limit on machine hours of a process of 24*8*2*N per month,N (maccount) represents total no. of machines available 
+
+                    LOWER          LEVEL          UPPER         MARGINAL
+
+grinding.Jan        -INF         -256.0000          .              .          
+grinding.Feb        -INF         -631.0000          .              .          
+grinding.Mar        -INF         -486.0000          .              .          
+grinding.Apr        -INF         -768.0000          .              .          
+grinding.May        -INF        -1106.0000          .              .          
+grinding.Jun        -INF         -366.0000          .              .          
+vdrill  .Jan        -INF         -308.0000          .              .          
+vdrill  .Feb        -INF          -44.0000          .              .          
+vdrill  .Mar        -INF         -318.0000          .              .          
+vdrill  .Apr        -INF         -768.0000          .              .          
+vdrill  .May        -INF         -154.0000          .              .          
+vdrill  .Jun        -INF         -168.0000          .              .          
+hdrill  .Jan        -INF         -752.0000          .              .          
+hdrill  .Feb        -INF         -782.0000          .              .          
+hdrill  .Mar        -INF         -872.0000          .              .          
+hdrill  .Apr        -INF        -1152.0000          .              .          
+hdrill  .May        -INF         -368.0000          .              .          
+hdrill  .Jun        -INF          -88.0000          .              .          
+boring  .Jan        -INF         -220.0000          .              .          
+boring  .Feb        -INF         -287.0000          .              .          
+boring  .Mar        -INF         -260.0000          .              .          
+boring  .Apr        -INF             .              .           200.0000      
+boring  .May        -INF         -274.0000          .              .          
+boring  .Jun        -INF         -191.7000          .              .          
+planing .Jan        -INF         -336.0000          .              .          
+planing .Feb        -INF         -354.5000          .              .          
+planing .Mar        -INF         -343.0000          .              .          
+planing .Apr        -INF             .              .           800.0000      
+planing .May        -INF         -329.0000          .              .          
+planing .Jun        -INF         -319.5000          .              .          
+
+---- EQU stock  storage balance
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+p1.Feb          .              .              .             EPS         
+p1.Mar          .              .              .             EPS         
+p1.Apr          .              .              .            10.0000      
+p1.May          .              .              .             EPS         
+p1.Jun          .              .              .             EPS         
+p2.Feb          .              .              .             EPS         
+p2.Mar          .              .              .             EPS         
+p2.Apr          .              .              .             6.0000      
+p2.May          .              .              .             EPS         
+p2.Jun          .              .              .             EPS         
+p3.Feb          .              .              .             EPS         
+p3.Mar          .              .              .             EPS         
+p3.Apr          .              .              .             8.0000      
+p3.May          .              .              .             EPS         
+p3.Jun          .              .              .             EPS         
+p4.Feb          .              .              .            -0.5000      
+p4.Mar          .              .              .             EPS         
+p4.Apr          .              .              .             4.0000      
+p4.May          .              .              .             EPS         
+p4.Jun          .              .              .             EPS         
+p5.Feb          .              .              .             EPS         
+p5.Mar          .              .              .             EPS         
+p5.Apr          .              .              .            11.0000      
+p5.May          .              .              .             EPS         
+p5.Jun          .              .              .             EPS         
+p6.Feb          .              .              .             EPS         
+p6.Mar          .              .              .             EPS         
+p6.Apr          .              .              .            -0.5000      
+p6.May          .              .              .             EPS         
+p6.Jun          .              .              .             EPS         
+p7.Feb          .              .              .             EPS         
+p7.Mar          .              .              .             EPS         
+p7.Apr          .              .              .             3.0000      
+p7.May          .              .              .             EPS         
+p7.Jun          .              .              .             EPS         
+
+---- EQU stockjan  storage balance for jan
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+p1          .              .              .             EPS         
+p2          .              .              .             EPS         
+p3          .              .              .             EPS         
+p4          .              .              .             EPS         
+p5          .              .              .             EPS         
+p6          .              .              .             EPS         
+p7          .              .              .             EPS         
+
+---- EQU macactive  calclating active machines for each process each month
+
+                    LOWER          LEVEL          UPPER         MARGINAL
+
+grinding.Jan          .              .              .             EPS         
+grinding.Feb          .              .              .             EPS         
+grinding.Mar          .              .              .             EPS         
+grinding.Apr          .              .              .             EPS         
+grinding.May          .              .              .             EPS         
+grinding.Jun          .              .              .             EPS         
+vdrill  .Jan          .              .              .             EPS         
+vdrill  .Feb          .              .              .             EPS         
+vdrill  .Mar          .              .              .             EPS         
+vdrill  .Apr          .              .              .             EPS         
+vdrill  .May          .              .              .             EPS         
+vdrill  .Jun          .              .              .             EPS         
+hdrill  .Jan          .              .              .             EPS         
+hdrill  .Feb          .              .              .             EPS         
+hdrill  .Mar          .              .              .             EPS         
+hdrill  .Apr          .              .              .             EPS         
+hdrill  .May          .              .              .             EPS         
+hdrill  .Jun          .              .              .             EPS         
+boring  .Jan          .              .              .             EPS         
+boring  .Feb          .              .              .             EPS         
+boring  .Mar          .              .              .             EPS         
+boring  .Apr          .              .              .         76800.0000      
+boring  .May          .              .              .             EPS         
+boring  .Jun          .              .              .             EPS         
+planing .Jan          .              .              .             EPS         
+planing .Feb          .              .              .             EPS         
+planing .Mar          .              .              .             EPS         
+planing .Apr          .              .              .        307200.0000      
+planing .May          .              .              .             EPS         
+planing .Jun          .              .              .             EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU objfunc             .              .              .             1.0000      
+
+---- EQU nonGschedule   Maintenance of machines atleast once in 6 month
+
+                      LOWER          LEVEL          UPPER         MARGINAL
+
+vdrill .VD1            5.0000         5.0000         5.0000          .          
+vdrill .VD2            5.0000         5.0000         5.0000          .          
+hdrill .HD1            5.0000         5.0000         5.0000          .          
+hdrill .HD2            5.0000         5.0000         5.0000          .          
+hdrill .HD3            5.0000         5.0000         5.0000          .          
+boring .borer          5.0000         5.0000         5.0000          .          
+planing.planer         5.0000         5.0000         5.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU Gschedule         22.0000        22.0000        22.0000          .          
+
+  Gschedule  Maintenance of 2 grinders in 6 months
+
+---- VAR produced  units of ech product produced
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+p1.Jan          .           500.0000        +INF             .          
+p1.Feb          .           600.0000        +INF             .          
+p1.Mar          .           400.0000        +INF             .          
+p1.Apr          .              .            +INF             .          
+p1.May          .              .            +INF             .          
+p1.Jun          .           550.0000        +INF             .          
+p2.Jan          .          1000.0000        +INF             .          
+p2.Feb          .           500.0000        +INF             .          
+p2.Mar          .           700.0000        +INF             .          
+p2.Apr          .              .            +INF            EPS         
+p2.May          .           100.0000        +INF             .          
+p2.Jun          .           550.0000        +INF             .          
+p3.Jan          .           300.0000        +INF             .          
+p3.Feb          .           200.0000        +INF             .          
+p3.Mar          .           100.0000        +INF             .          
+p3.Apr          .              .            +INF             .          
+p3.May          .           500.0000        +INF             .          
+p3.Jun          .           150.0000        +INF             .          
+p4.Jan          .           300.0000        +INF             .          
+p4.Feb          .              .            +INF           -0.5000      
+p4.Mar          .           100.0000        +INF             .          
+p4.Apr          .              .            +INF          -10.0000      
+p4.May          .           100.0000        +INF             .          
+p4.Jun          .           350.0000        +INF             .          
+p5.Jan          .           800.0000        +INF             .          
+p5.Feb          .           400.0000        +INF             .          
+p5.Mar          .           600.0000        +INF             .          
+p5.Apr          .              .            +INF          -49.0000      
+p5.May          .          1000.0000        +INF             .          
+p5.Jun          .          1150.0000        +INF             .          
+p6.Jan          .           200.0000        +INF             .          
+p6.Feb          .           300.0000        +INF             .          
+p6.Mar          .           400.0000        +INF             .          
+p6.Apr          .              .            +INF           -0.5000      
+p6.May          .           300.0000        +INF             .          
+p6.Jun          .           550.0000        +INF             .          
+p7.Jan          .           100.0000        +INF             .          
+p7.Feb          .           150.0000        +INF             .          
+p7.Mar          .           200.0000        +INF             .          
+p7.Apr          .              .            +INF          -53.0000      
+p7.May          .              .            +INF             .          
+p7.Jun          .           110.0000        +INF             .          
+
+---- VAR prodsold  
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+p1.Jan        -INF          500.0000       500.0000        10.0000      
+p1.Feb        -INF          600.0000       600.0000        10.0000      
+p1.Mar        -INF          300.0000       300.0000        10.0000      
+p1.Apr        -INF          100.0000       200.0000          .          
+p1.May        -INF             .              .            10.0000      
+p1.Jun        -INF          500.0000       500.0000        10.0000      
+p2.Jan        -INF         1000.0000      1000.0000         6.0000      
+p2.Feb        -INF          500.0000       500.0000         6.0000      
+p2.Mar        -INF          600.0000       600.0000         6.0000      
+p2.Apr        -INF          100.0000       300.0000          .          
+p2.May        -INF          100.0000       100.0000         6.0000      
+p2.Jun        -INF          500.0000       500.0000         6.0000      
+p3.Jan        -INF          300.0000       300.0000         8.0000      
+p3.Feb        -INF          200.0000       200.0000         8.0000      
+p3.Mar        -INF             .              .             8.0000      
+p3.Apr        -INF          100.0000       400.0000          .          
+p3.May        -INF          500.0000       500.0000         8.0000      
+p3.Jun        -INF          100.0000       100.0000         8.0000      
+p4.Jan        -INF          300.0000       300.0000         4.0000      
+p4.Feb        -INF             .              .             4.5000      
+p4.Mar        -INF             .              .             4.0000      
+p4.Apr        -INF          100.0000       500.0000          .          
+p4.May        -INF          100.0000       100.0000         4.0000      
+p4.Jun        -INF          300.0000       300.0000         4.0000      
+p5.Jan        -INF          800.0000       800.0000        11.0000      
+p5.Feb        -INF          400.0000       400.0000        11.0000      
+p5.Mar        -INF          500.0000       500.0000        11.0000      
+p5.Apr        -INF          100.0000       200.0000          .          
+p5.May        -INF         1000.0000      1000.0000        11.0000      
+p5.Jun        -INF         1100.0000      1100.0000        11.0000      
+p6.Jan        -INF          200.0000       200.0000         9.0000      
+p6.Feb        -INF          300.0000       300.0000         9.0000      
+p6.Mar        -INF          400.0000       400.0000         9.0000      
+p6.Apr        -INF             .              .             9.5000      
+p6.May        -INF          300.0000       300.0000         9.0000      
+p6.Jun        -INF          500.0000       500.0000         9.0000      
+p7.Jan        -INF          100.0000       100.0000         3.0000      
+p7.Feb        -INF          150.0000       150.0000         3.0000      
+p7.Mar        -INF          100.0000       100.0000         3.0000      
+p7.Apr        -INF          100.0000       100.0000          .          
+p7.May        -INF             .              .             3.0000      
+p7.Jun        -INF           60.0000        60.0000         3.0000      
+
+---- VAR maccount  number of machines active for a process in a month
+
+                    LOWER          LEVEL          UPPER         MARGINAL
+
+grinding.Jan        -INF            4.0000        +INF             .          
+grinding.Feb        -INF            4.0000        +INF             .          
+grinding.Mar        -INF            4.0000        +INF             .          
+grinding.Apr        -INF            2.0000        +INF             .          
+grinding.May        -INF            4.0000        +INF             .          
+grinding.Jun        -INF            4.0000        +INF             .          
+vdrill  .Jan        -INF            2.0000        +INF             .          
+vdrill  .Feb        -INF            1.0000        +INF             .          
+vdrill  .Mar        -INF            2.0000        +INF             .          
+vdrill  .Apr        -INF            2.0000        +INF             .          
+vdrill  .May        -INF            1.0000        +INF             .          
+vdrill  .Jun        -INF            2.0000        +INF             .          
+hdrill  .Jan        -INF            3.0000        +INF             .          
+hdrill  .Feb        -INF            3.0000        +INF             .          
+hdrill  .Mar        -INF            3.0000        +INF             .          
+hdrill  .Apr        -INF            3.0000        +INF             .          
+hdrill  .May        -INF            2.0000        +INF             .          
+hdrill  .Jun        -INF            1.0000        +INF             .          
+boring  .Jan        -INF            1.0000        +INF             .          
+boring  .Feb        -INF            1.0000        +INF             .          
+boring  .Mar        -INF            1.0000        +INF             .          
+boring  .Apr        -INF             .            +INF             .          
+boring  .May        -INF            1.0000        +INF             .          
+boring  .Jun        -INF            1.0000        +INF             .          
+planing .Jan        -INF            1.0000        +INF             .          
+planing .Feb        -INF            1.0000        +INF             .          
+planing .Mar        -INF            1.0000        +INF             .          
+planing .Apr        -INF             .            +INF             .          
+planing .May        -INF            1.0000        +INF             .          
+planing .Jun        -INF            1.0000        +INF             .          
+
+---- VAR storage  units stored at the end of each month
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+p1.Jan          .              .           100.0000        -0.5000      
+p1.Feb          .              .           100.0000        -0.5000      
+p1.Mar          .           100.0000       100.0000         9.5000      
+p1.Apr          .              .           100.0000       -10.5000      
+p1.May          .              .           100.0000        -0.5000      
+p1.Jun        50.0000        50.0000        50.0000        -0.5000      
+p2.Jan          .              .           100.0000        -0.5000      
+p2.Feb          .              .           100.0000        -0.5000      
+p2.Mar          .           100.0000       100.0000         5.5000      
+p2.Apr          .              .           100.0000        -6.5000      
+p2.May          .              .           100.0000        -0.5000      
+p2.Jun        50.0000        50.0000        50.0000        -0.5000      
+p3.Jan          .              .           100.0000        -0.5000      
+p3.Feb          .              .           100.0000        -0.5000      
+p3.Mar          .           100.0000       100.0000         7.5000      
+p3.Apr          .              .           100.0000        -8.5000      
+p3.May          .              .           100.0000        -0.5000      
+p3.Jun        50.0000        50.0000        50.0000        -0.5000      
+p4.Jan          .              .           100.0000        -1.0000      
+p4.Feb          .              .           100.0000          .          
+p4.Mar          .           100.0000       100.0000         3.5000      
+p4.Apr          .              .           100.0000        -4.5000      
+p4.May          .              .           100.0000        -0.5000      
+p4.Jun        50.0000        50.0000        50.0000        -0.5000      
+p5.Jan          .              .           100.0000        -0.5000      
+p5.Feb          .              .           100.0000        -0.5000      
+p5.Mar          .           100.0000       100.0000        10.5000      
+p5.Apr          .              .           100.0000       -11.5000      
+p5.May          .              .           100.0000        -0.5000      
+p5.Jun        50.0000        50.0000        50.0000        -0.5000      
+p6.Jan          .              .           100.0000        -0.5000      
+p6.Feb          .              .           100.0000        -0.5000      
+p6.Mar          .              .           100.0000        -1.0000      
+p6.Apr          .              .           100.0000          .          
+p6.May          .              .           100.0000        -0.5000      
+p6.Jun        50.0000        50.0000        50.0000        -0.5000      
+p7.Jan          .              .           100.0000        -0.5000      
+p7.Feb          .              .           100.0000        -0.5000      
+p7.Mar          .           100.0000       100.0000         2.5000      
+p7.Apr          .              .           100.0000        -3.5000      
+p7.May          .              .           100.0000        -0.5000      
+p7.Jun        50.0000        50.0000        50.0000        -0.5000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR profit            -INF       108855.0000        +INF             .          
+
+---- VAR avail  
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+G1    .Jan          .             1.0000         1.0000         EPS         
+G1    .Feb          .             1.0000         1.0000         EPS         
+G1    .Mar          .             1.0000         1.0000         EPS         
+G1    .Apr          .             1.0000         1.0000         EPS         
+G1    .May          .             1.0000         1.0000         EPS         
+G1    .Jun          .             1.0000         1.0000         EPS         
+G2    .Jan          .             1.0000         1.0000         EPS         
+G2    .Feb          .             1.0000         1.0000         EPS         
+G2    .Mar          .             1.0000         1.0000         EPS         
+G2    .Apr          .              .             1.0000         EPS         
+G2    .May          .             1.0000         1.0000         EPS         
+G2    .Jun          .             1.0000         1.0000         EPS         
+G3    .Jan          .             1.0000         1.0000         EPS         
+G3    .Feb          .             1.0000         1.0000         EPS         
+G3    .Mar          .             1.0000         1.0000         EPS         
+G3    .Apr          .              .             1.0000         EPS         
+G3    .May          .             1.0000         1.0000         EPS         
+G3    .Jun          .             1.0000         1.0000         EPS         
+G4    .Jan          .             1.0000         1.0000         EPS         
+G4    .Feb          .             1.0000         1.0000         EPS         
+G4    .Mar          .             1.0000         1.0000         EPS         
+G4    .Apr          .             1.0000         1.0000         EPS         
+G4    .May          .             1.0000         1.0000         EPS         
+G4    .Jun          .             1.0000         1.0000         EPS         
+VD1   .Jan          .             1.0000         1.0000         EPS         
+VD1   .Feb          .              .             1.0000         EPS         
+VD1   .Mar          .             1.0000         1.0000         EPS         
+VD1   .Apr          .             1.0000         1.0000         EPS         
+VD1   .May          .             1.0000         1.0000         EPS         
+VD1   .Jun          .             1.0000         1.0000         EPS         
+VD2   .Jan          .             1.0000         1.0000         EPS         
+VD2   .Feb          .             1.0000         1.0000         EPS         
+VD2   .Mar          .             1.0000         1.0000         EPS         
+VD2   .Apr          .             1.0000         1.0000         EPS         
+VD2   .May          .              .             1.0000         EPS         
+VD2   .Jun          .             1.0000         1.0000         EPS         
+HD1   .Jan          .             1.0000         1.0000         EPS         
+HD1   .Feb          .             1.0000         1.0000         EPS         
+HD1   .Mar          .             1.0000         1.0000         EPS         
+HD1   .Apr          .             1.0000         1.0000         EPS         
+HD1   .May          .             1.0000         1.0000         EPS         
+HD1   .Jun          .              .             1.0000         EPS         
+HD2   .Jan          .             1.0000         1.0000         EPS         
+HD2   .Feb          .             1.0000         1.0000         EPS         
+HD2   .Mar          .             1.0000         1.0000         EPS         
+HD2   .Apr          .             1.0000         1.0000         EPS         
+HD2   .May          .              .             1.0000         EPS         
+HD2   .Jun          .             1.0000         1.0000         EPS         
+HD3   .Jan          .             1.0000         1.0000         EPS         
+HD3   .Feb          .             1.0000         1.0000         EPS         
+HD3   .Mar          .             1.0000         1.0000         EPS         
+HD3   .Apr          .             1.0000         1.0000         EPS         
+HD3   .May          .             1.0000         1.0000         EPS         
+HD3   .Jun          .              .             1.0000         EPS         
+borer .Jan          .             1.0000         1.0000         EPS         
+borer .Feb          .             1.0000         1.0000         EPS         
+borer .Mar          .             1.0000         1.0000         EPS         
+borer .Apr          .              .             1.0000     76800.0000      
+borer .May          .             1.0000         1.0000         EPS         
+borer .Jun          .             1.0000         1.0000         EPS         
+planer.Jan          .             1.0000         1.0000         EPS         
+planer.Feb          .             1.0000         1.0000         EPS         
+planer.Mar          .             1.0000         1.0000         EPS         
+planer.Apr          .              .             1.0000    307200.0000      
+planer.May          .             1.0000         1.0000         EPS         
+planer.Jun          .             1.0000         1.0000         EPS         
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/16/18 17:25:23 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    103 VARIABLE storage.L  units stored at the end of each month
+
+           Mar         Jun
+
+p1     100.000      50.000
+p2     100.000      50.000
+p3     100.000      50.000
+p4     100.000      50.000
+p5     100.000      50.000
+p6                  50.000
+p7     100.000      50.000
+
+
+----    103 VARIABLE profit.L              =   108855.000  
+
+----    104 VARIABLE produced.L  units of ech product produced
+
+           Jan         Feb         Mar         May         Jun
+
+p1     500.000     600.000     400.000                 550.000
+p2    1000.000     500.000     700.000     100.000     550.000
+p3     300.000     200.000     100.000     500.000     150.000
+p4     300.000                 100.000     100.000     350.000
+p5     800.000     400.000     600.000    1000.000    1150.000
+p6     200.000     300.000     400.000     300.000     550.000
+p7     100.000     150.000     200.000                 110.000
+
+
+----    104 VARIABLE prodsold.L  
+
+           Jan         Feb         Mar         Apr         May         Jun
+
+p1     500.000     600.000     300.000     100.000                 500.000
+p2    1000.000     500.000     600.000     100.000     100.000     500.000
+p3     300.000     200.000                 100.000     500.000     100.000
+p4     300.000                             100.000     100.000     300.000
+p5     800.000     400.000     500.000     100.000    1000.000    1100.000
+p6     200.000     300.000     400.000                 300.000     500.000
+p7     100.000     150.000     100.000     100.000                  60.000
+
+
+----    104 VARIABLE avail.L  
+
+               Jan         Feb         Mar         Apr         May         Jun
+
+G1           1.000       1.000       1.000       1.000       1.000       1.000
+G2           1.000       1.000       1.000                   1.000       1.000
+G3           1.000       1.000       1.000                   1.000       1.000
+G4           1.000       1.000       1.000       1.000       1.000       1.000
+VD1          1.000                   1.000       1.000       1.000       1.000
+VD2          1.000       1.000       1.000       1.000                   1.000
+HD1          1.000       1.000       1.000       1.000       1.000
+HD2          1.000       1.000       1.000       1.000                   1.000
+HD3          1.000       1.000       1.000       1.000       1.000
+borer        1.000       1.000       1.000                   1.000       1.000
+planer       1.000       1.000       1.000                   1.000       1.000
+
+
+
+EXECUTION TIME       =        0.000 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\factory plan 2\factory_plan_2.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\factory plan 2\factory_plan_2.lst

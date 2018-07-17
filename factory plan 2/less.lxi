@@ -1,0 +1,37 @@
+B 2 C o m p i l a t i o n
+B 119 Equation Listing    SOLVE eqchk Using MIP From line 110
+D 120 machrslimit
+D 184 stock
+D 257 stockjan
+D 274 macactive
+D 337 objfunc
+D 356 maintenance1
+D 373 maintenance2
+B 384 Column Listing      SOLVE eqchk Using MIP From line 110
+E 385 produced
+E 414 prodsold
+E 433 machrs
+E 452 storage
+E 474 profit
+E 481 maintain
+B 502 Model Statistics    SOLVE eqchk Using MIP From line 110
+B 518 Solution Report     SOLVE eqchk Using MIP From line 110
+F 559 machrslimit
+F 594 stock
+F 634 stockjan
+F 646 macactive
+F 679 objfunc
+F 685 maintenance1
+F 697 maintenance2
+G 698 produced
+G 745 prodsold
+G 792 machrs
+G 827 storage
+G 874 profit
+G 878 maintain
+B 956 E x e c u t i o n
+I 957 storage
+I 972 profit
+I 973 produced
+I 986 prodsold
+I 999 maintain

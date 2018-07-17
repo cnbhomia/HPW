@@ -1,0 +1,37 @@
+B 2 C o m p i l a t i o n
+B 112 Equation Listing    SOLVE eqchk Using MIP From line 101
+D 113 machrslimit
+D 177 stock
+D 250 stockjan
+D 267 macactive
+D 330 objfunc
+D 349 nonGschedule
+D 366 Gschedule
+B 375 Column Listing      SOLVE eqchk Using MIP From line 101
+E 376 produced
+E 405 prodsold
+E 424 maccount
+E 443 storage
+E 465 profit
+E 472 avail
+B 493 Model Statistics    SOLVE eqchk Using MIP From line 101
+B 509 Solution Report     SOLVE eqchk Using MIP From line 101
+F 550 machrslimit
+F 585 stock
+F 625 stockjan
+F 637 macactive
+F 670 objfunc
+F 676 nonGschedule
+F 686 Gschedule
+G 689 produced
+G 736 prodsold
+G 783 maccount
+G 818 storage
+G 865 profit
+G 869 avail
+B 947 E x e c u t i o n
+I 948 storage
+I 963 profit
+I 964 produced
+I 977 prodsold
+I 990 avail
