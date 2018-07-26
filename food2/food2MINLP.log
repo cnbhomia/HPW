@@ -1,0 +1,66 @@
+--- Job food2MINLP.gms Start 07/24/18 11:17:40 25.1.1 r66732 DEX-DEG x86 64bit/Mac OS X
+GAMS 25.1.1   Copyright (C) 1987-2018 GAMS Development. All rights reserved
+Licensee: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+          GAMS Development, Fairfax                                 DC14199
+          cbhomia@gams.com                                                 
+--- Starting compilation
+--- food2MINLP.gms(101) 3 Mb
+--- Starting execution: elapsed 0:00:00.062[LST:109]
+--- food2MINLP.gms(97) 4 Mb
+--- Generating MINLP model food1[LST:109]
+--- food2MINLP.gms(98) 6 Mb
+---   79 rows  127 columns  529 non-zeroes
+---   528 nl-code  300 nl-non-zeroes
+---   30 discrete-columns
+--- food2MINLP.gms(98) 4 Mb
+--- Executing DICOPT: elapsed 0:00:00.067[LST:490]
+-------------------------------------------------------------------------------
+Dicopt 2         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
+-------------------------------------------------------------------------------
+by Aldo Vecchietti, Director del Instituto INGAR,
+   CONICET, UTN, Santa Fe, Argentina
+by Ignacio E. Grossmann, Chemical Engineering Faculty,
+   Carnegie Mellon University, Pittsburgh, PA, USA
+-------------------------------------------------------------------------------
+--- DICOPT: Starting major iteration 1
+--- DICOPT: Setting up first (relaxed) NLP.
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
+ 
+ 
+    C O N O P T 3   version 3.17I
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+   Iter Phase Ninf   Infeasibility   RGmax    NSB   Step InItr MX OK
+      0   0        1.7500000000E+04 (Input point)
+ 
+                   Pre-triangular equations:   0
+                   Post-triangular equations:  19
+                   Definitional equations:     6
+ 
+      1   0        5.0000000000E+03 (After pre-processing)
+      2   0        1.9531250000E+01 (After scaling)
+ 
+ ** Feasible solution. Value of objective =   -75000.0000000
+ 
+   Iter Phase Ninf     Objective     RGmax    NSB   Step InItr MX OK
+      6   3        3.6491835431E+04 1.4E+04     8 1.0E+00   11 T  T
+      8   3        1.0784259259E+05 0.0E+00    13
+ 
+ ** Optimal solution. Reduced gradient less than tolerance.
+ 
+--- DICOPT: Setting up first MIP
+--- DICOPT: Relaxed NLP gives integer solution
+
+      The Relaxed NLP gave a solution where all the integer
+      variables have integral values. There is no need to
+      to continue the search.
+
+--- Restarting execution
+--- food2MINLP.gms(98) 2 Mb
+--- Reading solution for model food1[LST:505]
+--- GDX File /Users/cbhomia/Documents/GitHub/HPW/food2/food2MINLP.gdx[FIL:"/Users/cbhomia/Documents/GitHub/HPW/food2/food2MINLP.gdx",0,0]
+*** Status: Normal completion[LST:874]
+--- Job food2MINLP.gms Stop 07/24/18 11:17:40 elapsed 0:00:00.105

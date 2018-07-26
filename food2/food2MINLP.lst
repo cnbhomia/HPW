@@ -1,4 +1,4 @@
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 09:35:51 Page 1
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/24/18 12:10:05 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -104,8 +104,8 @@ C o m p i l a t i o n
  101   
 
 
-COMPILATION TIME     =        0.004 SECONDS      3 MB  25.1.1 r66732 DEX-DEG
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 09:35:51 Page 2
+COMPILATION TIME     =        0.001 SECONDS      3 MB  25.1.1 r66732 DEX-DEG
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/24/18 12:10:05 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE food1 Using MINLP From line 98
 
@@ -344,7 +344,7 @@ combo2(May)..  D(veg2,May) - D(oil3,May) =L= 1 ; (LHS = 0)
      
 combo2(June)..  D(veg2,June) - D(oil3,June) =L= 1 ; (LHS = 0)
      
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 09:35:51 Page 3
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/24/18 12:10:05 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE food1 Using MINLP From line 98
 
@@ -483,7 +483,7 @@ D(veg1,Mar)
         1       combo1(Mar)
 
 REMAINING 27 ENTRIES SKIPPED
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 09:35:51 Page 4
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/24/18 12:10:05 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE food1 Using MINLP From line 98
 
@@ -497,11 +497,11 @@ DERIVATIVE POOL              20     CONSTANT POOL              19
 CODE LENGTH                 528     DISCRETE VARIABLES         30
 
 
-GENERATION TIME      =        0.012 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
+GENERATION TIME      =        0.006 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
 
 
-EXECUTION TIME       =        0.013 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
-GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/12/18 09:35:51 Page 5
+EXECUTION TIME       =        0.006 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/24/18 12:10:05 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE food1 Using MINLP From line 98
 
@@ -516,7 +516,7 @@ Solution Report     SOLVE food1 Using MINLP From line 98
 **** MODEL STATUS      2 Locally Optimal           
 **** OBJECTIVE VALUE           107842.5926
 
- RESOURCE USAGE, LIMIT          0.014      1000.000
+ RESOURCE USAGE, LIMIT          0.002      1000.000
  ITERATION COUNT, LIMIT         8    2000000000
  EVALUATION ERRORS              0             0
 -------------------------------------------------------------------------------
@@ -555,8 +555,8 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X
  ** Optimal solution. Reduced gradient less than tolerance.
  
  
- CONOPT time Total                            0.012 seconds
-   of which: Function evaluations             0.001 =  8.3%
+ CONOPT time Total                            0.002 seconds
+   of which: Function evaluations             0.001 = 50.0%
              1st Derivative evaluations       0.000 =  0.0%
  
 --- DICOPT: Relaxed NLP gives integer solution
@@ -860,7 +860,7 @@ oil3.June          .             1.0000         1.0000         EPS
                              1  PROJECTED
 
 
-EXECUTION TIME       =        0.001 SECONDS      2 MB  25.1.1 r66732 DEX-DEG
+EXECUTION TIME       =        0.002 SECONDS      2 MB  25.1.1 r66732 DEX-DEG
 
 
 USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN

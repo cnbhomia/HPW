@@ -1,4 +1,4 @@
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 13:45:03 Page 1
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/24/18 12:10:13 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -109,8 +109,8 @@ C o m p i l a t i o n
  112   
 
 
-COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 13:45:03 Page 2
+COMPILATION TIME     =        0.002 SECONDS      3 MB  25.1.1 r66732 DEX-DEG
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/24/18 12:10:13 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE food1 Using MINLP From line 109
 
@@ -340,7 +340,7 @@ combo2(May)..  D(veg2,May) - D(oil3,May) =L= 1 ; (LHS = 0)
      
 combo2(June)..  D(veg2,June) - D(oil3,June) =L= 1 ; (LHS = 0)
      
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 13:45:03 Page 3
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/24/18 12:10:13 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE food1 Using MINLP From line 109
 
@@ -482,7 +482,7 @@ D(veg1,Mar)
         1       combo1(Mar)
 
 REMAINING 27 ENTRIES SKIPPED
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 13:45:03 Page 4
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/24/18 12:10:13 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE food1 Using MINLP From line 109
 
@@ -496,11 +496,11 @@ DERIVATIVE POOL              20     CONSTANT POOL              19
 CODE LENGTH                 528     DISCRETE VARIABLES         30
 
 
-GENERATION TIME      =        0.000 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
+GENERATION TIME      =        0.006 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
 
 
-EXECUTION TIME       =        0.015 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/13/18 13:45:03 Page 5
+EXECUTION TIME       =        0.006 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/24/18 12:10:13 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE food1 Using MINLP From line 109
 
@@ -513,20 +513,20 @@ Solution Report     SOLVE food1 Using MINLP From line 109
 
 **** SOLVER STATUS     1 Normal Completion         
 **** MODEL STATUS      8 Integer Solution          
-**** OBJECTIVE VALUE            95640.3439
+**** OBJECTIVE VALUE            65146.1640
 
- RESOURCE USAGE, LIMIT          0.359      1000.000
- ITERATION COUNT, LIMIT      4742    2000000000
+ RESOURCE USAGE, LIMIT          0.190      1000.000
+ ITERATION COUNT, LIMIT      2772    2000000000
  EVALUATION ERRORS              0             0
 -------------------------------------------------------------------------------
-Dicopt 2         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+Dicopt 2         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
 -------------------------------------------------------------------------------
 by Aldo Vecchietti, Director del Instituto INGAR,
    CONICET, UTN, Santa Fe, Argentina
 by Ignacio E. Grossmann, Chemical Engineering Faculty,
    Carnegie Mellon University, Pittsburgh, PA, USA
 -------------------------------------------------------------------------------
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
  
  
     C O N O P T 3   version 3.17I
@@ -548,31 +548,31 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
  ** Optimal solution. Reduced gradient less than tolerance.
  
  
- CONOPT time Total                            0.015 seconds
-   of which: Function evaluations             0.005 = 33.3%
-             1st Derivative evaluations       0.001 =  6.7%
+ CONOPT time Total                            0.017 seconds
+   of which: Function evaluations             0.005 = 29.4%
+             1st Derivative evaluations       0.001 =  5.9%
  
 
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
 Cplex 12.8.0.0
 
 Unable to load names.
 MIP status(101): integer optimal solution
-Cplex Time: 0.02sec (det. 0.99 ticks)
+Cplex Time: 0.02sec (det. 0.96 ticks)
 Fixing integer variables, and solving final LP...
 Fixed MIP status(1): optimal
-Cplex Time: 0.00sec (det. 0.29 ticks)
+Cplex Time: 0.00sec (det. 0.44 ticks)
 Proven optimal solution.
 
 MIP Solution:       107842.592593    (92 iterations, 0 nodes)
-Final Solve:        107842.592593    (53 iterations)
+Final Solve:        107842.592593    (55 iterations)
 
 Best possible:      107842.592593
 Absolute gap:            0.000000
 Relative gap:            0.000000
 
 --- DICOPT: Setting up next NLP
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
  
  
     C O N O P T 3   version 3.17I
@@ -607,9 +607,55 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
  
  
  ** Warning **  The variance of the derivatives in the final
-                point is large (= 4.8 ). A better scaling or
+                point is large (= 4.7 ). A better scaling or
                 better bounds on the variables will probably
                 help the optimization.
+ 
+ 
+ CONOPT time Total                            0.001 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+ 
+
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
+Cplex 12.8.0.0
+
+Unable to load names.
+MIP status(101): integer optimal solution
+Cplex Time: 0.01sec (det. 3.54 ticks)
+Fixing integer variables, and solving final LP...
+Fixed MIP status(1): optimal
+Cplex Time: 0.00sec (det. 0.45 ticks)
+Proven optimal solution.
+
+MIP Solution:       107842.592593    (111 iterations, 0 nodes)
+Final Solve:        107842.592593    (57 iterations)
+
+Best possible:      107842.592593
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- DICOPT: Setting up next NLP
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
+ 
+ 
+    C O N O P T 3   version 3.17I
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+    The model has 127 variables and 79 constraints
+    with 529 Jacobian elements, 300 of which are nonlinear.
+    The Hessian of the Lagrangian has 0 elements on the diagonal,
+    30 elements below the diagonal, and 60 nonlinear variables.
+ 
+                   Pre-triangular equations:   18
+                   Post-triangular equations:  4
+                   Definitional equations:     6
+ 
+ 
+ ** Optimal solution. Reduced gradient less than tolerance.
  
  
  CONOPT time Total                            0.001 seconds
@@ -617,26 +663,90 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
              1st Derivative evaluations       0.000 =  0.0%
  
 
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
 Cplex 12.8.0.0
 
 Unable to load names.
 MIP status(101): integer optimal solution
-Cplex Time: 0.02sec (det. 1.52 ticks)
+Cplex Time: 0.00sec (det. 1.12 ticks)
 Fixing integer variables, and solving final LP...
 Fixed MIP status(1): optimal
-Cplex Time: 0.00sec (det. 0.29 ticks)
+Cplex Time: 0.00sec (det. 0.45 ticks)
 Proven optimal solution.
 
-MIP Solution:       107842.592593    (95 iterations, 0 nodes)
-Final Solve:        107842.592593    (53 iterations)
+MIP Solution:       107842.592593    (103 iterations, 0 nodes)
+Final Solve:        107842.592593    (55 iterations)
 
 Best possible:      107842.592593
 Absolute gap:            0.000000
 Relative gap:            0.000000
 
 --- DICOPT: Setting up next NLP
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
+ 
+ 
+    C O N O P T 3   version 3.17I
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+    The model has 127 variables and 79 constraints
+    with 529 Jacobian elements, 300 of which are nonlinear.
+    The Hessian of the Lagrangian has 0 elements on the diagonal,
+    30 elements below the diagonal, and 60 nonlinear variables.
+ 
+ ** Warning **  The number of nonlinear derivatives equal to zero
+                in the initial point is large (= 24 percent).
+                A better initial point will probably help the
+                optimization.
+ 
+ 
+                   Pre-triangular equations:   18
+                   Post-triangular equations:  11
+                   Definitional equations:     6
+ 
+ 
+ ** Infeasible solution. Reduced gradient less than tolerance.
+ 
+ 
+ ** Warning **  The number of nonlinear derivatives equal to zero
+                in the final point is large (= 21 percent).
+                Better bounds on the variables may help the
+                optimization.
+ 
+ 
+ ** Warning **  The variance of the derivatives in the final
+                point is large (= 4.7 ). A better scaling or
+                better bounds on the variables will probably
+                help the optimization.
+ 
+ 
+ CONOPT time Total                            0.001 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+ 
+
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
+Cplex 12.8.0.0
+
+Unable to load names.
+MIP status(101): integer optimal solution
+Cplex Time: 0.00sec (det. 1.27 ticks)
+Fixing integer variables, and solving final LP...
+Fixed MIP status(1): optimal
+Cplex Time: 0.00sec (det. 0.45 ticks)
+Proven optimal solution.
+
+MIP Solution:       107842.592593    (104 iterations, 0 nodes)
+Final Solve:        107842.592593    (55 iterations)
+
+Best possible:      107842.592593
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- DICOPT: Setting up next NLP
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
  
  
     C O N O P T 3   version 3.17I
@@ -671,30 +781,33 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
  
  
  CONOPT time Total                            0.001 seconds
-   of which: Function evaluations             0.000 =  0.0%
+   of which: Function evaluations             0.001 =100.0%
              1st Derivative evaluations       0.000 =  0.0%
  
 
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+--- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
+
+
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
 Cplex 12.8.0.0
 
 Unable to load names.
 MIP status(101): integer optimal solution
-Cplex Time: 0.00sec (det. 1.45 ticks)
+Cplex Time: 0.01sec (det. 1.62 ticks)
 Fixing integer variables, and solving final LP...
 Fixed MIP status(1): optimal
-Cplex Time: 0.00sec (det. 0.29 ticks)
+Cplex Time: 0.00sec (det. 0.46 ticks)
 Proven optimal solution.
 
-MIP Solution:       107842.592593    (98 iterations, 0 nodes)
-Final Solve:        107842.592593    (53 iterations)
+MIP Solution:       107842.592593    (107 iterations, 0 nodes)
+Final Solve:        107842.592593    (55 iterations)
 
 Best possible:      107842.592593
 Absolute gap:            0.000000
 Relative gap:            0.000000
 
 --- DICOPT: Setting up next NLP
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
  
  
     C O N O P T 3   version 3.17I
@@ -723,7 +836,7 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
  
  
  ** Warning **  The variance of the derivatives in the final
-                point is large (= 4.7 ). A better scaling or
+                point is large (= 4.6 ). A better scaling or
                 better bounds on the variables will probably
                 help the optimization.
  
@@ -736,26 +849,26 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
 --- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
 
 
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
 Cplex 12.8.0.0
 
 Unable to load names.
 MIP status(101): integer optimal solution
-Cplex Time: 0.00sec (det. 1.52 ticks)
+Cplex Time: 0.00sec (det. 1.69 ticks)
 Fixing integer variables, and solving final LP...
 Fixed MIP status(1): optimal
-Cplex Time: 0.00sec (det. 0.29 ticks)
+Cplex Time: 0.00sec (det. 0.46 ticks)
 Proven optimal solution.
 
-MIP Solution:       107842.592593    (99 iterations, 0 nodes)
-Final Solve:        107842.592593    (53 iterations)
+MIP Solution:       107842.592593    (108 iterations, 0 nodes)
+Final Solve:        107842.592593    (55 iterations)
 
 Best possible:      107842.592593
 Absolute gap:            0.000000
 Relative gap:            0.000000
 
 --- DICOPT: Setting up next NLP
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
  
  
     C O N O P T 3   version 3.17I
@@ -797,81 +910,26 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
 --- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
 
 
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
 Cplex 12.8.0.0
 
 Unable to load names.
 MIP status(101): integer optimal solution
-Cplex Time: 0.00sec (det. 1.94 ticks)
+Cplex Time: 0.00sec (det. 1.85 ticks)
 Fixing integer variables, and solving final LP...
 Fixed MIP status(1): optimal
-Cplex Time: 0.00sec (det. 0.30 ticks)
+Cplex Time: 0.00sec (det. 0.46 ticks)
 Proven optimal solution.
 
-MIP Solution:       107842.592593    (102 iterations, 0 nodes)
-Final Solve:        107842.592593    (53 iterations)
+MIP Solution:       107842.592593    (109 iterations, 0 nodes)
+Final Solve:        107842.592593    (55 iterations)
 
 Best possible:      107842.592593
 Absolute gap:            0.000000
 Relative gap:            0.000000
 
 --- DICOPT: Setting up next NLP
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
- 
- 
-    C O N O P T 3   version 3.17I
-    Copyright (C)   ARKI Consulting and Development A/S
-                    Bagsvaerdvej 246 A
-                    DK-2880 Bagsvaerd, Denmark
- 
- 
-    The model has 127 variables and 79 constraints
-    with 529 Jacobian elements, 300 of which are nonlinear.
-    The Hessian of the Lagrangian has 0 elements on the diagonal,
-    30 elements below the diagonal, and 60 nonlinear variables.
- 
- ** Warning **  The number of nonlinear derivatives equal to zero
-                in the initial point is large (= 24 percent).
-                A better initial point will probably help the
-                optimization.
- 
- 
-                   Pre-triangular equations:   18
-                   Post-triangular equations:  13
-                   Definitional equations:     6
- 
- 
- ** Optimal solution. Reduced gradient less than tolerance.
- 
- 
- CONOPT time Total                            0.001 seconds
-   of which: Function evaluations             0.000 =  0.0%
-             1st Derivative evaluations       0.001 =100.0%
- 
-
---- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
-
-
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
-Cplex 12.8.0.0
-
-Unable to load names.
-MIP status(101): integer optimal solution
-Cplex Time: 0.00sec (det. 2.00 ticks)
-Fixing integer variables, and solving final LP...
-Fixed MIP status(1): optimal
-Cplex Time: 0.00sec (det. 0.30 ticks)
-Proven optimal solution.
-
-MIP Solution:       107842.592593    (103 iterations, 0 nodes)
-Final Solve:        107842.592593    (53 iterations)
-
-Best possible:      107842.592593
-Absolute gap:            0.000000
-Relative gap:            0.000000
-
---- DICOPT: Setting up next NLP
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
  
  
     C O N O P T 3   version 3.17I
@@ -896,62 +954,11 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
                    Definitional equations:     6
  
  
- ** Optimal solution. Reduced gradient less than tolerance.
- 
- 
- CONOPT time Total                            0.001 seconds
-   of which: Function evaluations             0.000 =  0.0%
-             1st Derivative evaluations       0.000 =  0.0%
- 
-
---- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
-
---- GMO Resort Time 0ms
-
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
---- GAMS/Cplex licensed for continuous and discrete problems.
-Cplex 12.8.0.0
-
-Unable to load names.
-MIP status(101): integer optimal solution
-Cplex Time: 0.02sec (det. 5.08 ticks)
-Fixing integer variables, and solving final LP...
-Fixed MIP status(1): optimal
-Cplex Time: 0.00sec (det. 0.50 ticks)
-Proven optimal solution.
-
-MIP Solution:        83854.621204    (170 iterations, 5 nodes)
-Final Solve:         83854.621204    (83 iterations)
-
-Best possible:       83854.621204
-Absolute gap:            0.000000
-Relative gap:            0.000000
-
---- DICOPT: Setting up next NLP
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
- 
- 
-    C O N O P T 3   version 3.17I
-    Copyright (C)   ARKI Consulting and Development A/S
-                    Bagsvaerdvej 246 A
-                    DK-2880 Bagsvaerd, Denmark
- 
- 
-    The model has 127 variables and 79 constraints
-    with 529 Jacobian elements, 300 of which are nonlinear.
-    The Hessian of the Lagrangian has 0 elements on the diagonal,
-    30 elements below the diagonal, and 60 nonlinear variables.
- 
-                   Pre-triangular equations:   18
-                   Post-triangular equations:  4
-                   Definitional equations:     6
- 
- 
  ** Infeasible solution. Reduced gradient less than tolerance.
  
  
  ** Warning **  The variance of the derivatives in the final
-                point is large (= 4.1 ). A better scaling or
+                point is large (= 4.8 ). A better scaling or
                 better bounds on the variables will probably
                 help the optimization.
  
@@ -964,27 +971,26 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
 --- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
 
 
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
---- GAMS/Cplex licensed for continuous and discrete problems.
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
 Cplex 12.8.0.0
 
 Unable to load names.
 MIP status(101): integer optimal solution
-Cplex Time: 0.02sec (det. 5.45 ticks)
+Cplex Time: 0.01sec (det. 4.32 ticks)
 Fixing integer variables, and solving final LP...
 Fixed MIP status(1): optimal
-Cplex Time: 0.00sec (det. 0.51 ticks)
+Cplex Time: 0.00sec (det. 0.47 ticks)
 Proven optimal solution.
 
-MIP Solution:        83854.621204    (166 iterations, 11 nodes)
-Final Solve:         83854.621204    (83 iterations)
+MIP Solution:       107842.592593    (105 iterations, 0 nodes)
+Final Solve:        107842.592593    (55 iterations)
 
-Best possible:       83854.621204
+Best possible:      107842.592593
 Absolute gap:            0.000000
 Relative gap:            0.000000
 
 --- DICOPT: Setting up next NLP
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
  
  
     C O N O P T 3   version 3.17I
@@ -998,16 +1004,28 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
     The Hessian of the Lagrangian has 0 elements on the diagonal,
     30 elements below the diagonal, and 60 nonlinear variables.
  
+ ** Warning **  The number of nonlinear derivatives equal to zero
+                in the initial point is large (= 25 percent).
+                A better initial point will probably help the
+                optimization.
+ 
+ 
                    Pre-triangular equations:   18
-                   Post-triangular equations:  4
+                   Post-triangular equations:  13
                    Definitional equations:     6
  
  
  ** Infeasible solution. Reduced gradient less than tolerance.
  
  
+ ** Warning **  The number of nonlinear derivatives equal to zero
+                in the final point is large (= 22 percent).
+                Better bounds on the variables may help the
+                optimization.
+ 
+ 
  ** Warning **  The variance of the derivatives in the final
-                point is large (= 4.1 ). A better scaling or
+                point is large (= 4.8 ). A better scaling or
                 better bounds on the variables will probably
                 help the optimization.
  
@@ -1020,27 +1038,26 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
 --- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
 
 
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
---- GAMS/Cplex licensed for continuous and discrete problems.
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
 Cplex 12.8.0.0
 
 Unable to load names.
 MIP status(101): integer optimal solution
-Cplex Time: 0.02sec (det. 5.24 ticks)
+Cplex Time: 0.00sec (det. 1.46 ticks)
 Fixing integer variables, and solving final LP...
 Fixed MIP status(1): optimal
-Cplex Time: 0.00sec (det. 0.51 ticks)
+Cplex Time: 0.00sec (det. 0.47 ticks)
 Proven optimal solution.
 
-MIP Solution:        83854.621204    (167 iterations, 5 nodes)
-Final Solve:         83854.621204    (83 iterations)
+MIP Solution:       107842.592593    (105 iterations, 0 nodes)
+Final Solve:        107842.592593    (56 iterations)
 
-Best possible:       83854.621204
+Best possible:      107842.592593
 Absolute gap:            0.000000
 Relative gap:            0.000000
 
 --- DICOPT: Setting up next NLP
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
  
  
     C O N O P T 3   version 3.17I
@@ -1054,8 +1071,14 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
     The Hessian of the Lagrangian has 0 elements on the diagonal,
     30 elements below the diagonal, and 60 nonlinear variables.
  
+ ** Warning **  The number of nonlinear derivatives equal to zero
+                in the initial point is large (= 23 percent).
+                A better initial point will probably help the
+                optimization.
+ 
+ 
                    Pre-triangular equations:   18
-                   Post-triangular equations:  4
+                   Post-triangular equations:  9
                    Definitional equations:     6
  
  
@@ -1063,119 +1086,7 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
  
  
  ** Warning **  The variance of the derivatives in the final
-                point is large (= 4.2 ). A better scaling or
-                better bounds on the variables will probably
-                help the optimization.
- 
- 
- CONOPT time Total                            0.001 seconds
-   of which: Function evaluations             0.000 =  0.0%
-             1st Derivative evaluations       0.000 =  0.0%
- 
-
---- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
-
-
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
---- GAMS/Cplex licensed for continuous and discrete problems.
-Cplex 12.8.0.0
-
-Unable to load names.
-MIP status(101): integer optimal solution
-Cplex Time: 0.01sec (det. 5.63 ticks)
-Fixing integer variables, and solving final LP...
-Fixed MIP status(1): optimal
-Cplex Time: 0.00sec (det. 0.51 ticks)
-Proven optimal solution.
-
-MIP Solution:        83854.621204    (182 iterations, 11 nodes)
-Final Solve:         83854.621204    (83 iterations)
-
-Best possible:       83854.621204
-Absolute gap:            0.000000
-Relative gap:            0.000000
-
---- DICOPT: Setting up next NLP
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
- 
- 
-    C O N O P T 3   version 3.17I
-    Copyright (C)   ARKI Consulting and Development A/S
-                    Bagsvaerdvej 246 A
-                    DK-2880 Bagsvaerd, Denmark
- 
- 
-    The model has 127 variables and 79 constraints
-    with 529 Jacobian elements, 300 of which are nonlinear.
-    The Hessian of the Lagrangian has 0 elements on the diagonal,
-    30 elements below the diagonal, and 60 nonlinear variables.
- 
-                   Pre-triangular equations:   18
-                   Post-triangular equations:  4
-                   Definitional equations:     6
- 
- 
- ** Infeasible solution. Reduced gradient less than tolerance.
- 
- 
- ** Warning **  The variance of the derivatives in the final
-                point is large (= 4.2 ). A better scaling or
-                better bounds on the variables will probably
-                help the optimization.
- 
- 
- CONOPT time Total                            0.001 seconds
-   of which: Function evaluations             0.000 =  0.0%
-             1st Derivative evaluations       0.000 =  0.0%
- 
-
---- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
-
-
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
---- GAMS/Cplex licensed for continuous and discrete problems.
-Cplex 12.8.0.0
-
-Unable to load names.
-MIP status(101): integer optimal solution
-Cplex Time: 0.00sec (det. 6.25 ticks)
-Fixing integer variables, and solving final LP...
-Fixed MIP status(1): optimal
-Cplex Time: 0.00sec (det. 0.51 ticks)
-Proven optimal solution.
-
-MIP Solution:        83854.621204    (191 iterations, 14 nodes)
-Final Solve:         83854.621204    (82 iterations)
-
-Best possible:       83854.621204
-Absolute gap:            0.000000
-Relative gap:            0.000000
-
---- DICOPT: Setting up next NLP
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
- 
- 
-    C O N O P T 3   version 3.17I
-    Copyright (C)   ARKI Consulting and Development A/S
-                    Bagsvaerdvej 246 A
-                    DK-2880 Bagsvaerd, Denmark
- 
- 
-    The model has 127 variables and 79 constraints
-    with 529 Jacobian elements, 300 of which are nonlinear.
-    The Hessian of the Lagrangian has 0 elements on the diagonal,
-    30 elements below the diagonal, and 60 nonlinear variables.
- 
-                   Pre-triangular equations:   18
-                   Post-triangular equations:  4
-                   Definitional equations:     6
- 
- 
- ** Infeasible solution. Reduced gradient less than tolerance.
- 
- 
- ** Warning **  The variance of the derivatives in the final
-                point is large (= 4.1 ). A better scaling or
+                point is large (= 4.6 ). A better scaling or
                 better bounds on the variables will probably
                 help the optimization.
  
@@ -1188,27 +1099,26 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
 --- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
 
 
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
---- GAMS/Cplex licensed for continuous and discrete problems.
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
 Cplex 12.8.0.0
 
 Unable to load names.
 MIP status(101): integer optimal solution
-Cplex Time: 0.02sec (det. 6.61 ticks)
+Cplex Time: 0.00sec (det. 1.99 ticks)
 Fixing integer variables, and solving final LP...
 Fixed MIP status(1): optimal
-Cplex Time: 0.00sec (det. 0.51 ticks)
+Cplex Time: 0.00sec (det. 0.48 ticks)
 Proven optimal solution.
 
-MIP Solution:        83854.621204    (200 iterations, 19 nodes)
-Final Solve:         83854.621204    (83 iterations)
+MIP Solution:       107842.592593    (104 iterations, 0 nodes)
+Final Solve:        107842.592593    (56 iterations)
 
-Best possible:       83854.621204
+Best possible:      107842.592593
 Absolute gap:            0.000000
 Relative gap:            0.000000
 
 --- DICOPT: Setting up next NLP
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
  
  
     C O N O P T 3   version 3.17I
@@ -1222,8 +1132,14 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
     The Hessian of the Lagrangian has 0 elements on the diagonal,
     30 elements below the diagonal, and 60 nonlinear variables.
  
+ ** Warning **  The number of nonlinear derivatives equal to zero
+                in the initial point is large (= 22 percent).
+                A better initial point will probably help the
+                optimization.
+ 
+ 
                    Pre-triangular equations:   18
-                   Post-triangular equations:  3
+                   Post-triangular equations:  8
                    Definitional equations:     6
  
  
@@ -1231,7 +1147,68 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
  
  
  ** Warning **  The variance of the derivatives in the final
-                point is large (= 4.0 ). A better scaling or
+                point is large (= 4.5 ). A better scaling or
+                better bounds on the variables will probably
+                help the optimization.
+ 
+ 
+ CONOPT time Total                            0.000 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+ 
+
+--- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
+
+
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
+Cplex 12.8.0.0
+
+Unable to load names.
+MIP status(101): integer optimal solution
+Cplex Time: 0.00sec (det. 2.01 ticks)
+Fixing integer variables, and solving final LP...
+Fixed MIP status(1): optimal
+Cplex Time: 0.00sec (det. 0.49 ticks)
+Proven optimal solution.
+
+MIP Solution:       107842.592593    (106 iterations, 0 nodes)
+Final Solve:        107842.592593    (58 iterations)
+
+Best possible:      107842.592593
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- DICOPT: Setting up next NLP
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
+ 
+ 
+    C O N O P T 3   version 3.17I
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+    The model has 127 variables and 79 constraints
+    with 529 Jacobian elements, 300 of which are nonlinear.
+    The Hessian of the Lagrangian has 0 elements on the diagonal,
+    30 elements below the diagonal, and 60 nonlinear variables.
+ 
+ ** Warning **  The number of nonlinear derivatives equal to zero
+                in the initial point is large (= 22 percent).
+                A better initial point will probably help the
+                optimization.
+ 
+ 
+                   Pre-triangular equations:   18
+                   Post-triangular equations:  8
+                   Definitional equations:     6
+ 
+ 
+ ** Infeasible solution. Reduced gradient less than tolerance.
+ 
+ 
+ ** Warning **  The variance of the derivatives in the final
+                point is large (= 4.5 ). A better scaling or
                 better bounds on the variables will probably
                 help the optimization.
  
@@ -1244,27 +1221,26 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
 --- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
 
 
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
---- GAMS/Cplex licensed for continuous and discrete problems.
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
 Cplex 12.8.0.0
 
 Unable to load names.
 MIP status(101): integer optimal solution
-Cplex Time: 0.00sec (det. 5.90 ticks)
+Cplex Time: 0.00sec (det. 2.08 ticks)
 Fixing integer variables, and solving final LP...
 Fixed MIP status(1): optimal
-Cplex Time: 0.02sec (det. 0.50 ticks)
+Cplex Time: 0.00sec (det. 0.49 ticks)
 Proven optimal solution.
 
-MIP Solution:        83854.621204    (183 iterations, 9 nodes)
-Final Solve:         83854.621204    (81 iterations)
+MIP Solution:       107842.592593    (106 iterations, 0 nodes)
+Final Solve:        107842.592593    (58 iterations)
 
-Best possible:       83854.621204
+Best possible:      107842.592593
 Absolute gap:            0.000000
 Relative gap:            0.000000
 
 --- DICOPT: Setting up next NLP
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
  
  
     C O N O P T 3   version 3.17I
@@ -1278,8 +1254,14 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
     The Hessian of the Lagrangian has 0 elements on the diagonal,
     30 elements below the diagonal, and 60 nonlinear variables.
  
+ ** Warning **  The number of nonlinear derivatives equal to zero
+                in the initial point is large (= 21 percent).
+                A better initial point will probably help the
+                optimization.
+ 
+ 
                    Pre-triangular equations:   18
-                   Post-triangular equations:  3
+                   Post-triangular equations:  7
                    Definitional equations:     6
  
  
@@ -1287,7 +1269,68 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
  
  
  ** Warning **  The variance of the derivatives in the final
-                point is large (= 4.1 ). A better scaling or
+                point is large (= 4.5 ). A better scaling or
+                better bounds on the variables will probably
+                help the optimization.
+ 
+ 
+ CONOPT time Total                            0.000 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+ 
+
+--- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
+
+
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
+Cplex 12.8.0.0
+
+Unable to load names.
+MIP status(101): integer optimal solution
+Cplex Time: 0.01sec (det. 4.38 ticks)
+Fixing integer variables, and solving final LP...
+Fixed MIP status(1): optimal
+Cplex Time: 0.00sec (det. 0.49 ticks)
+Proven optimal solution.
+
+MIP Solution:       107842.592593    (110 iterations, 0 nodes)
+Final Solve:        107842.592593    (58 iterations)
+
+Best possible:      107842.592593
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- DICOPT: Setting up next NLP
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
+ 
+ 
+    C O N O P T 3   version 3.17I
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+    The model has 127 variables and 79 constraints
+    with 529 Jacobian elements, 300 of which are nonlinear.
+    The Hessian of the Lagrangian has 0 elements on the diagonal,
+    30 elements below the diagonal, and 60 nonlinear variables.
+ 
+ ** Warning **  The number of nonlinear derivatives equal to zero
+                in the initial point is large (= 21 percent).
+                A better initial point will probably help the
+                optimization.
+ 
+ 
+                   Pre-triangular equations:   18
+                   Post-triangular equations:  7
+                   Definitional equations:     6
+ 
+ 
+ ** Infeasible solution. Reduced gradient less than tolerance.
+ 
+ 
+ ** Warning **  The variance of the derivatives in the final
+                point is large (= 4.4 ). A better scaling or
                 better bounds on the variables will probably
                 help the optimization.
  
@@ -1300,27 +1343,87 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
 --- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
 
 
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
---- GAMS/Cplex licensed for continuous and discrete problems.
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
 Cplex 12.8.0.0
 
 Unable to load names.
 MIP status(101): integer optimal solution
-Cplex Time: 0.02sec (det. 6.51 ticks)
+Cplex Time: 0.00sec (det. 2.25 ticks)
 Fixing integer variables, and solving final LP...
 Fixed MIP status(1): optimal
-Cplex Time: 0.00sec (det. 0.51 ticks)
+Cplex Time: 0.00sec (det. 0.49 ticks)
 Proven optimal solution.
 
-MIP Solution:        83854.621204    (190 iterations, 14 nodes)
-Final Solve:         83854.621204    (81 iterations)
+MIP Solution:       107842.592593    (105 iterations, 0 nodes)
+Final Solve:        107842.592593    (56 iterations)
 
-Best possible:       83854.621204
+Best possible:      107842.592593
 Absolute gap:            0.000000
 Relative gap:            0.000000
 
 --- DICOPT: Setting up next NLP
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
+ 
+ 
+    C O N O P T 3   version 3.17I
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+    The model has 127 variables and 79 constraints
+    with 529 Jacobian elements, 300 of which are nonlinear.
+    The Hessian of the Lagrangian has 0 elements on the diagonal,
+    30 elements below the diagonal, and 60 nonlinear variables.
+ 
+ ** Warning **  The number of nonlinear derivatives equal to zero
+                in the initial point is large (= 21 percent).
+                A better initial point will probably help the
+                optimization.
+ 
+ 
+                   Pre-triangular equations:   18
+                   Post-triangular equations:  8
+                   Definitional equations:     6
+ 
+ 
+ ** Infeasible solution. Reduced gradient less than tolerance.
+ 
+ 
+ ** Warning **  The variance of the derivatives in the final
+                point is large (= 4.5 ). A better scaling or
+                better bounds on the variables will probably
+                help the optimization.
+ 
+ 
+ CONOPT time Total                            0.000 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+ 
+
+--- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
+
+
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
+Cplex 12.8.0.0
+
+Unable to load names.
+MIP status(101): integer optimal solution
+Cplex Time: 0.00sec (det. 2.27 ticks)
+Fixing integer variables, and solving final LP...
+Fixed MIP status(1): optimal
+Cplex Time: 0.00sec (det. 0.50 ticks)
+Proven optimal solution.
+
+MIP Solution:       107842.592593    (107 iterations, 0 nodes)
+Final Solve:        107842.592593    (58 iterations)
+
+Best possible:      107842.592593
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- DICOPT: Setting up next NLP
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
  
  
     C O N O P T 3   version 3.17I
@@ -1335,7 +1438,7 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
     30 elements below the diagonal, and 60 nonlinear variables.
  
                    Pre-triangular equations:   18
-                   Post-triangular equations:  3
+                   Post-triangular equations:  7
                    Definitional equations:     6
  
  
@@ -1343,7 +1446,7 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
  
  
  ** Warning **  The variance of the derivatives in the final
-                point is large (= 4.2 ). A better scaling or
+                point is large (= 4.4 ). A better scaling or
                 better bounds on the variables will probably
                 help the optimization.
  
@@ -1356,27 +1459,26 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
 --- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
 
 
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
---- GAMS/Cplex licensed for continuous and discrete problems.
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
 Cplex 12.8.0.0
 
 Unable to load names.
 MIP status(101): integer optimal solution
-Cplex Time: 0.02sec (det. 6.41 ticks)
+Cplex Time: 0.01sec (det. 4.70 ticks)
 Fixing integer variables, and solving final LP...
 Fixed MIP status(1): optimal
-Cplex Time: 0.00sec (det. 0.51 ticks)
+Cplex Time: 0.00sec (det. 0.50 ticks)
 Proven optimal solution.
 
-MIP Solution:        83854.621204    (187 iterations, 10 nodes)
-Final Solve:         83854.621204    (81 iterations)
+MIP Solution:       107842.592593    (111 iterations, 0 nodes)
+Final Solve:        107842.592593    (58 iterations)
 
-Best possible:       83854.621204
+Best possible:      107842.592593
 Absolute gap:            0.000000
 Relative gap:            0.000000
 
 --- DICOPT: Setting up next NLP
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
  
  
     C O N O P T 3   version 3.17I
@@ -1391,63 +1493,7 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
     30 elements below the diagonal, and 60 nonlinear variables.
  
                    Pre-triangular equations:   18
-                   Post-triangular equations:  3
-                   Definitional equations:     6
- 
- 
- ** Infeasible solution. Reduced gradient less than tolerance.
- 
- 
- ** Warning **  The variance of the derivatives in the final
-                point is large (= 4.1 ). A better scaling or
-                better bounds on the variables will probably
-                help the optimization.
- 
- 
- CONOPT time Total                            0.001 seconds
-   of which: Function evaluations             0.000 =  0.0%
-             1st Derivative evaluations       0.000 =  0.0%
- 
-
---- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
-
-
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
---- GAMS/Cplex licensed for continuous and discrete problems.
-Cplex 12.8.0.0
-
-Unable to load names.
-MIP status(101): integer optimal solution
-Cplex Time: 0.02sec (det. 6.08 ticks)
-Fixing integer variables, and solving final LP...
-Fixed MIP status(1): optimal
-Cplex Time: 0.00sec (det. 0.51 ticks)
-Proven optimal solution.
-
-MIP Solution:        83854.621204    (175 iterations, 8 nodes)
-Final Solve:         83854.621204    (81 iterations)
-
-Best possible:       83854.621204
-Absolute gap:            0.000000
-Relative gap:            0.000000
-
---- DICOPT: Setting up next NLP
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
- 
- 
-    C O N O P T 3   version 3.17I
-    Copyright (C)   ARKI Consulting and Development A/S
-                    Bagsvaerdvej 246 A
-                    DK-2880 Bagsvaerd, Denmark
- 
- 
-    The model has 127 variables and 79 constraints
-    with 529 Jacobian elements, 300 of which are nonlinear.
-    The Hessian of the Lagrangian has 0 elements on the diagonal,
-    30 elements below the diagonal, and 60 nonlinear variables.
- 
-                   Pre-triangular equations:   18
-                   Post-triangular equations:  2
+                   Post-triangular equations:  6
                    Definitional equations:     6
  
  
@@ -1461,165 +1507,12 @@ CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows
 
 --- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
 
---- GMO Resort Time 0ms
+--- DICOPT: Stopped on NLP worsening
 
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
---- GAMS/Cplex licensed for continuous and discrete problems.
-Cplex 12.8.0.0
+      The search was stopped because the objective function
+      of the NLP subproblems started to deteriorate.
 
-Unable to load names.
-MIP status(101): integer optimal solution
-Cplex Time: 0.02sec (det. 12.31 ticks)
-Fixing integer variables, and solving final LP...
-Fixed MIP status(1): optimal
-Cplex Time: 0.00sec (det. 0.65 ticks)
-Proven optimal solution.
-
-MIP Solution:        56585.942383    (249 iterations, 18 nodes)
-Final Solve:         56585.942383    (81 iterations)
-
-Best possible:       56585.942383
-Absolute gap:            0.000000
-Relative gap:            0.000000
-
---- DICOPT: Setting up next NLP
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
- 
- 
-    C O N O P T 3   version 3.17I
-    Copyright (C)   ARKI Consulting and Development A/S
-                    Bagsvaerdvej 246 A
-                    DK-2880 Bagsvaerd, Denmark
- 
- 
-    The model has 127 variables and 79 constraints
-    with 529 Jacobian elements, 300 of which are nonlinear.
-    The Hessian of the Lagrangian has 0 elements on the diagonal,
-    30 elements below the diagonal, and 60 nonlinear variables.
- 
-                   Pre-triangular equations:   18
-                   Post-triangular equations:  2
-                   Definitional equations:     6
- 
- 
- ** Infeasible solution. Reduced gradient less than tolerance.
- 
- 
- CONOPT time Total                            0.001 seconds
-   of which: Function evaluations             0.000 =  0.0%
-             1st Derivative evaluations       0.000 =  0.0%
- 
-
---- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
-
-
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
---- GAMS/Cplex licensed for continuous and discrete problems.
-Cplex 12.8.0.0
-
-Unable to load names.
-MIP status(101): integer optimal solution
-Cplex Time: 0.02sec (det. 12.50 ticks)
-Fixing integer variables, and solving final LP...
-Fixed MIP status(1): optimal
-Cplex Time: 0.00sec (det. 0.66 ticks)
-Proven optimal solution.
-
-MIP Solution:        56585.942383    (251 iterations, 18 nodes)
-Final Solve:         56585.942383    (81 iterations)
-
-Best possible:       56585.942383
-Absolute gap:            0.000000
-Relative gap:            0.000000
-
---- DICOPT: Setting up next NLP
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
- 
- 
-    C O N O P T 3   version 3.17I
-    Copyright (C)   ARKI Consulting and Development A/S
-                    Bagsvaerdvej 246 A
-                    DK-2880 Bagsvaerd, Denmark
- 
- 
-    The model has 127 variables and 79 constraints
-    with 529 Jacobian elements, 300 of which are nonlinear.
-    The Hessian of the Lagrangian has 0 elements on the diagonal,
-    30 elements below the diagonal, and 60 nonlinear variables.
- 
-                   Pre-triangular equations:   18
-                   Post-triangular equations:  2
-                   Definitional equations:     6
- 
- 
- ** Infeasible solution. Reduced gradient less than tolerance.
- 
- 
- CONOPT time Total                            0.001 seconds
-   of which: Function evaluations             0.000 =  0.0%
-             1st Derivative evaluations       0.000 =  0.0%
- 
-
---- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
-
-
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
---- GAMS/Cplex licensed for continuous and discrete problems.
-Cplex 12.8.0.0
-
-Unable to load names.
-MIP status(101): integer optimal solution
-Cplex Time: 0.02sec (det. 12.92 ticks)
-Fixing integer variables, and solving final LP...
-Fixed MIP status(1): optimal
-Cplex Time: 0.00sec (det. 0.67 ticks)
-Proven optimal solution.
-
-MIP Solution:        56585.942383    (250 iterations, 18 nodes)
-Final Solve:         56585.942383    (82 iterations)
-
-Best possible:       56585.942383
-Absolute gap:            0.000000
-Relative gap:            0.000000
-
---- DICOPT: Setting up next NLP
-CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
- 
- 
-    C O N O P T 3   version 3.17I
-    Copyright (C)   ARKI Consulting and Development A/S
-                    Bagsvaerdvej 246 A
-                    DK-2880 Bagsvaerd, Denmark
- 
- 
-    The model has 127 variables and 79 constraints
-    with 529 Jacobian elements, 300 of which are nonlinear.
-    The Hessian of the Lagrangian has 0 elements on the diagonal,
-    30 elements below the diagonal, and 60 nonlinear variables.
- 
-                   Pre-triangular equations:   18
-                   Post-triangular equations:  1
-                   Definitional equations:     6
- 
- 
- ** Optimal solution. Reduced gradient less than tolerance.
- 
- 
- CONOPT time Total                            0.001 seconds
-   of which: Function evaluations             0.000 =  0.0%
-             1st Derivative evaluations       0.000 =  0.0%
- 
-
---- NOTICE : Too many infeasible NLP subproblems consider the use of infeasder option
-
---- DICOPT: Maximum number of major iterations (20) exceeded
---- DICOPT: Stopped on MAXCYCLES
-
-      The search was stopped because the major iteration limit
-      was reached. This limit can be reset with the DICOPT
-      option MAXCYCLES.
-
---- DICOPT: Best integer solution found: 95640.343915
+--- DICOPT: Best integer solution found: 65146.164021
 
 ---- EQU stockcalc  stock calculation
 
@@ -1637,12 +1530,12 @@ veg2.Mar           .              .              .            85.0000
 veg2.Apr           .              .              .            90.0000      
 veg2.May           .              .              .            95.0000      
 veg2.June          .              .              .           100.0000      
-oil1.Jan           .              .              .           105.0000      
-oil1.Feb           .              .              .           110.0000      
-oil1.Mar           .              .              .           115.0000      
-oil1.Apr           .              .              .           120.0000      
-oil1.May           .              .              .           125.0000      
-oil1.June          .              .              .           130.0000      
+oil1.Jan           .              .              .              .          
+oil1.Feb           .              .              .             5.0000      
+oil1.Mar           .              .              .            10.0000      
+oil1.Apr           .              .              .            15.0000      
+oil1.May           .              .              .            20.0000      
+oil1.June          .              .              .            25.0000      
 oil2.Jan           .              .              .            85.0000      
 oil2.Feb           .              .              .            90.0000      
 oil2.Mar           .              .              .            95.0000      
@@ -1662,10 +1555,10 @@ oil3.June          .              .              .           110.0000
 
 Jan           .              .              .           332.1429      
 Feb           .              .              .           172.2222      
-Mar           .              .              .           172.2222      
-Apr           .              .              .           172.2222      
+Mar           .              .              .           150.0000      
+Apr           .              .              .           150.0000      
 May           .              .              .           150.0000      
-June          .              .              .           190.0000      
+June          .              .              .           278.5714      
 
 ---- EQU hardnessup   hardness less than 6
 
@@ -1673,10 +1566,10 @@ June          .              .              .           190.0000
 
 Jan         -INF             .              .            30.3571      
 Feb         -INF             .              .             3.7037      
-Mar         -INF             .              .             3.7037      
-Apr         -INF             .              .             3.7037      
-May         -INF         -430.0000          .              .          
-June        -INF             .              .             6.6667      
+Mar         -INF         -266.0000          .              .          
+Apr         -INF         -450.0000          .              .          
+May         -INF         -434.0000          .              .          
+June        -INF             .              .            21.4286      
 
 ---- EQU hardnesslow   hardness more than 3
 
@@ -1684,10 +1577,10 @@ June        -INF             .              .             6.6667
 
 Jan           .          1232.1429        +INF             .          
 Feb           .          1350.0000        +INF             .          
-Mar           .          1350.0000        +INF             .          
-Apr           .          1350.0000        +INF             .          
-May           .           920.0000        +INF             .          
-June          .          1350.0000        +INF             .          
+Mar           .           484.0000        +INF             .          
+Apr           .           300.0000        +INF             .          
+May           .           316.0000        +INF             .          
+June          .          1232.1429        +INF             .          
 
 ---- EQU refiningLimVeg  refining limit of each month for veg oil
 
@@ -1695,21 +1588,21 @@ June          .          1350.0000        +INF             .
 
 Jan         -INF          160.7143       200.0000          .          
 Feb         -INF          200.0000       200.0000        69.6296      
-Mar         -INF          200.0000       200.0000        64.6296      
-Apr         -INF          200.0000       200.0000        59.6296      
-May         -INF          200.0000       200.0000        55.0000      
-June        -INF          200.0000       200.0000        41.3333      
+Mar         -INF             .           200.0000          .          
+Apr         -INF             .           200.0000          .          
+May         -INF             .           200.0000          .          
+June        -INF          160.7143       200.0000          .          
 
 ---- EQU refiningLimNVeg  refining limit of each month for nonveg oil
 
             LOWER          LEVEL          UPPER         MARGINAL
 
 Jan         -INF          250.0000       250.0000       119.6429      
-Feb         -INF          250.0000       250.0000        63.7037      
-Mar         -INF          250.0000       250.0000        58.7037      
-Apr         -INF          250.0000       250.0000        56.6667      
+Feb         -INF          250.0000       250.0000        66.6667      
+Mar         -INF          250.0000       250.0000        55.0000      
+Apr         -INF          250.0000       250.0000        50.0000      
 May         -INF          250.0000       250.0000        45.0000      
-June        -INF          250.0000       250.0000        46.6667      
+June        -INF          250.0000       250.0000       108.5714      
 
                            LOWER          LEVEL          UPPER         MARGINAL
 
@@ -1723,32 +1616,32 @@ June        -INF          250.0000       250.0000        46.6667
 
 Jan         -INF            2.0000         3.0000          .          
 Feb         -INF            3.0000         3.0000          .          
-Mar         -INF            3.0000         3.0000          .          
-Apr         -INF            3.0000         3.0000          .          
+Mar         -INF            2.0000         3.0000          .          
+Apr         -INF            1.0000         3.0000          .          
 May         -INF            2.0000         3.0000          .          
-June        -INF            3.0000         3.0000          .          
+June        -INF            2.0000         3.0000          .          
 
 ---- EQU combo1  
 
             LOWER          LEVEL          UPPER         MARGINAL
 
 Jan         -INF            1.0000         1.0000          .          
-Feb         -INF             .             1.0000          .          
-Mar         -INF             .             1.0000          .          
-Apr         -INF            1.0000         1.0000          .          
-May         -INF             .             1.0000          .          
-June        -INF             .             1.0000          .          
+Feb         -INF            1.0000         1.0000          .          
+Mar         -INF           -1.0000         1.0000          .          
+Apr         -INF             .             1.0000          .          
+May         -INF           -1.0000         1.0000          .          
+June        -INF            1.0000         1.0000          .          
 
 ---- EQU combo2  
 
             LOWER          LEVEL          UPPER         MARGINAL
 
 Jan         -INF             .             1.0000          .          
-Feb         -INF             .             1.0000          .          
-Mar         -INF             .             1.0000          .          
-Apr         -INF            1.0000         1.0000          .          
-May         -INF            1.0000         1.0000          .          
-June        -INF           -1.0000         1.0000          .          
+Feb         -INF            1.0000         1.0000          .          
+Mar         -INF           -1.0000         1.0000          .          
+Apr         -INF             .             1.0000          .          
+May         -INF           -1.0000         1.0000          .          
+June        -INF             .             1.0000          .          
 
 ---- VAR RMpur   amount of oil purchased each month
 
@@ -1759,28 +1652,28 @@ veg1.Feb           .              .            +INF          -60.0000
 veg1.Mar           .              .            +INF          -35.0000      
 veg1.Apr           .              .            +INF          -40.0000      
 veg1.May           .              .            +INF          -15.0000      
-veg1.June          .           690.3439        +INF             .          
+veg1.June          .           480.6878        +INF             .          
 veg2.Jan           .              .            +INF          -45.0000      
 veg2.Feb           .              .            +INF          -50.0000      
 veg2.Mar           .              .            +INF          -55.0000      
 veg2.Apr           .              .            +INF          -20.0000      
 veg2.May           .              .            +INF          -25.0000      
-veg2.June          .           470.3704        +INF             .          
-oil1.Jan           .              .            +INF          -25.0000      
-oil1.Feb           .              .            +INF            EPS         
-oil1.Mar           .              .            +INF          -15.0000      
-oil1.Apr           .           103.3333        +INF             .          
-oil1.May           .              .            +INF          -25.0000      
-oil1.June          .              .            +INF          -10.0000      
+veg2.June          .            40.7407        +INF             .          
+oil1.Jan           .              .            +INF         -130.0000      
+oil1.Feb           .              .            +INF         -105.0000      
+oil1.Mar           .              .            +INF         -120.0000      
+oil1.Apr           .              .            +INF         -105.0000      
+oil1.May           .              .            +INF         -130.0000      
+oil1.June          .              .            +INF         -115.0000      
 oil2.Jan           .              .            +INF          -25.0000      
 oil2.Feb           .              .            +INF            EPS         
 oil2.Mar           .              .            +INF           -5.0000      
 oil2.Apr           .              .            +INF          -20.0000      
 oil2.May           .              .            +INF           -5.0000      
-oil2.June          .           750.0000        +INF             .          
+oil2.June          .          1250.0000        +INF             .          
 oil3.Jan           .              .            +INF          -30.0000      
 oil3.Feb           .              .            +INF          -25.0000      
-oil3.Mar           .           646.6667        +INF             .          
+oil3.Mar           .           250.0000        +INF             .          
 oil3.Apr           .              .            +INF          -25.0000      
 oil3.May           .              .            +INF            EPS         
 oil3.June          .              .            +INF          -25.0000      
@@ -1790,35 +1683,35 @@ oil3.June          .              .            +INF          -25.0000
                  LOWER          LEVEL          UPPER         MARGINAL
 
 veg1.Jan         20.0000       160.7143        +INF             .          
-veg1.Feb         20.0000        85.1852        +INF             .          
-veg1.Mar         20.0000        85.1852        +INF             .          
-veg1.Apr         20.0000       159.2593        +INF             .          
-veg1.May         20.0000       526.6456        +INF            EPS         
-veg1.June        20.0000       200.0000        +INF             .          
-veg2.Jan         20.0000      1026.2875        +INF            EPS         
-veg2.Feb         20.0000       114.8148        +INF             .          
-veg2.Mar         20.0000       114.8148        +INF             .          
-veg2.Apr         20.0000        40.7407        +INF             .          
-veg2.May         20.0000       200.0000        +INF             .          
-veg2.June        20.0000        54.9024        +INF            EPS         
+veg1.Feb         20.0000       159.2593        +INF             .          
+veg1.Mar         20.0000       194.9005        +INF            EPS         
+veg1.Apr         20.0000        20.0000        +INF            EPS         
+veg1.May         20.0000      1188.0145        +INF            EPS         
+veg1.June        20.0000       160.7143        +INF             .          
+veg2.Jan         20.0000      2496.2714        +INF            EPS         
+veg2.Feb         20.0000        40.7407        +INF             .          
+veg2.Mar         20.0000       205.0995        +INF            EPS         
+veg2.Apr         20.0000       439.9898        +INF            EPS         
+veg2.May         20.0000        40.7407        +INF            EPS         
+veg2.June        20.0000       109.8049        +INF            EPS         
 oil1.Jan         20.0000        20.0000        +INF            EPS         
 oil1.Feb         20.0000        20.0000        +INF            EPS         
 oil1.Mar         20.0000        20.0000        +INF            EPS         
 oil1.Apr         20.0000        20.0000        +INF            EPS         
 oil1.May         20.0000        20.0000        +INF            EPS         
-oil1.June        20.0000       103.3333        +INF             .          
+oil1.June        20.0000        20.0000        +INF            EPS         
 oil2.Jan         20.0000       250.0000        +INF             .          
-oil2.Feb         20.0000       224.7322        +INF            EPS         
+oil2.Feb         20.0000       250.0000        +INF             .          
 oil2.Mar         20.0000        20.0000        +INF            EPS         
 oil2.Apr         20.0000       250.0000        +INF             .          
-oil2.May         20.0000       250.0000        +INF             .          
-oil2.June        20.0000       430.6912        +INF            EPS         
-oil3.Jan         20.0000        20.0000        +INF            EPS         
-oil3.Feb         20.0000       250.0000        +INF             .          
-oil3.Mar         20.0000       250.0000        +INF             .          
-oil3.Apr         20.0000       540.6760        +INF            EPS         
-oil3.May         20.0000        20.0000        +INF            EPS         
-oil3.June        20.0000       146.6667        +INF             .          
+oil2.May         20.0000       230.0000        +INF             .          
+oil2.June        20.0000       250.0000        +INF             .          
+oil3.Jan         20.0000       713.4307        +INF            EPS         
+oil3.Feb         20.0000        20.0000        +INF            EPS         
+oil3.Mar         20.0000       230.0000        +INF             .          
+oil3.Apr         20.0000       941.3488        +INF            EPS         
+oil3.May         20.0000        20.0000        +INF             .          
+oil3.June        20.0000        20.0000        +INF            EPS         
 
 ---- VAR RMstock  amount of oil in stock at the begining of each month
 
@@ -1826,34 +1719,34 @@ oil3.June        20.0000       146.6667        +INF             .
 
 veg1.Jan        500.0000       500.0000      1000.0000       -30.0000      
 veg1.Feb           .           339.2857      1000.0000          .          
-veg1.Mar           .           254.1005      1000.0000          .          
-veg1.Apr           .           168.9153      1000.0000          .          
-veg1.May           .             9.6561      1000.0000          .          
-veg1.June          .             9.6561      1000.0000          .          
+veg1.Mar           .           180.0265      1000.0000          .          
+veg1.Apr           .           180.0265      1000.0000          .          
+veg1.May           .           180.0265      1000.0000          .          
+veg1.June          .           180.0265      1000.0000          .          
 veg2.Jan        500.0000       500.0000      1000.0000       -30.0000      
 veg2.Feb           .           500.0000      1000.0000          .          
-veg2.Mar           .           385.1852      1000.0000          .          
-veg2.Apr           .           270.3704      1000.0000          .          
-veg2.May           .           229.6296      1000.0000          .          
-veg2.June          .            29.6296      1000.0000          .          
+veg2.Mar           .           459.2593      1000.0000          .          
+veg2.Apr           .           459.2593      1000.0000          .          
+veg2.May           .           459.2593      1000.0000          .          
+veg2.June          .           459.2593      1000.0000          .          
 oil1.Jan        500.0000       500.0000      1000.0000       -30.0000      
 oil1.Feb           .           500.0000      1000.0000          .          
 oil1.Mar           .           500.0000      1000.0000          .          
 oil1.Apr           .           500.0000      1000.0000          .          
-oil1.May           .           603.3333      1000.0000          .          
-oil1.June          .           603.3333      1000.0000          .          
-oil2.Jan        500.0000       750.0000      1000.0000          .          
-oil2.Feb           .           500.0000      1000.0000          .          
+oil1.May           .           500.0000      1000.0000          .          
+oil1.June          .           500.0000      1000.0000          .          
+oil2.Jan        500.0000      1000.0000      1000.0000         EPS         
+oil2.Feb           .           750.0000      1000.0000          .          
 oil2.Mar           .           500.0000      1000.0000          .          
-oil2.Apr           .           500.0000      1000.0000          .          
-oil2.May           .           250.0000      1000.0000          .          
+oil2.Apr           .           480.0000      1000.0000          .          
+oil2.May           .           230.0000      1000.0000          .          
 oil2.June          .              .          1000.0000       -30.0000      
 oil3.Jan        500.0000       500.0000      1000.0000       -30.0000      
 oil3.Feb           .           500.0000      1000.0000          .          
-oil3.Mar           .           250.0000      1000.0000          .          
-oil3.Apr           .           646.6667      1000.0000          .          
-oil3.May           .           646.6667      1000.0000          .          
-oil3.June          .           646.6667      1000.0000          .          
+oil3.Mar           .           500.0000      1000.0000          .          
+oil3.Apr           .           520.0000      1000.0000          .          
+oil3.May           .           520.0000      1000.0000          .          
+oil3.June          .           500.0000      1000.0000          .          
 
 ---- VAR product  amount of final product each month
 
@@ -1861,14 +1754,14 @@ oil3.June          .           646.6667      1000.0000          .
 
 Jan           .           410.7143        +INF             .          
 Feb           .           450.0000        +INF             .          
-Mar           .           450.0000        +INF             .          
-Apr           .           450.0000        +INF             .          
-May           .           450.0000        +INF             .          
-June          .           450.0000        +INF             .          
+Mar           .           250.0000        +INF             .          
+Apr           .           250.0000        +INF             .          
+May           .           250.0000        +INF             .          
+June          .           410.7143        +INF             .          
 
                            LOWER          LEVEL          UPPER         MARGINAL
 
----- VAR profit            -INF        95640.3439        +INF             .          
+---- VAR profit            -INF        65146.1640        +INF             .          
 
   profit  profit overall
 
@@ -1878,44 +1771,43 @@ June          .           450.0000        +INF             .
 
 veg1.Jan           .             1.0000         1.0000         EPS         
 veg1.Feb           .             1.0000         1.0000         EPS         
-veg1.Mar           .             1.0000         1.0000         EPS         
-veg1.Apr           .             1.0000         1.0000         EPS         
-veg1.May           .              .             1.0000      5266.4559      
+veg1.Mar           .              .             1.0000     14617.5363      
+veg1.Apr           .              .             1.0000      1400.0000      
+veg1.May           .              .             1.0000     77220.9409      
 veg1.June          .             1.0000         1.0000         EPS         
-veg2.Jan           .              .             1.0000     73856.0501      
+veg2.Jan           .              .             1.0000    179642.3910      
 veg2.Feb           .             1.0000         1.0000         EPS         
-veg2.Mar           .             1.0000         1.0000         EPS         
-veg2.Apr           .             1.0000         1.0000         EPS         
-veg2.May           .             1.0000         1.0000         EPS         
-veg2.June          .              .             1.0000       439.2194      
-oil1.Jan           .              .             1.0000       935.7143      
-oil1.Feb           .              .             1.0000      -177.7778      
-oil1.Mar           .              .             1.0000      -177.7778      
-oil1.Apr           .              .             1.0000      -237.0370      
-oil1.May           .              .             1.0000      -400.0000      
-oil1.June          .             1.0000         1.0000         EPS         
+veg2.Mar           .              .             1.0000     13331.4685      
+veg2.Apr           .              .             1.0000     26399.3904      
+veg2.May           .              .             1.0000      2240.7407      
+veg2.June          .              .             1.0000      5254.9465      
+oil1.Jan           .              .             1.0000      3035.7143      
+oil1.Feb           .              .             1.0000      1862.9630      
+oil1.Mar           .              .             1.0000      1700.0000      
+oil1.Apr           .              .             1.0000      1700.0000      
+oil1.May           .              .             1.0000      1700.0000      
+oil1.June          .              .             1.0000      2042.8571      
 oil2.Jan           .             1.0000         1.0000         EPS         
-oil2.Feb           .              .             1.0000       665.8731      
-oil2.Mar           .              .             1.0000        59.2593      
+oil2.Feb           .             1.0000         1.0000         EPS         
+oil2.Mar           .             1.0000         1.0000         EPS         
 oil2.Apr           .             1.0000         1.0000         EPS         
 oil2.May           .             1.0000         1.0000         EPS         
-oil2.June          .              .             1.0000     15217.7569      
-oil3.Jan           .              .             1.0000      -485.7143      
-oil3.Feb           .             1.0000         1.0000         EPS         
+oil2.June          .             1.0000         1.0000         EPS         
+oil3.Jan           .              .             1.0000    -17326.1750      
+oil3.Feb           .              .             1.0000       -59.2593      
 oil3.Mar           .             1.0000         1.0000         EPS         
-oil3.Apr           .              .             1.0000     -1602.0030      
-oil3.May           .              .             1.0000         EPS         
-oil3.June          .             1.0000         1.0000         EPS         
+oil3.Apr           .              .             1.0000         EPS         
+oil3.May           .             1.0000         1.0000         EPS         
+oil3.June          .              .             1.0000      -942.8571      
 
 
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
                              0     ERRORS
-                             2  PROJECTED
 
 
-EXECUTION TIME       =        0.016 SECONDS      2 MB  25.1.1 r66732 WEX-WEI
+EXECUTION TIME       =        0.015 SECONDS      2 MB  25.1.1 r66732 DEX-DEG
 
 
 USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
@@ -1924,5 +1816,5 @@ USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
 
 **** FILE SUMMARY
 
-Input      C:\Users\cnbho\Documents\GitHub\HPW\food2\food2MINLPint.gms
-Output     C:\Users\cnbho\Documents\GitHub\HPW\food2\food2MINLPint.lst
+Input      /Users/cbhomia/Documents/GitHub/HPW/food2/food2MINLPint.gms
+Output     /Users/cbhomia/Documents/GitHub/HPW/food2/food2MINLPint.lst
