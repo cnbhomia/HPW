@@ -1,0 +1,3639 @@
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+      this model is the manpower planning model from HP WIlliams book, excercise 12.5
+       
+   5   
+   6  sets
+   7          y 'years in question' /y0*y3/
+   8          yd(y) ' decision years' /y1*y3/
+   9          sk 'skill level' /s1*s3/
+  10          ;
+  11  Alias(sk,skp);
+  12   
+  13  table manpow(y,sk)  'manpower requirements'
+  14            s1       s2         s3
+  15  y0       2000     1500       1000
+  16  y1       1000     1400       1000
+  17  y2       500      2000       1500
+  18  y3       0        2500       2000
+  19  ;
+  20   
+  21  parameters
+  22          Cretain(sk)   'cost to retrain per worker'        /s1 400, s2 500/
+  23          Credund(sk)       'cost of redundancy per worker'     / s1 200, s2 500, s3 500/
+  24          Cover(sk)   'cost of overmanning per worker'    / s1 1500, s2 2000, s3 3000/
+  25          Cshortt(sk)    'cost of shorttime worker'          / s1 500, s2 400, s3 400/
+  26          Rnewatt(sk)    'rate of attrition of new workers'  /s1 0.25, s2 0.20, s3 0.10 /
+  27          Roldatt(sk)    'rate of attrition of old workers'  /s1 0.10, s2 0.05, s3 0.05 /
+  28          Rdownatt           'rate of attrition of downgraded workers' /0.5/
+  29          RecLim(sk)     'max recruitment each year in each category' / s1 500, s2 800 , s3 500/
+  30          ;
+  31   
+  32  integer variable
+  33           Wrec(y,sk)   'number of recruits at end of each year'
+  34           Wret(y,sk)   'number of retrained personnel'
+  35           Wred(y,sk)   'number of workers declared redundant'
+  36           Wsho(y,sk)   'number of workers on short work'
+  37           Wextra(y,sk)       'number of extra workers each year. sum over categories'
+  38  *         Woverman(y)         'total extra workers each year, up to 150 max'
+  39           Watt(y,sk)           'number of workers leaving. includes current and past year workers'
+  40           Wdown(y,sk,skp) 'number of workers downgraded'
+  41           Wtot(y,sk) ' total number of manpower in each category each year'
+  42          ;
+  43   
+  44  variables
+  45           Cret(y)          'Cost of retraining'
+  46           Cred(y)      'Redundancy cost each year'
+  47           Cextra(y)    'extraworker costs each year'
+  48           Csho(y)     'short time worker cost'
+  49           TotCTC               'total cost to company'
+  50           objval         'total number of layoffs / redundancy workers'
+  51           ;
+  52   
+  53  equations
+  54          total(y,sk) 'total workers each year per skill level'
+  55          attrition(y,sk) 'attrition each year per skill level'
+  56          overman(y,sk)  'number of extra workers per year per skill level'
+  57          retrainlim(y,sk)   'retrainlim equations'
+  58          retraincosts(y) 'cost to retrain'
+  59          overmancosts(y) 'cost of overmanning'
+  60          redundancycosts(y) 'cost of redundancy'
+  61          shorttimecosts(y)
+  62          totalcosts  'total costs for 3 years'
+  63          objfunc 'cumulative redundancy minimization'
+  64          ;
+  65   
+  66           ;
+  67  Wtot.lo(y,sk) = manpow(y,sk) ;
+  68  Wtot.up(y,sk)= manpow(y,sk) + 150 ;
+  69  Wtot.fx('y0',sk) = manpow('y0',sk) ;
+  70   
+  71  *Limit of extra workers Wextra.up(y,sk) is indirectly taken care of  through Wextra
+  72   
+  73  Wrec.lo(y,sk) = 0;
+  74  Wrec.up(y,sk) = Reclim(sk);
+  75   
+  76   
+  77   
+  78  Wret.up(y,'s1') = 200;
+  79  Wret.fx(y,'s3') = 0;
+  80  Wret.lo(y,sk) =0 ;
+  81   
+  82  *y0 variables
+  83  Wrec.fx('y0',sk) =0   ;
+  84  Wret.fx('y0',sk) =0   ;
+  85  Wred.fx('y0',sk) =0   ;
+  86  Wdown.fx('y0',skp,sk) =0 ;
+  87   
+  88  *TotCTC.up = 6E6;
+  91   
+  92   
+  93  total(y,sk)$(ord(y)>1).. Wtot(y,sk) =e= Wtot(y-1,sk) + Wrec(y,sk) - Wred(y,sk)- Watt(y,sk) + [Wret(y,sk-1) - Wret(y,sk)]
+  94                                          + { sum(skp$(ord(skp) > ord(sk)),Wdown(y,skp,sk)) -sum(skp$(ord(skp)<ord(sk)),Wdown(y,sk,skp))}   ;
+  95   
+  96  attrition(y,sk).. Watt(y,sk) =e= Rnewatt(sk)*Wrec(y,sk) + Roldatt(sk)*Wtot(y-1,sk) + 0.5*[sum(skp$(ord(skp) > ord(sk)),Wdown(y,skp,sk))]    ;
+  97   
+  98  overman(y,sk).. Wextra(y,sk) +  0.5*Wsho(y,sk) =e= Wtot(y,sk) - manpow(y,sk) ;
+  99   
+ 100  retrainlim(y,sk).. Wret(y,'s2') =l= 0.25* Wtot(y,'s3') ;
+ 101   
+ 102  retraincosts(y).. Cret(y) =e= sum(sk, Cretain(sk)*Wret(y,sk)) ;
+ 103   
+ 104  redundancycosts(y).. Cred(y) =e= sum(sk, Credund(sk)*Wred(y,sk));
+ 105   
+ 106  overmancosts(y).. Cextra(y) =e= sum(sk, Cover(sk)*Wextra(y,sk));
+ 107   
+ 108  shorttimecosts(y).. Csho(y) =e= sum(sk, Cshortt(sk)* Wsho(y,sk)) ;
+ 109   
+ 110  totalcosts.. TotCTC =e= sum(y, Cret(y) + Cred(y) + Cextra(y) + Csho(y) ) ;
+ 111   
+ 112  objfunc.. objval =e= sum((y,sk), Wred(y,sk)) ;
+ 113   
+ 114   
+ 115   
+ 116  model manpowerplan /all/ ;
+ 117  option limrow = 100,limcol=100;
+ 118  option intVarup =2;
+ 119  solve manpowerplan using RMIP minimizing objval ;
+ 120   
+ 121  solve manpowerplan using MIP minimizing objval;
+ 122   
+ 123   
+ 124  solve manpowerplan using RMIP minimizing TotCTC ;
+ 125   
+ 126   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE manpowerplan Using RMIP From line 119
+
+
+---- total  =E=  total workers each year per skill level
+
+total(y1,s1)..  - Wrec(y1,s1) + Wret(y1,s1) + Wred(y1,s1) + Watt(y1,s1) - Wdown(y1,s2,s1) - Wdown(y1,s3,s1) - Wtot(y0,s1) + Wtot(y1,s1) =E= 0 ; (LHS = -1000, INFES = 1000 ****)
+     
+total(y1,s2)..  - Wrec(y1,s2) - Wret(y1,s1) + Wret(y1,s2) + Wred(y1,s2) + Watt(y1,s2) + Wdown(y1,s2,s1) - Wdown(y1,s3,s2) - Wtot(y0,s2) + Wtot(y1,s2) =E= 0 ; (LHS = -100, INFES = 100 ****)
+     
+total(y1,s3)..  - Wrec(y1,s3) - Wret(y1,s2) + Wret(y1,s3) + Wred(y1,s3) + Watt(y1,s3) + Wdown(y1,s3,s1) + Wdown(y1,s3,s2) - Wtot(y0,s3) + Wtot(y1,s3) =E= 0 ; (LHS = 0)
+     
+total(y2,s1)..  - Wrec(y2,s1) + Wret(y2,s1) + Wred(y2,s1) + Watt(y2,s1) - Wdown(y2,s2,s1) - Wdown(y2,s3,s1) - Wtot(y1,s1) + Wtot(y2,s1) =E= 0 ; (LHS = -500, INFES = 500 ****)
+     
+total(y2,s2)..  - Wrec(y2,s2) - Wret(y2,s1) + Wret(y2,s2) + Wred(y2,s2) + Watt(y2,s2) + Wdown(y2,s2,s1) - Wdown(y2,s3,s2) - Wtot(y1,s2) + Wtot(y2,s2) =E= 0 ; (LHS = 600, INFES = 600 ****)
+     
+total(y2,s3)..  - Wrec(y2,s3) - Wret(y2,s2) + Wret(y2,s3) + Wred(y2,s3) + Watt(y2,s3) + Wdown(y2,s3,s1) + Wdown(y2,s3,s2) - Wtot(y1,s3) + Wtot(y2,s3) =E= 0 ; (LHS = 500, INFES = 500 ****)
+     
+total(y3,s1)..  - Wrec(y3,s1) + Wret(y3,s1) + Wred(y3,s1) + Watt(y3,s1) - Wdown(y3,s2,s1) - Wdown(y3,s3,s1) - Wtot(y2,s1) + Wtot(y3,s1) =E= 0 ; (LHS = -500, INFES = 500 ****)
+     
+total(y3,s2)..  - Wrec(y3,s2) - Wret(y3,s1) + Wret(y3,s2) + Wred(y3,s2) + Watt(y3,s2) + Wdown(y3,s2,s1) - Wdown(y3,s3,s2) - Wtot(y2,s2) + Wtot(y3,s2) =E= 0 ; (LHS = 500, INFES = 500 ****)
+     
+total(y3,s3)..  - Wrec(y3,s3) - Wret(y3,s2) + Wret(y3,s3) + Wred(y3,s3) + Watt(y3,s3) + Wdown(y3,s3,s1) + Wdown(y3,s3,s2) - Wtot(y2,s3) + Wtot(y3,s3) =E= 0 ; (LHS = 500, INFES = 500 ****)
+     
+
+---- attrition  =E=  attrition each year per skill level
+
+attrition(y0,s1)..  - 0.25*Wrec(y0,s1) + Watt(y0,s1) - 0.5*Wdown(y0,s2,s1) - 0.5*Wdown(y0,s3,s1) =E= 0 ; (LHS = 0)
+     
+attrition(y0,s2)..  - 0.2*Wrec(y0,s2) + Watt(y0,s2) - 0.5*Wdown(y0,s3,s2) =E= 0 ; (LHS = 0)
+     
+attrition(y0,s3)..  - 0.1*Wrec(y0,s3) + Watt(y0,s3) =E= 0 ; (LHS = 0)
+     
+attrition(y1,s1)..  - 0.25*Wrec(y1,s1) + Watt(y1,s1) - 0.5*Wdown(y1,s2,s1) - 0.5*Wdown(y1,s3,s1) - 0.1*Wtot(y0,s1) =E= 0 ; (LHS = -200, INFES = 200 ****)
+     
+attrition(y1,s2)..  - 0.2*Wrec(y1,s2) + Watt(y1,s2) - 0.5*Wdown(y1,s3,s2) - 0.05*Wtot(y0,s2) =E= 0 ; (LHS = -75, INFES = 75 ****)
+     
+attrition(y1,s3)..  - 0.1*Wrec(y1,s3) + Watt(y1,s3) - 0.05*Wtot(y0,s3) =E= 0 ; (LHS = -50, INFES = 50 ****)
+     
+attrition(y2,s1)..  - 0.25*Wrec(y2,s1) + Watt(y2,s1) - 0.5*Wdown(y2,s2,s1) - 0.5*Wdown(y2,s3,s1) - 0.1*Wtot(y1,s1) =E= 0 ; (LHS = -100, INFES = 100 ****)
+     
+attrition(y2,s2)..  - 0.2*Wrec(y2,s2) + Watt(y2,s2) - 0.5*Wdown(y2,s3,s2) - 0.05*Wtot(y1,s2) =E= 0 ; (LHS = -70, INFES = 70 ****)
+     
+attrition(y2,s3)..  - 0.1*Wrec(y2,s3) + Watt(y2,s3) - 0.05*Wtot(y1,s3) =E= 0 ; (LHS = -50, INFES = 50 ****)
+     
+attrition(y3,s1)..  - 0.25*Wrec(y3,s1) + Watt(y3,s1) - 0.5*Wdown(y3,s2,s1) - 0.5*Wdown(y3,s3,s1) - 0.1*Wtot(y2,s1) =E= 0 ; (LHS = -50, INFES = 50 ****)
+     
+attrition(y3,s2)..  - 0.2*Wrec(y3,s2) + Watt(y3,s2) - 0.5*Wdown(y3,s3,s2) - 0.05*Wtot(y2,s2) =E= 0 ; (LHS = -100, INFES = 100 ****)
+     
+attrition(y3,s3)..  - 0.1*Wrec(y3,s3) + Watt(y3,s3) - 0.05*Wtot(y2,s3) =E= 0 ; (LHS = -75, INFES = 75 ****)
+     
+
+---- overman  =E=  number of extra workers per year per skill level
+
+overman(y0,s1)..  0.5*Wsho(y0,s1) + Wextra(y0,s1) - Wtot(y0,s1) =E= -2000 ; (LHS = -2000)
+     
+overman(y0,s2)..  0.5*Wsho(y0,s2) + Wextra(y0,s2) - Wtot(y0,s2) =E= -1500 ; (LHS = -1500)
+     
+overman(y0,s3)..  0.5*Wsho(y0,s3) + Wextra(y0,s3) - Wtot(y0,s3) =E= -1000 ; (LHS = -1000)
+     
+overman(y1,s1)..  0.5*Wsho(y1,s1) + Wextra(y1,s1) - Wtot(y1,s1) =E= -1000 ; (LHS = -1000)
+     
+overman(y1,s2)..  0.5*Wsho(y1,s2) + Wextra(y1,s2) - Wtot(y1,s2) =E= -1400 ; (LHS = -1400)
+     
+overman(y1,s3)..  0.5*Wsho(y1,s3) + Wextra(y1,s3) - Wtot(y1,s3) =E= -1000 ; (LHS = -1000)
+     
+overman(y2,s1)..  0.5*Wsho(y2,s1) + Wextra(y2,s1) - Wtot(y2,s1) =E= -500 ; (LHS = -500)
+     
+overman(y2,s2)..  0.5*Wsho(y2,s2) + Wextra(y2,s2) - Wtot(y2,s2) =E= -2000 ; (LHS = -2000)
+     
+overman(y2,s3)..  0.5*Wsho(y2,s3) + Wextra(y2,s3) - Wtot(y2,s3) =E= -1500 ; (LHS = -1500)
+     
+overman(y3,s1)..  0.5*Wsho(y3,s1) + Wextra(y3,s1) - Wtot(y3,s1) =E= 0 ; (LHS = 0)
+     
+overman(y3,s2)..  0.5*Wsho(y3,s2) + Wextra(y3,s2) - Wtot(y3,s2) =E= -2500 ; (LHS = -2500)
+     
+overman(y3,s3)..  0.5*Wsho(y3,s3) + Wextra(y3,s3) - Wtot(y3,s3) =E= -2000 ; (LHS = -2000)
+     
+
+---- retrainlim  =L=  retrainlim equations
+
+retrainlim(y0,s1)..  Wret(y0,s2) - 0.25*Wtot(y0,s3) =L= 0 ; (LHS = -250)
+     
+retrainlim(y0,s2)..  Wret(y0,s2) - 0.25*Wtot(y0,s3) =L= 0 ; (LHS = -250)
+     
+retrainlim(y0,s3)..  Wret(y0,s2) - 0.25*Wtot(y0,s3) =L= 0 ; (LHS = -250)
+     
+retrainlim(y1,s1)..  Wret(y1,s2) - 0.25*Wtot(y1,s3) =L= 0 ; (LHS = -250)
+     
+retrainlim(y1,s2)..  Wret(y1,s2) - 0.25*Wtot(y1,s3) =L= 0 ; (LHS = -250)
+     
+retrainlim(y1,s3)..  Wret(y1,s2) - 0.25*Wtot(y1,s3) =L= 0 ; (LHS = -250)
+     
+retrainlim(y2,s1)..  Wret(y2,s2) - 0.25*Wtot(y2,s3) =L= 0 ; (LHS = -375)
+     
+retrainlim(y2,s2)..  Wret(y2,s2) - 0.25*Wtot(y2,s3) =L= 0 ; (LHS = -375)
+     
+retrainlim(y2,s3)..  Wret(y2,s2) - 0.25*Wtot(y2,s3) =L= 0 ; (LHS = -375)
+     
+retrainlim(y3,s1)..  Wret(y3,s2) - 0.25*Wtot(y3,s3) =L= 0 ; (LHS = -500)
+     
+retrainlim(y3,s2)..  Wret(y3,s2) - 0.25*Wtot(y3,s3) =L= 0 ; (LHS = -500)
+     
+retrainlim(y3,s3)..  Wret(y3,s2) - 0.25*Wtot(y3,s3) =L= 0 ; (LHS = -500)
+     
+
+---- retraincosts  =E=  cost to retrain
+
+retraincosts(y0)..  - 400*Wret(y0,s1) - 500*Wret(y0,s2) + Cret(y0) =E= 0 ; (LHS = 0)
+     
+retraincosts(y1)..  - 400*Wret(y1,s1) - 500*Wret(y1,s2) + Cret(y1) =E= 0 ; (LHS = 0)
+     
+retraincosts(y2)..  - 400*Wret(y2,s1) - 500*Wret(y2,s2) + Cret(y2) =E= 0 ; (LHS = 0)
+     
+retraincosts(y3)..  - 400*Wret(y3,s1) - 500*Wret(y3,s2) + Cret(y3) =E= 0 ; (LHS = 0)
+     
+
+---- overmancosts  =E=  cost of overmanning
+
+overmancosts(y0)..  - 1500*Wextra(y0,s1) - 2000*Wextra(y0,s2) - 3000*Wextra(y0,s3) + Cextra(y0) =E= 0 ; (LHS = 0)
+     
+overmancosts(y1)..  - 1500*Wextra(y1,s1) - 2000*Wextra(y1,s2) - 3000*Wextra(y1,s3) + Cextra(y1) =E= 0 ; (LHS = 0)
+     
+overmancosts(y2)..  - 1500*Wextra(y2,s1) - 2000*Wextra(y2,s2) - 3000*Wextra(y2,s3) + Cextra(y2) =E= 0 ; (LHS = 0)
+     
+overmancosts(y3)..  - 1500*Wextra(y3,s1) - 2000*Wextra(y3,s2) - 3000*Wextra(y3,s3) + Cextra(y3) =E= 0 ; (LHS = 0)
+     
+
+---- redundancycosts  =E=  cost of redundancy
+
+redundancycosts(y0)..  - 200*Wred(y0,s1) - 500*Wred(y0,s2) - 500*Wred(y0,s3) + Cred(y0) =E= 0 ; (LHS = 0)
+     
+redundancycosts(y1)..  - 200*Wred(y1,s1) - 500*Wred(y1,s2) - 500*Wred(y1,s3) + Cred(y1) =E= 0 ; (LHS = 0)
+     
+redundancycosts(y2)..  - 200*Wred(y2,s1) - 500*Wred(y2,s2) - 500*Wred(y2,s3) + Cred(y2) =E= 0 ; (LHS = 0)
+     
+redundancycosts(y3)..  - 200*Wred(y3,s1) - 500*Wred(y3,s2) - 500*Wred(y3,s3) + Cred(y3) =E= 0 ; (LHS = 0)
+     
+
+---- shorttimecosts  =E=  
+
+shorttimecosts(y0)..  - 500*Wsho(y0,s1) - 400*Wsho(y0,s2) - 400*Wsho(y0,s3) + Csho(y0) =E= 0 ; (LHS = 0)
+     
+shorttimecosts(y1)..  - 500*Wsho(y1,s1) - 400*Wsho(y1,s2) - 400*Wsho(y1,s3) + Csho(y1) =E= 0 ; (LHS = 0)
+     
+shorttimecosts(y2)..  - 500*Wsho(y2,s1) - 400*Wsho(y2,s2) - 400*Wsho(y2,s3) + Csho(y2) =E= 0 ; (LHS = 0)
+     
+shorttimecosts(y3)..  - 500*Wsho(y3,s1) - 400*Wsho(y3,s2) - 400*Wsho(y3,s3) + Csho(y3) =E= 0 ; (LHS = 0)
+     
+
+---- totalcosts  =E=  total costs for 3 years
+
+totalcosts..  - Cret(y0) - Cret(y1) - Cret(y2) - Cret(y3) - Cred(y0) - Cred(y1) - Cred(y2) - Cred(y3) - Cextra(y0) - Cextra(y1) - Cextra(y2) - Cextra(y3) - Csho(y0) - Csho(y1) - Csho(y2) - Csho(y3) + TotCTC =E= 0 ; (LHS = 0)
+     
+
+---- objfunc  =E=  cumulative redundancy minimization
+
+objfunc..  - Wred(y0,s1) - Wred(y0,s2) - Wred(y0,s3) - Wred(y1,s1) - Wred(y1,s2) - Wred(y1,s3) - Wred(y2,s1) - Wred(y2,s2) - Wred(y2,s3) - Wred(y3,s1) - Wred(y3,s2) - Wred(y3,s3) + objval =E= 0 ; (LHS = 0)
+     
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE manpowerplan Using RMIP From line 119
+
+
+---- Wrec  number of recruits at end of each year
+
+Wrec(y0,s1)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+       -0.25    attrition(y0,s1)
+
+Wrec(y0,s2)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+       -0.2     attrition(y0,s2)
+
+Wrec(y0,s3)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+       -0.1     attrition(y0,s3)
+
+Wrec(y1,s1)
+                (.LO, .L, .UP, .M = 0, 0, 500, 0)
+       -1       total(y1,s1)
+       -0.25    attrition(y1,s1)
+
+Wrec(y1,s2)
+                (.LO, .L, .UP, .M = 0, 0, 800, 0)
+       -1       total(y1,s2)
+       -0.2     attrition(y1,s2)
+
+Wrec(y1,s3)
+                (.LO, .L, .UP, .M = 0, 0, 500, 0)
+       -1       total(y1,s3)
+       -0.1     attrition(y1,s3)
+
+Wrec(y2,s1)
+                (.LO, .L, .UP, .M = 0, 0, 500, 0)
+       -1       total(y2,s1)
+       -0.25    attrition(y2,s1)
+
+Wrec(y2,s2)
+                (.LO, .L, .UP, .M = 0, 0, 800, 0)
+       -1       total(y2,s2)
+       -0.2     attrition(y2,s2)
+
+Wrec(y2,s3)
+                (.LO, .L, .UP, .M = 0, 0, 500, 0)
+       -1       total(y2,s3)
+       -0.1     attrition(y2,s3)
+
+Wrec(y3,s1)
+                (.LO, .L, .UP, .M = 0, 0, 500, 0)
+       -1       total(y3,s1)
+       -0.25    attrition(y3,s1)
+
+Wrec(y3,s2)
+                (.LO, .L, .UP, .M = 0, 0, 800, 0)
+       -1       total(y3,s2)
+       -0.2     attrition(y3,s2)
+
+Wrec(y3,s3)
+                (.LO, .L, .UP, .M = 0, 0, 500, 0)
+       -1       total(y3,s3)
+       -0.1     attrition(y3,s3)
+
+
+---- Wret  number of retrained personnel
+
+Wret(y0,s1)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+     -400       retraincosts(y0)
+
+Wret(y0,s2)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+        1       retrainlim(y0,s1)
+        1       retrainlim(y0,s2)
+        1       retrainlim(y0,s3)
+     -500       retraincosts(y0)
+
+Wret(y1,s1)
+                (.LO, .L, .UP, .M = 0, 0, 200, 0)
+        1       total(y1,s1)
+       -1       total(y1,s2)
+     -400       retraincosts(y1)
+
+Wret(y1,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y1,s2)
+       -1       total(y1,s3)
+        1       retrainlim(y1,s1)
+        1       retrainlim(y1,s2)
+        1       retrainlim(y1,s3)
+     -500       retraincosts(y1)
+
+Wret(y1,s3)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+        1       total(y1,s3)
+
+Wret(y2,s1)
+                (.LO, .L, .UP, .M = 0, 0, 200, 0)
+        1       total(y2,s1)
+       -1       total(y2,s2)
+     -400       retraincosts(y2)
+
+Wret(y2,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y2,s2)
+       -1       total(y2,s3)
+        1       retrainlim(y2,s1)
+        1       retrainlim(y2,s2)
+        1       retrainlim(y2,s3)
+     -500       retraincosts(y2)
+
+Wret(y2,s3)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+        1       total(y2,s3)
+
+Wret(y3,s1)
+                (.LO, .L, .UP, .M = 0, 0, 200, 0)
+        1       total(y3,s1)
+       -1       total(y3,s2)
+     -400       retraincosts(y3)
+
+Wret(y3,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y3,s2)
+       -1       total(y3,s3)
+        1       retrainlim(y3,s1)
+        1       retrainlim(y3,s2)
+        1       retrainlim(y3,s3)
+     -500       retraincosts(y3)
+
+Wret(y3,s3)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+        1       total(y3,s3)
+
+
+---- Wred  number of workers declared redundant
+
+Wred(y0,s1)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+     -200       redundancycosts(y0)
+       -1       objfunc
+
+Wred(y0,s2)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+     -500       redundancycosts(y0)
+       -1       objfunc
+
+Wred(y0,s3)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+     -500       redundancycosts(y0)
+       -1       objfunc
+
+Wred(y1,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y1,s1)
+     -200       redundancycosts(y1)
+       -1       objfunc
+
+Wred(y1,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y1,s2)
+     -500       redundancycosts(y1)
+       -1       objfunc
+
+Wred(y1,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y1,s3)
+     -500       redundancycosts(y1)
+       -1       objfunc
+
+Wred(y2,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y2,s1)
+     -200       redundancycosts(y2)
+       -1       objfunc
+
+Wred(y2,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y2,s2)
+     -500       redundancycosts(y2)
+       -1       objfunc
+
+Wred(y2,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y2,s3)
+     -500       redundancycosts(y2)
+       -1       objfunc
+
+Wred(y3,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y3,s1)
+     -200       redundancycosts(y3)
+       -1       objfunc
+
+Wred(y3,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y3,s2)
+     -500       redundancycosts(y3)
+       -1       objfunc
+
+Wred(y3,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y3,s3)
+     -500       redundancycosts(y3)
+       -1       objfunc
+
+
+---- Wsho  number of workers on short work
+
+Wsho(y0,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.5     overman(y0,s1)
+     -500       shorttimecosts(y0)
+
+Wsho(y0,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.5     overman(y0,s2)
+     -400       shorttimecosts(y0)
+
+Wsho(y0,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.5     overman(y0,s3)
+     -400       shorttimecosts(y0)
+
+Wsho(y1,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.5     overman(y1,s1)
+     -500       shorttimecosts(y1)
+
+Wsho(y1,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.5     overman(y1,s2)
+     -400       shorttimecosts(y1)
+
+Wsho(y1,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.5     overman(y1,s3)
+     -400       shorttimecosts(y1)
+
+Wsho(y2,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.5     overman(y2,s1)
+     -500       shorttimecosts(y2)
+
+Wsho(y2,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.5     overman(y2,s2)
+     -400       shorttimecosts(y2)
+
+Wsho(y2,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.5     overman(y2,s3)
+     -400       shorttimecosts(y2)
+
+Wsho(y3,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.5     overman(y3,s1)
+     -500       shorttimecosts(y3)
+
+Wsho(y3,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.5     overman(y3,s2)
+     -400       shorttimecosts(y3)
+
+Wsho(y3,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.5     overman(y3,s3)
+     -400       shorttimecosts(y3)
+
+
+---- Wextra  number of extra workers each year. sum over categories
+
+Wextra(y0,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       overman(y0,s1)
+    -1500       overmancosts(y0)
+
+Wextra(y0,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       overman(y0,s2)
+    -2000       overmancosts(y0)
+
+Wextra(y0,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       overman(y0,s3)
+    -3000       overmancosts(y0)
+
+Wextra(y1,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       overman(y1,s1)
+    -1500       overmancosts(y1)
+
+Wextra(y1,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       overman(y1,s2)
+    -2000       overmancosts(y1)
+
+Wextra(y1,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       overman(y1,s3)
+    -3000       overmancosts(y1)
+
+Wextra(y2,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       overman(y2,s1)
+    -1500       overmancosts(y2)
+
+Wextra(y2,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       overman(y2,s2)
+    -2000       overmancosts(y2)
+
+Wextra(y2,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       overman(y2,s3)
+    -3000       overmancosts(y2)
+
+Wextra(y3,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       overman(y3,s1)
+    -1500       overmancosts(y3)
+
+Wextra(y3,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       overman(y3,s2)
+    -2000       overmancosts(y3)
+
+Wextra(y3,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       overman(y3,s3)
+    -3000       overmancosts(y3)
+
+
+---- Watt  number of workers leaving. includes current and past year workers
+
+Watt(y0,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       attrition(y0,s1)
+
+Watt(y0,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       attrition(y0,s2)
+
+Watt(y0,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       attrition(y0,s3)
+
+Watt(y1,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y1,s1)
+        1       attrition(y1,s1)
+
+Watt(y1,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y1,s2)
+        1       attrition(y1,s2)
+
+Watt(y1,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y1,s3)
+        1       attrition(y1,s3)
+
+Watt(y2,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y2,s1)
+        1       attrition(y2,s1)
+
+Watt(y2,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y2,s2)
+        1       attrition(y2,s2)
+
+Watt(y2,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y2,s3)
+        1       attrition(y2,s3)
+
+Watt(y3,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y3,s1)
+        1       attrition(y3,s1)
+
+Watt(y3,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y3,s2)
+        1       attrition(y3,s2)
+
+Watt(y3,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       total(y3,s3)
+        1       attrition(y3,s3)
+
+
+---- Wdown  number of workers downgraded
+
+Wdown(y0,s2,s1)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+       -0.5     attrition(y0,s1)
+
+Wdown(y0,s3,s1)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+       -0.5     attrition(y0,s1)
+
+Wdown(y0,s3,s2)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+       -0.5     attrition(y0,s2)
+
+Wdown(y1,s2,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       total(y1,s1)
+        1       total(y1,s2)
+       -0.5     attrition(y1,s1)
+
+Wdown(y1,s3,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       total(y1,s1)
+        1       total(y1,s3)
+       -0.5     attrition(y1,s1)
+
+Wdown(y1,s3,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       total(y1,s2)
+        1       total(y1,s3)
+       -0.5     attrition(y1,s2)
+
+Wdown(y2,s2,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       total(y2,s1)
+        1       total(y2,s2)
+       -0.5     attrition(y2,s1)
+
+Wdown(y2,s3,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       total(y2,s1)
+        1       total(y2,s3)
+       -0.5     attrition(y2,s1)
+
+Wdown(y2,s3,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       total(y2,s2)
+        1       total(y2,s3)
+       -0.5     attrition(y2,s2)
+
+Wdown(y3,s2,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       total(y3,s1)
+        1       total(y3,s2)
+       -0.5     attrition(y3,s1)
+
+Wdown(y3,s3,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       total(y3,s1)
+        1       total(y3,s3)
+       -0.5     attrition(y3,s1)
+
+Wdown(y3,s3,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       total(y3,s2)
+        1       total(y3,s3)
+       -0.5     attrition(y3,s2)
+
+
+---- Wtot   total number of manpower in each category each year
+
+Wtot(y0,s1)
+                (.LO, .L, .UP, .M = 2000, 2000, 2000, 0)
+       -1       total(y1,s1)
+       -0.1     attrition(y1,s1)
+       -1       overman(y0,s1)
+
+Wtot(y0,s2)
+                (.LO, .L, .UP, .M = 1500, 1500, 1500, 0)
+       -1       total(y1,s2)
+       -0.05    attrition(y1,s2)
+       -1       overman(y0,s2)
+
+Wtot(y0,s3)
+                (.LO, .L, .UP, .M = 1000, 1000, 1000, 0)
+       -1       total(y1,s3)
+       -0.05    attrition(y1,s3)
+       -1       overman(y0,s3)
+       -0.25    retrainlim(y0,s1)
+       -0.25    retrainlim(y0,s2)
+       -0.25    retrainlim(y0,s3)
+
+Wtot(y1,s1)
+                (.LO, .L, .UP, .M = 1000, 1000, 1150, 0)
+        1       total(y1,s1)
+       -1       total(y2,s1)
+       -0.1     attrition(y2,s1)
+       -1       overman(y1,s1)
+        0       (OLD LEVEL ****)
+
+Wtot(y1,s2)
+                (.LO, .L, .UP, .M = 1400, 1400, 1550, 0)
+        1       total(y1,s2)
+       -1       total(y2,s2)
+       -0.05    attrition(y2,s2)
+       -1       overman(y1,s2)
+        0       (OLD LEVEL ****)
+
+Wtot(y1,s3)
+                (.LO, .L, .UP, .M = 1000, 1000, 1150, 0)
+        1       total(y1,s3)
+       -1       total(y2,s3)
+       -0.05    attrition(y2,s3)
+       -1       overman(y1,s3)
+       -0.25    retrainlim(y1,s1)
+       -0.25    retrainlim(y1,s2)
+       -0.25    retrainlim(y1,s3)
+        0       (OLD LEVEL ****)
+
+Wtot(y2,s1)
+                (.LO, .L, .UP, .M = 500, 500, 650, 0)
+        1       total(y2,s1)
+       -1       total(y3,s1)
+       -0.1     attrition(y3,s1)
+       -1       overman(y2,s1)
+        0       (OLD LEVEL ****)
+
+Wtot(y2,s2)
+                (.LO, .L, .UP, .M = 2000, 2000, 2150, 0)
+        1       total(y2,s2)
+       -1       total(y3,s2)
+       -0.05    attrition(y3,s2)
+       -1       overman(y2,s2)
+        0       (OLD LEVEL ****)
+
+Wtot(y2,s3)
+                (.LO, .L, .UP, .M = 1500, 1500, 1650, 0)
+        1       total(y2,s3)
+       -1       total(y3,s3)
+       -0.05    attrition(y3,s3)
+       -1       overman(y2,s3)
+       -0.25    retrainlim(y2,s1)
+       -0.25    retrainlim(y2,s2)
+       -0.25    retrainlim(y2,s3)
+        0       (OLD LEVEL ****)
+
+Wtot(y3,s1)
+                (.LO, .L, .UP, .M = 0, 0, 150, 0)
+        1       total(y3,s1)
+       -1       overman(y3,s1)
+
+Wtot(y3,s2)
+                (.LO, .L, .UP, .M = 2500, 2500, 2650, 0)
+        1       total(y3,s2)
+       -1       overman(y3,s2)
+        0       (OLD LEVEL ****)
+
+Wtot(y3,s3)
+                (.LO, .L, .UP, .M = 2000, 2000, 2150, 0)
+        1       total(y3,s3)
+       -1       overman(y3,s3)
+       -0.25    retrainlim(y3,s1)
+       -0.25    retrainlim(y3,s2)
+       -0.25    retrainlim(y3,s3)
+        0       (OLD LEVEL ****)
+
+
+---- Cret  Cost of retraining
+
+Cret(y0)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       retraincosts(y0)
+       -1       totalcosts
+
+Cret(y1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       retraincosts(y1)
+       -1       totalcosts
+
+Cret(y2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       retraincosts(y2)
+       -1       totalcosts
+
+Cret(y3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       retraincosts(y3)
+       -1       totalcosts
+
+
+---- Cred  Redundancy cost each year
+
+Cred(y0)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       redundancycosts(y0)
+       -1       totalcosts
+
+Cred(y1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       redundancycosts(y1)
+       -1       totalcosts
+
+Cred(y2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       redundancycosts(y2)
+       -1       totalcosts
+
+Cred(y3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       redundancycosts(y3)
+       -1       totalcosts
+
+
+---- Cextra  extraworker costs each year
+
+Cextra(y0)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       overmancosts(y0)
+       -1       totalcosts
+
+Cextra(y1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       overmancosts(y1)
+       -1       totalcosts
+
+Cextra(y2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       overmancosts(y2)
+       -1       totalcosts
+
+Cextra(y3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       overmancosts(y3)
+       -1       totalcosts
+
+
+---- Csho  short time worker cost
+
+Csho(y0)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       shorttimecosts(y0)
+       -1       totalcosts
+
+Csho(y1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       shorttimecosts(y1)
+       -1       totalcosts
+
+Csho(y2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       shorttimecosts(y2)
+       -1       totalcosts
+
+Csho(y3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       shorttimecosts(y3)
+       -1       totalcosts
+
+
+---- TotCTC  total cost to company
+
+TotCTC
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       totalcosts
+
+
+---- objval  total number of layoffs / redundancy workers
+
+objval
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       objfunc
+
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE manpowerplan Using RMIP From line 119
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS          10     SINGLE EQUATIONS           63
+BLOCKS OF VARIABLES          14     SINGLE VARIABLES          113  8 projected
+NON ZERO ELEMENTS           273     DISCRETE VARIABLES         78
+
+
+GENERATION TIME      =        0.016 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
+
+
+EXECUTION TIME       =        0.016 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE manpowerplan Using RMIP From line 119
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   manpowerplan        OBJECTIVE  objval
+     TYPE    RMIP                DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  119
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE              870.0000
+
+ RESOURCE USAGE, LIMIT          0.000      1000.000
+ ITERATION COUNT, LIMIT         8    2000000000
+
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.00sec (det. 0.10 ticks)
+Optimal solution found.
+Objective :         870.000000
+
+
+---- EQU total  total workers each year per skill level
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y1.s1          .              .              .             1.0000      
+y1.s2          .              .              .             EPS         
+y1.s3          .              .              .             EPS         
+y2.s1          .              .              .             1.0000      
+y2.s2          .              .              .             EPS         
+y2.s3          .              .              .             EPS         
+y3.s1          .              .              .             1.0000      
+y3.s2          .              .              .             EPS         
+y3.s3          .              .              .             EPS         
+
+---- EQU attrition  attrition each year per skill level
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .              .             EPS         
+y0.s2          .              .              .             EPS         
+y0.s3          .              .              .             EPS         
+y1.s1          .              .              .            -1.0000      
+y1.s2          .              .              .             EPS         
+y1.s3          .              .              .             EPS         
+y2.s1          .              .              .            -1.0000      
+y2.s2          .              .              .             EPS         
+y2.s3          .              .              .             EPS         
+y3.s1          .              .              .            -1.0000      
+y3.s2          .              .              .             EPS         
+y3.s3          .              .              .             EPS         
+
+---- EQU overman  number of extra workers per year per skill level
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1     -2000.0000     -2000.0000     -2000.0000          .          
+y0.s2     -1500.0000     -1500.0000     -1500.0000          .          
+y0.s3     -1000.0000     -1000.0000     -1000.0000          .          
+y1.s1     -1000.0000     -1000.0000     -1000.0000         EPS         
+y1.s2     -1400.0000     -1400.0000     -1400.0000         EPS         
+y1.s3     -1000.0000     -1000.0000     -1000.0000         EPS         
+y2.s1      -500.0000      -500.0000      -500.0000         EPS         
+y2.s2     -2000.0000     -2000.0000     -2000.0000         EPS         
+y2.s3     -1500.0000     -1500.0000     -1500.0000         EPS         
+y3.s1          .              .              .             EPS         
+y3.s2     -2500.0000     -2500.0000     -2500.0000         EPS         
+y3.s3     -2000.0000     -2000.0000     -2000.0000         EPS         
+
+---- EQU retrainlim  retrainlim equations
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1        -INF         -250.0000          .              .          
+y0.s2        -INF         -250.0000          .              .          
+y0.s3        -INF         -250.0000          .              .          
+y1.s1        -INF         -181.2500          .              .          
+y1.s2        -INF         -181.2500          .              .          
+y1.s3        -INF         -181.2500          .              .          
+y2.s1        -INF         -298.7500          .              .          
+y2.s2        -INF         -298.7500          .              .          
+y2.s3        -INF         -298.7500          .              .          
+y3.s1        -INF         -375.0000          .              .          
+y3.s2        -INF         -375.0000          .              .          
+y3.s3        -INF         -375.0000          .              .          
+
+---- EQU retraincosts  cost to retrain
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0          .              .              .             EPS         
+y1          .              .              .             EPS         
+y2          .              .              .             EPS         
+y3          .              .              .             EPS         
+
+---- EQU overmancosts  cost of overmanning
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0          .              .              .             EPS         
+y1          .              .              .             EPS         
+y2          .              .              .             EPS         
+y3          .              .              .             EPS         
+
+---- EQU redundancycosts  cost of redundancy
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0          .              .              .             EPS         
+y1          .              .              .             EPS         
+y2          .              .              .             EPS         
+y3          .              .              .             EPS         
+
+---- EQU shorttimecosts  
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0          .              .              .             EPS         
+y1          .              .              .             EPS         
+y2          .              .              .             EPS         
+y3          .              .              .             EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU totalcosts          .              .              .             EPS         
+---- EQU objfunc             .              .              .             1.0000      
+
+  totalcosts  total costs for 3 years
+  objfunc  cumulative redundancy minimization
+
+---- VAR Wrec  number of recruits at end of each year
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .              .             EPS         
+y0.s2          .              .              .             EPS         
+y0.s3          .              .              .             EPS         
+y1.s1          .              .           500.0000         0.7500      
+y1.s2          .              .           800.0000         EPS         
+y1.s3          .              .           500.0000         EPS         
+y2.s1          .              .           500.0000         0.7500      
+y2.s2          .           504.6875       800.0000          .          
+y2.s3          .           500.0000       500.0000         EPS         
+y3.s1          .              .           500.0000         0.7500      
+y3.s2          .           656.2500       800.0000          .          
+y3.s3          .           500.0000       500.0000         EPS         
+
+---- VAR Wret  number of retrained personnel
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .              .             EPS         
+y0.s2          .              .              .             EPS         
+y1.s1          .           200.0000       200.0000        -1.0000      
+y1.s2          .            75.0000        +INF             .          
+y1.s3          .              .              .             EPS         
+y2.s1          .           200.0000       200.0000        -1.0000      
+y2.s2          .            76.2500        +INF             .          
+y2.s3          .              .              .             EPS         
+y3.s1          .           200.0000       200.0000        -1.0000      
+y3.s2          .           125.0000        +INF             .          
+y3.s3          .              .              .             EPS         
+
+---- VAR Wred  number of workers declared redundant
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .              .             1.0000      
+y0.s2          .              .              .             1.0000      
+y0.s3          .              .              .             1.0000      
+y1.s1          .           450.0000        +INF             .          
+y1.s2          .              .            +INF            1.0000      
+y1.s3          .              .            +INF            1.0000      
+y2.s1          .           185.0000        +INF             .          
+y2.s2          .              .            +INF            1.0000      
+y2.s3          .              .            +INF            1.0000      
+y3.s1          .           235.0000        +INF             .          
+y3.s2          .              .            +INF            1.0000      
+y3.s3          .              .            +INF            1.0000      
+
+---- VAR Wsho  number of workers on short work
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .            +INF            EPS         
+y0.s2          .              .            +INF            EPS         
+y0.s3          .              .            +INF            EPS         
+y1.s1          .           300.0000        +INF             .          
+y1.s2          .           300.0000        +INF             .          
+y1.s3          .            50.0000        +INF             .          
+y2.s1          .           300.0000        +INF             .          
+y2.s2          .              .            +INF             .          
+y2.s3          .              .            +INF             .          
+y3.s1          .           300.0000        +INF             .          
+y3.s2          .              .            +INF             .          
+y3.s3          .              .            +INF             .          
+
+---- VAR Wextra  number of extra workers each year. sum over categories
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .            +INF            EPS         
+y0.s2          .              .            +INF            EPS         
+y0.s3          .              .            +INF            EPS         
+y1.s1          .              .            +INF            EPS         
+y1.s2          .              .            +INF            EPS         
+y1.s3          .              .            +INF            EPS         
+y2.s1          .              .            +INF            EPS         
+y2.s2          .              .            +INF            EPS         
+y2.s3          .              .            +INF            EPS         
+y3.s1          .              .            +INF            EPS         
+y3.s2          .              .            +INF            EPS         
+y3.s3          .              .            +INF            EPS         
+
+---- VAR Watt  number of workers leaving. includes current and past year workers
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .            +INF             .          
+y0.s2          .              .            +INF             .          
+y0.s3          .              .            +INF             .          
+y1.s1          .           200.0000        +INF             .          
+y1.s2          .            75.0000        +INF             .          
+y1.s3          .            50.0000        +INF             .          
+y2.s1          .           115.0000        +INF             .          
+y2.s2          .           178.4375        +INF             .          
+y2.s3          .           101.2500        +INF             .          
+y3.s1          .            65.0000        +INF             .          
+y3.s2          .           231.2500        +INF             .          
+y3.s3          .           125.0000        +INF             .          
+
+---- VAR Wdown  number of workers downgraded
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s2.s1          .              .              .             EPS         
+y0.s3.s1          .              .              .             EPS         
+y0.s3.s2          .              .              .             EPS         
+y1.s2.s1          .              .            +INF            0.5000      
+y1.s3.s1          .              .            +INF            0.5000      
+y1.s3.s2          .              .            +INF            EPS         
+y2.s2.s1          .              .            +INF            0.5000      
+y2.s3.s1          .              .            +INF            0.5000      
+y2.s3.s2          .              .            +INF            EPS         
+y3.s2.s1          .              .            +INF            0.5000      
+y3.s3.s1          .              .            +INF            0.5000      
+y3.s3.s2          .              .            +INF            EPS         
+
+---- VAR Wtot   total number of manpower in each category each year
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1      2000.0000      2000.0000      2000.0000         0.9000      
+y0.s2      1500.0000      1500.0000      1500.0000         EPS         
+y0.s3      1000.0000      1000.0000      1000.0000         EPS         
+y1.s1      1000.0000      1150.0000      1150.0000        -0.1000      
+y1.s2      1400.0000      1550.0000      1550.0000         EPS         
+y1.s3      1000.0000      1025.0000      1150.0000          .          
+y2.s1       500.0000       650.0000       650.0000        -0.1000      
+y2.s2      2000.0000      2000.0000      2150.0000         EPS         
+y2.s3      1500.0000      1500.0000      1650.0000         EPS         
+y3.s1          .           150.0000       150.0000        -1.0000      
+y3.s2      2500.0000      2500.0000      2650.0000         EPS         
+y3.s3      2000.0000      2000.0000      2150.0000         EPS         
+
+---- VAR Cret  Cost of retraining
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0        -INF             .            +INF             .          
+y1        -INF       117500.0000        +INF             .          
+y2        -INF       118125.0000        +INF             .          
+y3        -INF       142500.0000        +INF             .          
+
+---- VAR Cred  Redundancy cost each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0        -INF             .            +INF             .          
+y1        -INF        90000.0000        +INF             .          
+y2        -INF        37000.0000        +INF             .          
+y3        -INF        47000.0000        +INF             .          
+
+---- VAR Cextra  extraworker costs each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0        -INF             .            +INF             .          
+y1        -INF             .            +INF             .          
+y2        -INF             .            +INF             .          
+y3        -INF             .            +INF             .          
+
+---- VAR Csho  short time worker cost
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0        -INF             .            +INF             .          
+y1        -INF       290000.0000        +INF             .          
+y2        -INF       150000.0000        +INF             .          
+y3        -INF       150000.0000        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR TotCTC            -INF      1142125.0000        +INF             .          
+---- VAR objval            -INF          870.0000        +INF             .          
+
+  TotCTC  total cost to company
+  objval  total number of layoffs / redundancy workers
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+
+****
+****  14 Integer levels greater than 100
+****
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE manpowerplan Using MIP From line 121
+
+
+---- total  =E=  total workers each year per skill level
+
+total(y1,s1)..  - Wrec(y1,s1) + Wret(y1,s1) + Wred(y1,s1) + Watt(y1,s1) - Wdown(y1,s2,s1) - Wdown(y1,s3,s1) - Wtot(y0,s1) + Wtot(y1,s1) =E= 0 ; (LHS = 0)
+     
+total(y1,s2)..  - Wrec(y1,s2) - Wret(y1,s1) + Wret(y1,s2) + Wred(y1,s2) + Watt(y1,s2) + Wdown(y1,s2,s1) - Wdown(y1,s3,s2) - Wtot(y0,s2) + Wtot(y1,s2) =E= 0 ; (LHS = 0)
+     
+total(y1,s3)..  - Wrec(y1,s3) - Wret(y1,s2) + Wret(y1,s3) + Wred(y1,s3) + Watt(y1,s3) + Wdown(y1,s3,s1) + Wdown(y1,s3,s2) - Wtot(y0,s3) + Wtot(y1,s3) =E= 0 ; (LHS = 0)
+     
+total(y2,s1)..  - Wrec(y2,s1) + Wret(y2,s1) + Wred(y2,s1) + Watt(y2,s1) - Wdown(y2,s2,s1) - Wdown(y2,s3,s1) - Wtot(y1,s1) + Wtot(y2,s1) =E= 0 ; (LHS = 0)
+     
+total(y2,s2)..  - Wrec(y2,s2) - Wret(y2,s1) + Wret(y2,s2) + Wred(y2,s2) + Watt(y2,s2) + Wdown(y2,s2,s1) - Wdown(y2,s3,s2) - Wtot(y1,s2) + Wtot(y2,s2) =E= 0 ; (LHS = 0)
+     
+total(y2,s3)..  - Wrec(y2,s3) - Wret(y2,s2) + Wret(y2,s3) + Wred(y2,s3) + Watt(y2,s3) + Wdown(y2,s3,s1) + Wdown(y2,s3,s2) - Wtot(y1,s3) + Wtot(y2,s3) =E= 0 ; (LHS = 0)
+     
+total(y3,s1)..  - Wrec(y3,s1) + Wret(y3,s1) + Wred(y3,s1) + Watt(y3,s1) - Wdown(y3,s2,s1) - Wdown(y3,s3,s1) - Wtot(y2,s1) + Wtot(y3,s1) =E= 0 ; (LHS = 0)
+     
+total(y3,s2)..  - Wrec(y3,s2) - Wret(y3,s1) + Wret(y3,s2) + Wred(y3,s2) + Watt(y3,s2) + Wdown(y3,s2,s1) - Wdown(y3,s3,s2) - Wtot(y2,s2) + Wtot(y3,s2) =E= 0 ; (LHS = 0)
+     
+total(y3,s3)..  - Wrec(y3,s3) - Wret(y3,s2) + Wret(y3,s3) + Wred(y3,s3) + Watt(y3,s3) + Wdown(y3,s3,s1) + Wdown(y3,s3,s2) - Wtot(y2,s3) + Wtot(y3,s3) =E= 0 ; (LHS = 0)
+     
+
+---- attrition  =E=  attrition each year per skill level
+
+attrition(y0,s1)..  - 0.25*Wrec(y0,s1) + Watt(y0,s1) - 0.5*Wdown(y0,s2,s1) - 0.5*Wdown(y0,s3,s1) =E= 0 ; (LHS = 0)
+     
+attrition(y0,s2)..  - 0.2*Wrec(y0,s2) + Watt(y0,s2) - 0.5*Wdown(y0,s3,s2) =E= 0 ; (LHS = 0)
+     
+attrition(y0,s3)..  - 0.1*Wrec(y0,s3) + Watt(y0,s3) =E= 0 ; (LHS = 0)
+     
+attrition(y1,s1)..  - 0.25*Wrec(y1,s1) + Watt(y1,s1) - 0.5*Wdown(y1,s2,s1) - 0.5*Wdown(y1,s3,s1) - 0.1*Wtot(y0,s1) =E= 0 ; (LHS = 0)
+     
+attrition(y1,s2)..  - 0.2*Wrec(y1,s2) + Watt(y1,s2) - 0.5*Wdown(y1,s3,s2) - 0.05*Wtot(y0,s2) =E= 0 ; (LHS = 0)
+     
+attrition(y1,s3)..  - 0.1*Wrec(y1,s3) + Watt(y1,s3) - 0.05*Wtot(y0,s3) =E= 0 ; (LHS = 0)
+     
+attrition(y2,s1)..  - 0.25*Wrec(y2,s1) + Watt(y2,s1) - 0.5*Wdown(y2,s2,s1) - 0.5*Wdown(y2,s3,s1) - 0.1*Wtot(y1,s1) =E= 0 ; (LHS = 0)
+     
+attrition(y2,s2)..  - 0.2*Wrec(y2,s2) + Watt(y2,s2) - 0.5*Wdown(y2,s3,s2) - 0.05*Wtot(y1,s2) =E= 0 ; (LHS = 0)
+     
+attrition(y2,s3)..  - 0.1*Wrec(y2,s3) + Watt(y2,s3) - 0.05*Wtot(y1,s3) =E= 0 ; (LHS = 0)
+     
+attrition(y3,s1)..  - 0.25*Wrec(y3,s1) + Watt(y3,s1) - 0.5*Wdown(y3,s2,s1) - 0.5*Wdown(y3,s3,s1) - 0.1*Wtot(y2,s1) =E= 0 ; (LHS = 0)
+     
+attrition(y3,s2)..  - 0.2*Wrec(y3,s2) + Watt(y3,s2) - 0.5*Wdown(y3,s3,s2) - 0.05*Wtot(y2,s2) =E= 0 ; (LHS = 0)
+     
+attrition(y3,s3)..  - 0.1*Wrec(y3,s3) + Watt(y3,s3) - 0.05*Wtot(y2,s3) =E= 0 ; (LHS = 0)
+     
+
+---- overman  =E=  number of extra workers per year per skill level
+
+overman(y0,s1)..  0.5*Wsho(y0,s1) + Wextra(y0,s1) - Wtot(y0,s1) =E= -2000 ; (LHS = -2000)
+     
+overman(y0,s2)..  0.5*Wsho(y0,s2) + Wextra(y0,s2) - Wtot(y0,s2) =E= -1500 ; (LHS = -1500)
+     
+overman(y0,s3)..  0.5*Wsho(y0,s3) + Wextra(y0,s3) - Wtot(y0,s3) =E= -1000 ; (LHS = -1000)
+     
+overman(y1,s1)..  0.5*Wsho(y1,s1) + Wextra(y1,s1) - Wtot(y1,s1) =E= -1000 ; (LHS = -1000)
+     
+overman(y1,s2)..  0.5*Wsho(y1,s2) + Wextra(y1,s2) - Wtot(y1,s2) =E= -1400 ; (LHS = -1400)
+     
+overman(y1,s3)..  0.5*Wsho(y1,s3) + Wextra(y1,s3) - Wtot(y1,s3) =E= -1000 ; (LHS = -1000)
+     
+overman(y2,s1)..  0.5*Wsho(y2,s1) + Wextra(y2,s1) - Wtot(y2,s1) =E= -500 ; (LHS = -500)
+     
+overman(y2,s2)..  0.5*Wsho(y2,s2) + Wextra(y2,s2) - Wtot(y2,s2) =E= -2000 ; (LHS = -2000)
+     
+overman(y2,s3)..  0.5*Wsho(y2,s3) + Wextra(y2,s3) - Wtot(y2,s3) =E= -1500 ; (LHS = -1500)
+     
+overman(y3,s1)..  0.5*Wsho(y3,s1) + Wextra(y3,s1) - Wtot(y3,s1) =E= 0 ; (LHS = 0)
+     
+overman(y3,s2)..  0.5*Wsho(y3,s2) + Wextra(y3,s2) - Wtot(y3,s2) =E= -2500 ; (LHS = -2500)
+     
+overman(y3,s3)..  0.5*Wsho(y3,s3) + Wextra(y3,s3) - Wtot(y3,s3) =E= -2000 ; (LHS = -2000)
+     
+
+---- retrainlim  =L=  retrainlim equations
+
+retrainlim(y0,s1)..  Wret(y0,s2) - 0.25*Wtot(y0,s3) =L= 0 ; (LHS = -250)
+     
+retrainlim(y0,s2)..  Wret(y0,s2) - 0.25*Wtot(y0,s3) =L= 0 ; (LHS = -250)
+     
+retrainlim(y0,s3)..  Wret(y0,s2) - 0.25*Wtot(y0,s3) =L= 0 ; (LHS = -250)
+     
+retrainlim(y1,s1)..  Wret(y1,s2) - 0.25*Wtot(y1,s3) =L= 0 ; (LHS = -181.25)
+     
+retrainlim(y1,s2)..  Wret(y1,s2) - 0.25*Wtot(y1,s3) =L= 0 ; (LHS = -181.25)
+     
+retrainlim(y1,s3)..  Wret(y1,s2) - 0.25*Wtot(y1,s3) =L= 0 ; (LHS = -181.25)
+     
+retrainlim(y2,s1)..  Wret(y2,s2) - 0.25*Wtot(y2,s3) =L= 0 ; (LHS = -298.75)
+     
+retrainlim(y2,s2)..  Wret(y2,s2) - 0.25*Wtot(y2,s3) =L= 0 ; (LHS = -298.75)
+     
+retrainlim(y2,s3)..  Wret(y2,s2) - 0.25*Wtot(y2,s3) =L= 0 ; (LHS = -298.75)
+     
+retrainlim(y3,s1)..  Wret(y3,s2) - 0.25*Wtot(y3,s3) =L= 0 ; (LHS = -375)
+     
+retrainlim(y3,s2)..  Wret(y3,s2) - 0.25*Wtot(y3,s3) =L= 0 ; (LHS = -375)
+     
+retrainlim(y3,s3)..  Wret(y3,s2) - 0.25*Wtot(y3,s3) =L= 0 ; (LHS = -375)
+     
+
+---- retraincosts  =E=  cost to retrain
+
+retraincosts(y0)..  - 400*Wret(y0,s1) - 500*Wret(y0,s2) + Cret(y0) =E= 0 ; (LHS = 0)
+     
+retraincosts(y1)..  - 400*Wret(y1,s1) - 500*Wret(y1,s2) + Cret(y1) =E= 0 ; (LHS = 0)
+     
+retraincosts(y2)..  - 400*Wret(y2,s1) - 500*Wret(y2,s2) + Cret(y2) =E= 0 ; (LHS = 0)
+     
+retraincosts(y3)..  - 400*Wret(y3,s1) - 500*Wret(y3,s2) + Cret(y3) =E= 0 ; (LHS = 0)
+     
+
+---- overmancosts  =E=  cost of overmanning
+
+overmancosts(y0)..  - 1500*Wextra(y0,s1) - 2000*Wextra(y0,s2) - 3000*Wextra(y0,s3) + Cextra(y0) =E= 0 ; (LHS = 0)
+     
+overmancosts(y1)..  - 1500*Wextra(y1,s1) - 2000*Wextra(y1,s2) - 3000*Wextra(y1,s3) + Cextra(y1) =E= 0 ; (LHS = 0)
+     
+overmancosts(y2)..  - 1500*Wextra(y2,s1) - 2000*Wextra(y2,s2) - 3000*Wextra(y2,s3) + Cextra(y2) =E= 0 ; (LHS = 0)
+     
+overmancosts(y3)..  - 1500*Wextra(y3,s1) - 2000*Wextra(y3,s2) - 3000*Wextra(y3,s3) + Cextra(y3) =E= 0 ; (LHS = 0)
+     
+
+---- redundancycosts  =E=  cost of redundancy
+
+redundancycosts(y0)..  - 200*Wred(y0,s1) - 500*Wred(y0,s2) - 500*Wred(y0,s3) + Cred(y0) =E= 0 ; (LHS = 0)
+     
+redundancycosts(y1)..  - 200*Wred(y1,s1) - 500*Wred(y1,s2) - 500*Wred(y1,s3) + Cred(y1) =E= 0 ; (LHS = 0)
+     
+redundancycosts(y2)..  - 200*Wred(y2,s1) - 500*Wred(y2,s2) - 500*Wred(y2,s3) + Cred(y2) =E= 0 ; (LHS = 0)
+     
+redundancycosts(y3)..  - 200*Wred(y3,s1) - 500*Wred(y3,s2) - 500*Wred(y3,s3) + Cred(y3) =E= 0 ; (LHS = 0)
+     
+
+---- shorttimecosts  =E=  
+
+shorttimecosts(y0)..  - 500*Wsho(y0,s1) - 400*Wsho(y0,s2) - 400*Wsho(y0,s3) + Csho(y0) =E= 0 ; (LHS = 0)
+     
+shorttimecosts(y1)..  - 500*Wsho(y1,s1) - 400*Wsho(y1,s2) - 400*Wsho(y1,s3) + Csho(y1) =E= 0 ; (LHS = 0)
+     
+shorttimecosts(y2)..  - 500*Wsho(y2,s1) - 400*Wsho(y2,s2) - 400*Wsho(y2,s3) + Csho(y2) =E= 0 ; (LHS = 0)
+     
+shorttimecosts(y3)..  - 500*Wsho(y3,s1) - 400*Wsho(y3,s2) - 400*Wsho(y3,s3) + Csho(y3) =E= 0 ; (LHS = 0)
+     
+
+---- totalcosts  =E=  total costs for 3 years
+
+totalcosts..  - Cret(y0) - Cret(y1) - Cret(y2) - Cret(y3) - Cred(y0) - Cred(y1) - Cred(y2) - Cred(y3) - Cextra(y0) - Cextra(y1) - Cextra(y2) - Cextra(y3) - Csho(y0) - Csho(y1) - Csho(y2) - Csho(y3) + TotCTC =E= 0 ; (LHS = 0)
+     
+
+---- objfunc  =E=  cumulative redundancy minimization
+
+objfunc..  - Wred(y0,s1) - Wred(y0,s2) - Wred(y0,s3) - Wred(y1,s1) - Wred(y1,s2) - Wred(y1,s3) - Wred(y2,s1) - Wred(y2,s2) - Wred(y2,s3) - Wred(y3,s1) - Wred(y3,s2) - Wred(y3,s3) + objval =E= 0 ; (LHS = 0)
+     
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE manpowerplan Using MIP From line 121
+
+
+---- Wrec  number of recruits at end of each year
+
+Wrec(y0,s1)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+       -0.25    attrition(y0,s1)
+
+Wrec(y0,s2)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+       -0.2     attrition(y0,s2)
+
+Wrec(y0,s3)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+       -0.1     attrition(y0,s3)
+
+Wrec(y1,s1)
+                (.LO, .L, .UP, .M = 0, 0, 500, 0.75)
+       -1       total(y1,s1)
+       -0.25    attrition(y1,s1)
+
+Wrec(y1,s2)
+                (.LO, .L, .UP, .M = 0, 0, 800, EPS)
+       -1       total(y1,s2)
+       -0.2     attrition(y1,s2)
+
+Wrec(y1,s3)
+                (.LO, .L, .UP, .M = 0, 0, 500, EPS)
+       -1       total(y1,s3)
+       -0.1     attrition(y1,s3)
+
+Wrec(y2,s1)
+                (.LO, .L, .UP, .M = 0, 0, 500, 0.75)
+       -1       total(y2,s1)
+       -0.25    attrition(y2,s1)
+
+Wrec(y2,s2)
+                (.LO, .L, .UP, .M = 0, 504.6875, 800, 0)
+       -1       total(y2,s2)
+       -0.2     attrition(y2,s2)
+
+Wrec(y2,s3)
+                (.LO, .L, .UP, .M = 0, 500, 500, EPS)
+       -1       total(y2,s3)
+       -0.1     attrition(y2,s3)
+
+Wrec(y3,s1)
+                (.LO, .L, .UP, .M = 0, 0, 500, 0.75)
+       -1       total(y3,s1)
+       -0.25    attrition(y3,s1)
+
+Wrec(y3,s2)
+                (.LO, .L, .UP, .M = 0, 656.25, 800, 0)
+       -1       total(y3,s2)
+       -0.2     attrition(y3,s2)
+
+Wrec(y3,s3)
+                (.LO, .L, .UP, .M = 0, 500, 500, EPS)
+       -1       total(y3,s3)
+       -0.1     attrition(y3,s3)
+
+
+---- Wret  number of retrained personnel
+
+Wret(y0,s1)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+     -400       retraincosts(y0)
+
+Wret(y0,s2)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+        1       retrainlim(y0,s1)
+        1       retrainlim(y0,s2)
+        1       retrainlim(y0,s3)
+     -500       retraincosts(y0)
+
+Wret(y1,s1)
+                (.LO, .L, .UP, .M = 0, 200, 200, -1)
+        1       total(y1,s1)
+       -1       total(y1,s2)
+     -400       retraincosts(y1)
+
+Wret(y1,s2)
+                (.LO, .L, .UP, .M = 0, 75, +INF, 0)
+        1       total(y1,s2)
+       -1       total(y1,s3)
+        1       retrainlim(y1,s1)
+        1       retrainlim(y1,s2)
+        1       retrainlim(y1,s3)
+     -500       retraincosts(y1)
+
+Wret(y1,s3)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+        1       total(y1,s3)
+
+Wret(y2,s1)
+                (.LO, .L, .UP, .M = 0, 200, 200, -1)
+        1       total(y2,s1)
+       -1       total(y2,s2)
+     -400       retraincosts(y2)
+
+Wret(y2,s2)
+                (.LO, .L, .UP, .M = 0, 76.25, +INF, 0)
+        1       total(y2,s2)
+       -1       total(y2,s3)
+        1       retrainlim(y2,s1)
+        1       retrainlim(y2,s2)
+        1       retrainlim(y2,s3)
+     -500       retraincosts(y2)
+
+Wret(y2,s3)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+        1       total(y2,s3)
+
+Wret(y3,s1)
+                (.LO, .L, .UP, .M = 0, 200, 200, -1)
+        1       total(y3,s1)
+       -1       total(y3,s2)
+     -400       retraincosts(y3)
+
+Wret(y3,s2)
+                (.LO, .L, .UP, .M = 0, 125, +INF, 0)
+        1       total(y3,s2)
+       -1       total(y3,s3)
+        1       retrainlim(y3,s1)
+        1       retrainlim(y3,s2)
+        1       retrainlim(y3,s3)
+     -500       retraincosts(y3)
+
+Wret(y3,s3)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+        1       total(y3,s3)
+
+
+---- Wred  number of workers declared redundant
+
+Wred(y0,s1)
+                (.LO, .L, .UP, .M = 0, 0, 0, 1)
+     -200       redundancycosts(y0)
+       -1       objfunc
+
+Wred(y0,s2)
+                (.LO, .L, .UP, .M = 0, 0, 0, 1)
+     -500       redundancycosts(y0)
+       -1       objfunc
+
+Wred(y0,s3)
+                (.LO, .L, .UP, .M = 0, 0, 0, 1)
+     -500       redundancycosts(y0)
+       -1       objfunc
+
+Wred(y1,s1)
+                (.LO, .L, .UP, .M = 0, 450, +INF, 0)
+        1       total(y1,s1)
+     -200       redundancycosts(y1)
+       -1       objfunc
+
+Wred(y1,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 1)
+        1       total(y1,s2)
+     -500       redundancycosts(y1)
+       -1       objfunc
+
+Wred(y1,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 1)
+        1       total(y1,s3)
+     -500       redundancycosts(y1)
+       -1       objfunc
+
+Wred(y2,s1)
+                (.LO, .L, .UP, .M = 0, 185, +INF, 0)
+        1       total(y2,s1)
+     -200       redundancycosts(y2)
+       -1       objfunc
+
+Wred(y2,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 1)
+        1       total(y2,s2)
+     -500       redundancycosts(y2)
+       -1       objfunc
+
+Wred(y2,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 1)
+        1       total(y2,s3)
+     -500       redundancycosts(y2)
+       -1       objfunc
+
+Wred(y3,s1)
+                (.LO, .L, .UP, .M = 0, 235, +INF, 0)
+        1       total(y3,s1)
+     -200       redundancycosts(y3)
+       -1       objfunc
+
+Wred(y3,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 1)
+        1       total(y3,s2)
+     -500       redundancycosts(y3)
+       -1       objfunc
+
+Wred(y3,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 1)
+        1       total(y3,s3)
+     -500       redundancycosts(y3)
+       -1       objfunc
+
+
+---- Wsho  number of workers on short work
+
+Wsho(y0,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        0.5     overman(y0,s1)
+     -500       shorttimecosts(y0)
+
+Wsho(y0,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        0.5     overman(y0,s2)
+     -400       shorttimecosts(y0)
+
+Wsho(y0,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        0.5     overman(y0,s3)
+     -400       shorttimecosts(y0)
+
+Wsho(y1,s1)
+                (.LO, .L, .UP, .M = 0, 300, +INF, 0)
+        0.5     overman(y1,s1)
+     -500       shorttimecosts(y1)
+
+Wsho(y1,s2)
+                (.LO, .L, .UP, .M = 0, 300, +INF, 0)
+        0.5     overman(y1,s2)
+     -400       shorttimecosts(y1)
+
+Wsho(y1,s3)
+                (.LO, .L, .UP, .M = 0, 50, +INF, 0)
+        0.5     overman(y1,s3)
+     -400       shorttimecosts(y1)
+
+Wsho(y2,s1)
+                (.LO, .L, .UP, .M = 0, 300, +INF, 0)
+        0.5     overman(y2,s1)
+     -500       shorttimecosts(y2)
+
+Wsho(y2,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.5     overman(y2,s2)
+     -400       shorttimecosts(y2)
+
+Wsho(y2,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.5     overman(y2,s3)
+     -400       shorttimecosts(y2)
+
+Wsho(y3,s1)
+                (.LO, .L, .UP, .M = 0, 300, +INF, 0)
+        0.5     overman(y3,s1)
+     -500       shorttimecosts(y3)
+
+Wsho(y3,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.5     overman(y3,s2)
+     -400       shorttimecosts(y3)
+
+Wsho(y3,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.5     overman(y3,s3)
+     -400       shorttimecosts(y3)
+
+
+---- Wextra  number of extra workers each year. sum over categories
+
+Wextra(y0,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y0,s1)
+    -1500       overmancosts(y0)
+
+Wextra(y0,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y0,s2)
+    -2000       overmancosts(y0)
+
+Wextra(y0,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y0,s3)
+    -3000       overmancosts(y0)
+
+Wextra(y1,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y1,s1)
+    -1500       overmancosts(y1)
+
+Wextra(y1,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y1,s2)
+    -2000       overmancosts(y1)
+
+Wextra(y1,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y1,s3)
+    -3000       overmancosts(y1)
+
+Wextra(y2,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y2,s1)
+    -1500       overmancosts(y2)
+
+Wextra(y2,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y2,s2)
+    -2000       overmancosts(y2)
+
+Wextra(y2,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y2,s3)
+    -3000       overmancosts(y2)
+
+Wextra(y3,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y3,s1)
+    -1500       overmancosts(y3)
+
+Wextra(y3,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y3,s2)
+    -2000       overmancosts(y3)
+
+Wextra(y3,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y3,s3)
+    -3000       overmancosts(y3)
+
+
+---- Watt  number of workers leaving. includes current and past year workers
+
+Watt(y0,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       attrition(y0,s1)
+
+Watt(y0,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       attrition(y0,s2)
+
+Watt(y0,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       attrition(y0,s3)
+
+Watt(y1,s1)
+                (.LO, .L, .UP, .M = 0, 200, +INF, 0)
+        1       total(y1,s1)
+        1       attrition(y1,s1)
+
+Watt(y1,s2)
+                (.LO, .L, .UP, .M = 0, 75, +INF, 0)
+        1       total(y1,s2)
+        1       attrition(y1,s2)
+
+Watt(y1,s3)
+                (.LO, .L, .UP, .M = 0, 50, +INF, 0)
+        1       total(y1,s3)
+        1       attrition(y1,s3)
+
+Watt(y2,s1)
+                (.LO, .L, .UP, .M = 0, 115, +INF, 0)
+        1       total(y2,s1)
+        1       attrition(y2,s1)
+
+Watt(y2,s2)
+                (.LO, .L, .UP, .M = 0, 178.4375, +INF, 0)
+        1       total(y2,s2)
+        1       attrition(y2,s2)
+
+Watt(y2,s3)
+                (.LO, .L, .UP, .M = 0, 101.25, +INF, 0)
+        1       total(y2,s3)
+        1       attrition(y2,s3)
+
+Watt(y3,s1)
+                (.LO, .L, .UP, .M = 0, 65, +INF, 0)
+        1       total(y3,s1)
+        1       attrition(y3,s1)
+
+Watt(y3,s2)
+                (.LO, .L, .UP, .M = 0, 231.25, +INF, 0)
+        1       total(y3,s2)
+        1       attrition(y3,s2)
+
+Watt(y3,s3)
+                (.LO, .L, .UP, .M = 0, 125, +INF, 0)
+        1       total(y3,s3)
+        1       attrition(y3,s3)
+
+
+---- Wdown  number of workers downgraded
+
+Wdown(y0,s2,s1)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+       -0.5     attrition(y0,s1)
+
+Wdown(y0,s3,s1)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+       -0.5     attrition(y0,s1)
+
+Wdown(y0,s3,s2)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+       -0.5     attrition(y0,s2)
+
+Wdown(y1,s2,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0.5)
+       -1       total(y1,s1)
+        1       total(y1,s2)
+       -0.5     attrition(y1,s1)
+
+Wdown(y1,s3,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0.5)
+       -1       total(y1,s1)
+        1       total(y1,s3)
+       -0.5     attrition(y1,s1)
+
+Wdown(y1,s3,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+       -1       total(y1,s2)
+        1       total(y1,s3)
+       -0.5     attrition(y1,s2)
+
+Wdown(y2,s2,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0.5)
+       -1       total(y2,s1)
+        1       total(y2,s2)
+       -0.5     attrition(y2,s1)
+
+Wdown(y2,s3,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0.5)
+       -1       total(y2,s1)
+        1       total(y2,s3)
+       -0.5     attrition(y2,s1)
+
+Wdown(y2,s3,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+       -1       total(y2,s2)
+        1       total(y2,s3)
+       -0.5     attrition(y2,s2)
+
+Wdown(y3,s2,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0.5)
+       -1       total(y3,s1)
+        1       total(y3,s2)
+       -0.5     attrition(y3,s1)
+
+Wdown(y3,s3,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0.5)
+       -1       total(y3,s1)
+        1       total(y3,s3)
+       -0.5     attrition(y3,s1)
+
+Wdown(y3,s3,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+       -1       total(y3,s2)
+        1       total(y3,s3)
+       -0.5     attrition(y3,s2)
+
+
+---- Wtot   total number of manpower in each category each year
+
+Wtot(y0,s1)
+                (.LO, .L, .UP, .M = 2000, 2000, 2000, 0.9)
+       -1       total(y1,s1)
+       -0.1     attrition(y1,s1)
+       -1       overman(y0,s1)
+
+Wtot(y0,s2)
+                (.LO, .L, .UP, .M = 1500, 1500, 1500, EPS)
+       -1       total(y1,s2)
+       -0.05    attrition(y1,s2)
+       -1       overman(y0,s2)
+
+Wtot(y0,s3)
+                (.LO, .L, .UP, .M = 1000, 1000, 1000, EPS)
+       -1       total(y1,s3)
+       -0.05    attrition(y1,s3)
+       -1       overman(y0,s3)
+       -0.25    retrainlim(y0,s1)
+       -0.25    retrainlim(y0,s2)
+       -0.25    retrainlim(y0,s3)
+
+Wtot(y1,s1)
+                (.LO, .L, .UP, .M = 1000, 1150, 1150, -0.1)
+        1       total(y1,s1)
+       -1       total(y2,s1)
+       -0.1     attrition(y2,s1)
+       -1       overman(y1,s1)
+
+Wtot(y1,s2)
+                (.LO, .L, .UP, .M = 1400, 1550, 1550, EPS)
+        1       total(y1,s2)
+       -1       total(y2,s2)
+       -0.05    attrition(y2,s2)
+       -1       overman(y1,s2)
+
+Wtot(y1,s3)
+                (.LO, .L, .UP, .M = 1000, 1025, 1150, 0)
+        1       total(y1,s3)
+       -1       total(y2,s3)
+       -0.05    attrition(y2,s3)
+       -1       overman(y1,s3)
+       -0.25    retrainlim(y1,s1)
+       -0.25    retrainlim(y1,s2)
+       -0.25    retrainlim(y1,s3)
+
+Wtot(y2,s1)
+                (.LO, .L, .UP, .M = 500, 650, 650, -0.1)
+        1       total(y2,s1)
+       -1       total(y3,s1)
+       -0.1     attrition(y3,s1)
+       -1       overman(y2,s1)
+
+Wtot(y2,s2)
+                (.LO, .L, .UP, .M = 2000, 2000, 2150, EPS)
+        1       total(y2,s2)
+       -1       total(y3,s2)
+       -0.05    attrition(y3,s2)
+       -1       overman(y2,s2)
+
+Wtot(y2,s3)
+                (.LO, .L, .UP, .M = 1500, 1500, 1650, EPS)
+        1       total(y2,s3)
+       -1       total(y3,s3)
+       -0.05    attrition(y3,s3)
+       -1       overman(y2,s3)
+       -0.25    retrainlim(y2,s1)
+       -0.25    retrainlim(y2,s2)
+       -0.25    retrainlim(y2,s3)
+
+Wtot(y3,s1)
+                (.LO, .L, .UP, .M = 0, 150, 150, -1)
+        1       total(y3,s1)
+       -1       overman(y3,s1)
+
+Wtot(y3,s2)
+                (.LO, .L, .UP, .M = 2500, 2500, 2650, EPS)
+        1       total(y3,s2)
+       -1       overman(y3,s2)
+
+Wtot(y3,s3)
+                (.LO, .L, .UP, .M = 2000, 2000, 2150, EPS)
+        1       total(y3,s3)
+       -1       overman(y3,s3)
+       -0.25    retrainlim(y3,s1)
+       -0.25    retrainlim(y3,s2)
+       -0.25    retrainlim(y3,s3)
+
+
+---- Cret  Cost of retraining
+
+Cret(y0)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       retraincosts(y0)
+       -1       totalcosts
+
+Cret(y1)
+                (.LO, .L, .UP, .M = -INF, 117500, +INF, 0)
+        1       retraincosts(y1)
+       -1       totalcosts
+
+Cret(y2)
+                (.LO, .L, .UP, .M = -INF, 118125, +INF, 0)
+        1       retraincosts(y2)
+       -1       totalcosts
+
+Cret(y3)
+                (.LO, .L, .UP, .M = -INF, 142500, +INF, 0)
+        1       retraincosts(y3)
+       -1       totalcosts
+
+
+---- Cred  Redundancy cost each year
+
+Cred(y0)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       redundancycosts(y0)
+       -1       totalcosts
+
+Cred(y1)
+                (.LO, .L, .UP, .M = -INF, 90000, +INF, 0)
+        1       redundancycosts(y1)
+       -1       totalcosts
+
+Cred(y2)
+                (.LO, .L, .UP, .M = -INF, 37000, +INF, 0)
+        1       redundancycosts(y2)
+       -1       totalcosts
+
+Cred(y3)
+                (.LO, .L, .UP, .M = -INF, 47000, +INF, 0)
+        1       redundancycosts(y3)
+       -1       totalcosts
+
+
+---- Cextra  extraworker costs each year
+
+Cextra(y0)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       overmancosts(y0)
+       -1       totalcosts
+
+Cextra(y1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       overmancosts(y1)
+       -1       totalcosts
+
+Cextra(y2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       overmancosts(y2)
+       -1       totalcosts
+
+Cextra(y3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       overmancosts(y3)
+       -1       totalcosts
+
+
+---- Csho  short time worker cost
+
+Csho(y0)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       shorttimecosts(y0)
+       -1       totalcosts
+
+Csho(y1)
+                (.LO, .L, .UP, .M = -INF, 290000, +INF, 0)
+        1       shorttimecosts(y1)
+       -1       totalcosts
+
+Csho(y2)
+                (.LO, .L, .UP, .M = -INF, 150000, +INF, 0)
+        1       shorttimecosts(y2)
+       -1       totalcosts
+
+Csho(y3)
+                (.LO, .L, .UP, .M = -INF, 150000, +INF, 0)
+        1       shorttimecosts(y3)
+       -1       totalcosts
+
+
+---- TotCTC  total cost to company
+
+TotCTC
+                (.LO, .L, .UP, .M = -INF, 1142125, +INF, 0)
+        1       totalcosts
+
+
+---- objval  total number of layoffs / redundancy workers
+
+objval
+                (.LO, .L, .UP, .M = -INF, 870, +INF, 0)
+        1       objfunc
+
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE manpowerplan Using MIP From line 121
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS          10     SINGLE EQUATIONS           63
+BLOCKS OF VARIABLES          14     SINGLE VARIABLES          113
+NON ZERO ELEMENTS           273     DISCRETE VARIABLES         78
+
+
+GENERATION TIME      =        0.016 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
+
+
+EXECUTION TIME       =        0.016 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE manpowerplan Using MIP From line 121
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   manpowerplan        OBJECTIVE  objval
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  121
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      8 Integer Solution          
+**** OBJECTIVE VALUE              872.0000
+
+ RESOURCE USAGE, LIMIT          0.047      1000.000
+ ITERATION COUNT, LIMIT        11    2000000000
+
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+--- GAMS/Cplex licensed for continuous and discrete problems.
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+MIP status(102): integer optimal, tolerance
+Cplex Time: 0.03sec (det. 0.95 ticks)
+Fixing integer variables, and solving final LP...
+Fixed MIP status(1): optimal
+Cplex Time: 0.00sec (det. 0.06 ticks)
+Solution satisfies tolerances.
+
+MIP Solution:          872.000000    (11 iterations, 0 nodes)
+Final Solve:           872.000000    (0 iterations)
+
+Best possible:         870.000000
+Absolute gap:            2.000000
+Relative gap:            0.002294
+
+
+---- EQU total  total workers each year per skill level
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y1.s1          .              .              .              .          
+y1.s2          .              .              .              .          
+y1.s3          .              .              .              .          
+y2.s1          .              .              .              .          
+y2.s2          .              .              .              .          
+y2.s3          .              .              .              .          
+y3.s1          .              .              .              .          
+y3.s2          .              .              .              .          
+y3.s3          .              .              .              .          
+
+---- EQU attrition  attrition each year per skill level
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .              .              .          
+y0.s2          .              .              .              .          
+y0.s3          .              .              .              .          
+y1.s1          .              .              .              .          
+y1.s2          .              .              .              .          
+y1.s3          .              .              .              .          
+y2.s1          .              .              .              .          
+y2.s2          .              .              .              .          
+y2.s3          .              .              .              .          
+y3.s1          .              .              .              .          
+y3.s2          .              .              .              .          
+y3.s3          .              .              .              .          
+
+---- EQU overman  number of extra workers per year per skill level
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1     -2000.0000     -2000.0000     -2000.0000          .          
+y0.s2     -1500.0000     -1500.0000     -1500.0000          .          
+y0.s3     -1000.0000     -1000.0000     -1000.0000          .          
+y1.s1     -1000.0000     -1000.0000     -1000.0000          .          
+y1.s2     -1400.0000     -1400.0000     -1400.0000          .          
+y1.s3     -1000.0000     -1000.0000     -1000.0000          .          
+y2.s1      -500.0000      -500.0000      -500.0000          .          
+y2.s2     -2000.0000     -2000.0000     -2000.0000          .          
+y2.s3     -1500.0000     -1500.0000     -1500.0000          .          
+y3.s1          .              .              .              .          
+y3.s2     -2500.0000     -2500.0000     -2500.0000          .          
+y3.s3     -2000.0000     -2000.0000     -2000.0000          .          
+
+---- EQU retrainlim  retrainlim equations
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1        -INF         -250.0000          .              .          
+y0.s2        -INF         -250.0000          .              .          
+y0.s3        -INF         -250.0000          .              .          
+y1.s1        -INF         -150.0000          .              .          
+y1.s2        -INF         -150.0000          .              .          
+y1.s3        -INF         -150.0000          .              .          
+y2.s1        -INF         -273.0000          .              .          
+y2.s2        -INF         -273.0000          .              .          
+y2.s3        -INF         -273.0000          .              .          
+y3.s1        -INF         -118.2500          .              .          
+y3.s2        -INF         -118.2500          .              .          
+y3.s3        -INF         -118.2500          .              .          
+
+---- EQU retraincosts  cost to retrain
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0          .              .              .             EPS         
+y1          .              .              .             EPS         
+y2          .              .              .             EPS         
+y3          .              .              .             EPS         
+
+---- EQU overmancosts  cost of overmanning
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0          .              .              .             EPS         
+y1          .              .              .             EPS         
+y2          .              .              .             EPS         
+y3          .              .              .             EPS         
+
+---- EQU redundancycosts  cost of redundancy
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0          .              .              .             EPS         
+y1          .              .              .             EPS         
+y2          .              .              .             EPS         
+y3          .              .              .             EPS         
+
+---- EQU shorttimecosts  
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0          .              .              .             EPS         
+y1          .              .              .             EPS         
+y2          .              .              .             EPS         
+y3          .              .              .             EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU totalcosts          .              .              .             EPS         
+---- EQU objfunc             .              .              .             1.0000      
+
+  totalcosts  total costs for 3 years
+  objfunc  cumulative redundancy minimization
+
+---- VAR Wrec  number of recruits at end of each year
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .              .             EPS         
+y0.s2          .              .              .             EPS         
+y0.s3          .              .              .             EPS         
+y1.s1          .              .           500.0000         EPS         
+y1.s2          .              .           800.0000         EPS         
+y1.s3          .              .           500.0000         EPS         
+y2.s1          .              .           500.0000         EPS         
+y2.s2          .           725.0000       800.0000         EPS         
+y2.s3          .           500.0000       500.0000         EPS         
+y3.s1          .              .           500.0000         EPS         
+y3.s2          .           800.0000       800.0000         EPS         
+y3.s3          .           220.0000       500.0000         EPS         
+
+---- VAR Wret  number of retrained personnel
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .              .             EPS         
+y0.s2          .              .              .             EPS         
+y1.s1          .           200.0000       200.0000         EPS         
+y1.s2          .           100.0000        +INF            EPS         
+y1.s3          .              .              .             EPS         
+y2.s1          .           200.0000       200.0000         EPS         
+y2.s2          .           102.0000        +INF            EPS         
+y2.s3          .              .              .             EPS         
+y3.s1          .           200.0000       200.0000         EPS         
+y3.s2          .           383.0000        +INF            EPS         
+y3.s3          .              .              .             EPS         
+
+---- VAR Wred  number of workers declared redundant
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .              .             1.0000      
+y0.s2          .              .              .             1.0000      
+y0.s3          .              .              .             1.0000      
+y1.s1          .           450.0000        +INF            1.0000      
+y1.s2          .              .            +INF            1.0000      
+y1.s3          .              .            +INF            1.0000      
+y2.s1          .           185.0000        +INF            1.0000      
+y2.s2          .             1.0000        +INF            1.0000      
+y2.s3          .             1.0000        +INF            1.0000      
+y3.s1          .           235.0000        +INF            1.0000      
+y3.s2          .              .            +INF            1.0000      
+y3.s3          .              .            +INF            1.0000      
+
+---- VAR Wsho  number of workers on short work
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .            +INF            EPS         
+y0.s2          .              .            +INF            EPS         
+y0.s3          .              .            +INF            EPS         
+y1.s1          .           300.0000        +INF            EPS         
+y1.s2          .           300.0000        +INF            EPS         
+y1.s3          .              .            +INF            EPS         
+y2.s1          .           300.0000        +INF            EPS         
+y2.s2          .           300.0000        +INF            EPS         
+y2.s3          .              .            +INF            EPS         
+y3.s1          .           300.0000        +INF            EPS         
+y3.s2          .              .            +INF            EPS         
+y3.s3          .            10.0000        +INF            EPS         
+
+---- VAR Wextra  number of extra workers each year. sum over categories
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .            +INF            EPS         
+y0.s2          .              .            +INF            EPS         
+y0.s3          .              .            +INF            EPS         
+y1.s1          .              .            +INF            EPS         
+y1.s2          .              .            +INF            EPS         
+y1.s3          .              .            +INF            EPS         
+y2.s1          .              .            +INF            EPS         
+y2.s2          .              .            +INF            EPS         
+y2.s3          .              .            +INF            EPS         
+y3.s1          .              .            +INF            EPS         
+y3.s2          .              .            +INF            EPS         
+y3.s3          .              .            +INF            EPS         
+
+---- VAR Watt  number of workers leaving. includes current and past year workers
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .            +INF            EPS         
+y0.s2          .              .            +INF            EPS         
+y0.s3          .              .            +INF            EPS         
+y1.s1          .           200.0000        +INF            EPS         
+y1.s2          .           100.0000        +INF            EPS         
+y1.s3          .            50.0000        +INF            EPS         
+y2.s1          .           115.0000        +INF            EPS         
+y2.s2          .           223.0000        +INF            EPS         
+y2.s3          .           100.0000        +INF            EPS         
+y3.s1          .            65.0000        +INF            EPS         
+y3.s2          .           268.0000        +INF            EPS         
+y3.s3          .            97.0000        +INF            EPS         
+
+---- VAR Wdown  number of workers downgraded
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s2.s1          .              .              .             EPS         
+y0.s3.s1          .              .              .             EPS         
+y0.s3.s2          .              .              .             EPS         
+y1.s2.s1          .              .            +INF            EPS         
+y1.s3.s1          .              .            +INF            EPS         
+y1.s3.s2          .            50.0000        +INF            EPS         
+y2.s2.s1          .              .            +INF            EPS         
+y2.s3.s1          .              .            +INF            EPS         
+y2.s3.s2          .             1.0000        +INF            EPS         
+y3.s2.s1          .              .            +INF            EPS         
+y3.s3.s1          .              .            +INF            EPS         
+y3.s3.s2          .             1.0000        +INF            EPS         
+
+---- VAR Wtot   total number of manpower in each category each year
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1      2000.0000      2000.0000      2000.0000         EPS         
+y0.s2      1500.0000      1500.0000      1500.0000         EPS         
+y0.s3      1000.0000      1000.0000      1000.0000         EPS         
+y1.s1      1000.0000      1150.0000      1150.0000         EPS         
+y1.s2      1400.0000      1550.0000      1550.0000         EPS         
+y1.s3      1000.0000      1000.0000      1150.0000         EPS         
+y2.s1       500.0000       650.0000       650.0000         EPS         
+y2.s2      2000.0000      2150.0000      2150.0000         EPS         
+y2.s3      1500.0000      1500.0000      1650.0000         EPS         
+y3.s1          .           150.0000       150.0000         EPS         
+y3.s2      2500.0000      2500.0000      2650.0000         EPS         
+y3.s3      2000.0000      2005.0000      2150.0000         EPS         
+
+---- VAR Cret  Cost of retraining
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0        -INF             .            +INF             .          
+y1        -INF       130000.0000        +INF             .          
+y2        -INF       131000.0000        +INF             .          
+y3        -INF       271500.0000        +INF             .          
+
+---- VAR Cred  Redundancy cost each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0        -INF             .            +INF             .          
+y1        -INF        90000.0000        +INF             .          
+y2        -INF        38000.0000        +INF             .          
+y3        -INF        47000.0000        +INF             .          
+
+---- VAR Cextra  extraworker costs each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0        -INF             .            +INF             .          
+y1        -INF             .            +INF             .          
+y2        -INF             .            +INF             .          
+y3        -INF             .            +INF             .          
+
+---- VAR Csho  short time worker cost
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0        -INF             .            +INF             .          
+y1        -INF       270000.0000        +INF             .          
+y2        -INF       270000.0000        +INF             .          
+y3        -INF       154000.0000        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR TotCTC            -INF      1401500.0000        +INF             .          
+---- VAR objval            -INF          872.0000        +INF             .          
+
+  TotCTC  total cost to company
+  objval  total number of layoffs / redundancy workers
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             6  PROJECTED
+
+****
+****  15 Integer levels greater than 100
+****
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE manpowerplan Using RMIP From line 124
+
+
+---- total  =E=  total workers each year per skill level
+
+total(y1,s1)..  - Wrec(y1,s1) + Wret(y1,s1) + Wred(y1,s1) + Watt(y1,s1) - Wdown(y1,s2,s1) - Wdown(y1,s3,s1) - Wtot(y0,s1) + Wtot(y1,s1) =E= 0 ; (LHS = 0)
+     
+total(y1,s2)..  - Wrec(y1,s2) - Wret(y1,s1) + Wret(y1,s2) + Wred(y1,s2) + Watt(y1,s2) + Wdown(y1,s2,s1) - Wdown(y1,s3,s2) - Wtot(y0,s2) + Wtot(y1,s2) =E= 0 ; (LHS = 0)
+     
+total(y1,s3)..  - Wrec(y1,s3) - Wret(y1,s2) + Wret(y1,s3) + Wred(y1,s3) + Watt(y1,s3) + Wdown(y1,s3,s1) + Wdown(y1,s3,s2) - Wtot(y0,s3) + Wtot(y1,s3) =E= 0 ; (LHS = 0)
+     
+total(y2,s1)..  - Wrec(y2,s1) + Wret(y2,s1) + Wred(y2,s1) + Watt(y2,s1) - Wdown(y2,s2,s1) - Wdown(y2,s3,s1) - Wtot(y1,s1) + Wtot(y2,s1) =E= 0 ; (LHS = 0)
+     
+total(y2,s2)..  - Wrec(y2,s2) - Wret(y2,s1) + Wret(y2,s2) + Wred(y2,s2) + Watt(y2,s2) + Wdown(y2,s2,s1) - Wdown(y2,s3,s2) - Wtot(y1,s2) + Wtot(y2,s2) =E= 0 ; (LHS = -4.54747350886464E-13, INFES = 4.54747350886464E-13 ****)
+     
+total(y2,s3)..  - Wrec(y2,s3) - Wret(y2,s2) + Wret(y2,s3) + Wred(y2,s3) + Watt(y2,s3) + Wdown(y2,s3,s1) + Wdown(y2,s3,s2) - Wtot(y1,s3) + Wtot(y2,s3) =E= 0 ; (LHS = 6.82121026329696E-13, INFES = 6.82121026329696E-13 ****)
+     
+total(y3,s1)..  - Wrec(y3,s1) + Wret(y3,s1) + Wred(y3,s1) + Watt(y3,s1) - Wdown(y3,s2,s1) - Wdown(y3,s3,s1) - Wtot(y2,s1) + Wtot(y3,s1) =E= 0 ; (LHS = 0)
+     
+total(y3,s2)..  - Wrec(y3,s2) - Wret(y3,s1) + Wret(y3,s2) + Wred(y3,s2) + Watt(y3,s2) + Wdown(y3,s2,s1) - Wdown(y3,s3,s2) - Wtot(y2,s2) + Wtot(y3,s2) =E= 0 ; (LHS = 0)
+     
+total(y3,s3)..  - Wrec(y3,s3) - Wret(y3,s2) + Wret(y3,s3) + Wred(y3,s3) + Watt(y3,s3) + Wdown(y3,s3,s1) + Wdown(y3,s3,s2) - Wtot(y2,s3) + Wtot(y3,s3) =E= 0 ; (LHS = 0)
+     
+
+---- attrition  =E=  attrition each year per skill level
+
+attrition(y0,s1)..  - 0.25*Wrec(y0,s1) + Watt(y0,s1) - 0.5*Wdown(y0,s2,s1) - 0.5*Wdown(y0,s3,s1) =E= 0 ; (LHS = 0)
+     
+attrition(y0,s2)..  - 0.2*Wrec(y0,s2) + Watt(y0,s2) - 0.5*Wdown(y0,s3,s2) =E= 0 ; (LHS = 0)
+     
+attrition(y0,s3)..  - 0.1*Wrec(y0,s3) + Watt(y0,s3) =E= 0 ; (LHS = 0)
+     
+attrition(y1,s1)..  - 0.25*Wrec(y1,s1) + Watt(y1,s1) - 0.5*Wdown(y1,s2,s1) - 0.5*Wdown(y1,s3,s1) - 0.1*Wtot(y0,s1) =E= 0 ; (LHS = 0)
+     
+attrition(y1,s2)..  - 0.2*Wrec(y1,s2) + Watt(y1,s2) - 0.5*Wdown(y1,s3,s2) - 0.05*Wtot(y0,s2) =E= 0 ; (LHS = 0)
+     
+attrition(y1,s3)..  - 0.1*Wrec(y1,s3) + Watt(y1,s3) - 0.05*Wtot(y0,s3) =E= 0 ; (LHS = 0)
+     
+attrition(y2,s1)..  - 0.25*Wrec(y2,s1) + Watt(y2,s1) - 0.5*Wdown(y2,s2,s1) - 0.5*Wdown(y2,s3,s1) - 0.1*Wtot(y1,s1) =E= 0 ; (LHS = 0)
+     
+attrition(y2,s2)..  - 0.2*Wrec(y2,s2) + Watt(y2,s2) - 0.5*Wdown(y2,s3,s2) - 0.05*Wtot(y1,s2) =E= 0 ; (LHS = 0)
+     
+attrition(y2,s3)..  - 0.1*Wrec(y2,s3) + Watt(y2,s3) - 0.05*Wtot(y1,s3) =E= 0 ; (LHS = 0)
+     
+attrition(y3,s1)..  - 0.25*Wrec(y3,s1) + Watt(y3,s1) - 0.5*Wdown(y3,s2,s1) - 0.5*Wdown(y3,s3,s1) - 0.1*Wtot(y2,s1) =E= 0 ; (LHS = 0)
+     
+attrition(y3,s2)..  - 0.2*Wrec(y3,s2) + Watt(y3,s2) - 0.5*Wdown(y3,s3,s2) - 0.05*Wtot(y2,s2) =E= 0 ; (LHS = 0)
+     
+attrition(y3,s3)..  - 0.1*Wrec(y3,s3) + Watt(y3,s3) - 0.05*Wtot(y2,s3) =E= 0 ; (LHS = 0)
+     
+
+---- overman  =E=  number of extra workers per year per skill level
+
+overman(y0,s1)..  0.5*Wsho(y0,s1) + Wextra(y0,s1) - Wtot(y0,s1) =E= -2000 ; (LHS = -2000)
+     
+overman(y0,s2)..  0.5*Wsho(y0,s2) + Wextra(y0,s2) - Wtot(y0,s2) =E= -1500 ; (LHS = -1500)
+     
+overman(y0,s3)..  0.5*Wsho(y0,s3) + Wextra(y0,s3) - Wtot(y0,s3) =E= -1000 ; (LHS = -1000)
+     
+overman(y1,s1)..  0.5*Wsho(y1,s1) + Wextra(y1,s1) - Wtot(y1,s1) =E= -1000 ; (LHS = -1000)
+     
+overman(y1,s2)..  0.5*Wsho(y1,s2) + Wextra(y1,s2) - Wtot(y1,s2) =E= -1400 ; (LHS = -1400)
+     
+overman(y1,s3)..  0.5*Wsho(y1,s3) + Wextra(y1,s3) - Wtot(y1,s3) =E= -1000 ; (LHS = -1000)
+     
+overman(y2,s1)..  0.5*Wsho(y2,s1) + Wextra(y2,s1) - Wtot(y2,s1) =E= -500 ; (LHS = -500)
+     
+overman(y2,s2)..  0.5*Wsho(y2,s2) + Wextra(y2,s2) - Wtot(y2,s2) =E= -2000 ; (LHS = -2000)
+     
+overman(y2,s3)..  0.5*Wsho(y2,s3) + Wextra(y2,s3) - Wtot(y2,s3) =E= -1500 ; (LHS = -1500)
+     
+overman(y3,s1)..  0.5*Wsho(y3,s1) + Wextra(y3,s1) - Wtot(y3,s1) =E= 0 ; (LHS = 0)
+     
+overman(y3,s2)..  0.5*Wsho(y3,s2) + Wextra(y3,s2) - Wtot(y3,s2) =E= -2500 ; (LHS = -2500)
+     
+overman(y3,s3)..  0.5*Wsho(y3,s3) + Wextra(y3,s3) - Wtot(y3,s3) =E= -2000 ; (LHS = -2000)
+     
+
+---- retrainlim  =L=  retrainlim equations
+
+retrainlim(y0,s1)..  Wret(y0,s2) - 0.25*Wtot(y0,s3) =L= 0 ; (LHS = -250)
+     
+retrainlim(y0,s2)..  Wret(y0,s2) - 0.25*Wtot(y0,s3) =L= 0 ; (LHS = -250)
+     
+retrainlim(y0,s3)..  Wret(y0,s2) - 0.25*Wtot(y0,s3) =L= 0 ; (LHS = -250)
+     
+retrainlim(y1,s1)..  Wret(y1,s2) - 0.25*Wtot(y1,s3) =L= 0 ; (LHS = -150)
+     
+retrainlim(y1,s2)..  Wret(y1,s2) - 0.25*Wtot(y1,s3) =L= 0 ; (LHS = -150)
+     
+retrainlim(y1,s3)..  Wret(y1,s2) - 0.25*Wtot(y1,s3) =L= 0 ; (LHS = -150)
+     
+retrainlim(y2,s1)..  Wret(y2,s2) - 0.25*Wtot(y2,s3) =L= 0 ; (LHS = -273)
+     
+retrainlim(y2,s2)..  Wret(y2,s2) - 0.25*Wtot(y2,s3) =L= 0 ; (LHS = -273)
+     
+retrainlim(y2,s3)..  Wret(y2,s2) - 0.25*Wtot(y2,s3) =L= 0 ; (LHS = -273)
+     
+retrainlim(y3,s1)..  Wret(y3,s2) - 0.25*Wtot(y3,s3) =L= 0 ; (LHS = -118.25)
+     
+retrainlim(y3,s2)..  Wret(y3,s2) - 0.25*Wtot(y3,s3) =L= 0 ; (LHS = -118.25)
+     
+retrainlim(y3,s3)..  Wret(y3,s2) - 0.25*Wtot(y3,s3) =L= 0 ; (LHS = -118.25)
+     
+
+---- retraincosts  =E=  cost to retrain
+
+retraincosts(y0)..  - 400*Wret(y0,s1) - 500*Wret(y0,s2) + Cret(y0) =E= 0 ; (LHS = 0)
+     
+retraincosts(y1)..  - 400*Wret(y1,s1) - 500*Wret(y1,s2) + Cret(y1) =E= 0 ; (LHS = 0)
+     
+retraincosts(y2)..  - 400*Wret(y2,s1) - 500*Wret(y2,s2) + Cret(y2) =E= 0 ; (LHS = 0)
+     
+retraincosts(y3)..  - 400*Wret(y3,s1) - 500*Wret(y3,s2) + Cret(y3) =E= 0 ; (LHS = 0)
+     
+
+---- overmancosts  =E=  cost of overmanning
+
+overmancosts(y0)..  - 1500*Wextra(y0,s1) - 2000*Wextra(y0,s2) - 3000*Wextra(y0,s3) + Cextra(y0) =E= 0 ; (LHS = 0)
+     
+overmancosts(y1)..  - 1500*Wextra(y1,s1) - 2000*Wextra(y1,s2) - 3000*Wextra(y1,s3) + Cextra(y1) =E= 0 ; (LHS = 0)
+     
+overmancosts(y2)..  - 1500*Wextra(y2,s1) - 2000*Wextra(y2,s2) - 3000*Wextra(y2,s3) + Cextra(y2) =E= 0 ; (LHS = 0)
+     
+overmancosts(y3)..  - 1500*Wextra(y3,s1) - 2000*Wextra(y3,s2) - 3000*Wextra(y3,s3) + Cextra(y3) =E= 0 ; (LHS = 0)
+     
+
+---- redundancycosts  =E=  cost of redundancy
+
+redundancycosts(y0)..  - 200*Wred(y0,s1) - 500*Wred(y0,s2) - 500*Wred(y0,s3) + Cred(y0) =E= 0 ; (LHS = 0)
+     
+redundancycosts(y1)..  - 200*Wred(y1,s1) - 500*Wred(y1,s2) - 500*Wred(y1,s3) + Cred(y1) =E= 0 ; (LHS = 0)
+     
+redundancycosts(y2)..  - 200*Wred(y2,s1) - 500*Wred(y2,s2) - 500*Wred(y2,s3) + Cred(y2) =E= 0 ; (LHS = 0)
+     
+redundancycosts(y3)..  - 200*Wred(y3,s1) - 500*Wred(y3,s2) - 500*Wred(y3,s3) + Cred(y3) =E= 0 ; (LHS = 0)
+     
+
+---- shorttimecosts  =E=  
+
+shorttimecosts(y0)..  - 500*Wsho(y0,s1) - 400*Wsho(y0,s2) - 400*Wsho(y0,s3) + Csho(y0) =E= 0 ; (LHS = 0)
+     
+shorttimecosts(y1)..  - 500*Wsho(y1,s1) - 400*Wsho(y1,s2) - 400*Wsho(y1,s3) + Csho(y1) =E= 0 ; (LHS = 0)
+     
+shorttimecosts(y2)..  - 500*Wsho(y2,s1) - 400*Wsho(y2,s2) - 400*Wsho(y2,s3) + Csho(y2) =E= 0 ; (LHS = 0)
+     
+shorttimecosts(y3)..  - 500*Wsho(y3,s1) - 400*Wsho(y3,s2) - 400*Wsho(y3,s3) + Csho(y3) =E= 0 ; (LHS = 0)
+     
+
+---- totalcosts  =E=  total costs for 3 years
+
+totalcosts..  - Cret(y0) - Cret(y1) - Cret(y2) - Cret(y3) - Cred(y0) - Cred(y1) - Cred(y2) - Cred(y3) - Cextra(y0) - Cextra(y1) - Cextra(y2) - Cextra(y3) - Csho(y0) - Csho(y1) - Csho(y2) - Csho(y3) + TotCTC =E= 0 ; (LHS = 0)
+     
+
+---- objfunc  =E=  cumulative redundancy minimization
+
+objfunc..  - Wred(y0,s1) - Wred(y0,s2) - Wred(y0,s3) - Wred(y1,s1) - Wred(y1,s2) - Wred(y1,s3) - Wred(y2,s1) - Wred(y2,s2) - Wred(y2,s3) - Wred(y3,s1) - Wred(y3,s2) - Wred(y3,s3) + objval =E= 0 ; (LHS = 0)
+     
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE manpowerplan Using RMIP From line 124
+
+
+---- Wrec  number of recruits at end of each year
+
+Wrec(y0,s1)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+       -0.25    attrition(y0,s1)
+
+Wrec(y0,s2)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+       -0.2     attrition(y0,s2)
+
+Wrec(y0,s3)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+       -0.1     attrition(y0,s3)
+
+Wrec(y1,s1)
+                (.LO, .L, .UP, .M = 0, 0, 500, EPS)
+       -1       total(y1,s1)
+       -0.25    attrition(y1,s1)
+
+Wrec(y1,s2)
+                (.LO, .L, .UP, .M = 0, 0, 800, EPS)
+       -1       total(y1,s2)
+       -0.2     attrition(y1,s2)
+
+Wrec(y1,s3)
+                (.LO, .L, .UP, .M = 0, 0, 500, EPS)
+       -1       total(y1,s3)
+       -0.1     attrition(y1,s3)
+
+Wrec(y2,s1)
+                (.LO, .L, .UP, .M = 0, 0, 500, EPS)
+       -1       total(y2,s1)
+       -0.25    attrition(y2,s1)
+
+Wrec(y2,s2)
+                (.LO, .L, .UP, .M = 0, 725, 800, EPS)
+       -1       total(y2,s2)
+       -0.2     attrition(y2,s2)
+
+Wrec(y2,s3)
+                (.LO, .L, .UP, .M = 0, 500, 500, EPS)
+       -1       total(y2,s3)
+       -0.1     attrition(y2,s3)
+
+Wrec(y3,s1)
+                (.LO, .L, .UP, .M = 0, 0, 500, EPS)
+       -1       total(y3,s1)
+       -0.25    attrition(y3,s1)
+
+Wrec(y3,s2)
+                (.LO, .L, .UP, .M = 0, 800, 800, EPS)
+       -1       total(y3,s2)
+       -0.2     attrition(y3,s2)
+
+Wrec(y3,s3)
+                (.LO, .L, .UP, .M = 0, 220, 500, EPS)
+       -1       total(y3,s3)
+       -0.1     attrition(y3,s3)
+
+
+---- Wret  number of retrained personnel
+
+Wret(y0,s1)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+     -400       retraincosts(y0)
+
+Wret(y0,s2)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+        1       retrainlim(y0,s1)
+        1       retrainlim(y0,s2)
+        1       retrainlim(y0,s3)
+     -500       retraincosts(y0)
+
+Wret(y1,s1)
+                (.LO, .L, .UP, .M = 0, 200, 200, EPS)
+        1       total(y1,s1)
+       -1       total(y1,s2)
+     -400       retraincosts(y1)
+
+Wret(y1,s2)
+                (.LO, .L, .UP, .M = 0, 100, +INF, EPS)
+        1       total(y1,s2)
+       -1       total(y1,s3)
+        1       retrainlim(y1,s1)
+        1       retrainlim(y1,s2)
+        1       retrainlim(y1,s3)
+     -500       retraincosts(y1)
+
+Wret(y1,s3)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+        1       total(y1,s3)
+
+Wret(y2,s1)
+                (.LO, .L, .UP, .M = 0, 200, 200, EPS)
+        1       total(y2,s1)
+       -1       total(y2,s2)
+     -400       retraincosts(y2)
+
+Wret(y2,s2)
+                (.LO, .L, .UP, .M = 0, 102, +INF, EPS)
+        1       total(y2,s2)
+       -1       total(y2,s3)
+        1       retrainlim(y2,s1)
+        1       retrainlim(y2,s2)
+        1       retrainlim(y2,s3)
+     -500       retraincosts(y2)
+
+Wret(y2,s3)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+        1       total(y2,s3)
+
+Wret(y3,s1)
+                (.LO, .L, .UP, .M = 0, 200, 200, EPS)
+        1       total(y3,s1)
+       -1       total(y3,s2)
+     -400       retraincosts(y3)
+
+Wret(y3,s2)
+                (.LO, .L, .UP, .M = 0, 383, +INF, EPS)
+        1       total(y3,s2)
+       -1       total(y3,s3)
+        1       retrainlim(y3,s1)
+        1       retrainlim(y3,s2)
+        1       retrainlim(y3,s3)
+     -500       retraincosts(y3)
+
+Wret(y3,s3)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+        1       total(y3,s3)
+
+
+---- Wred  number of workers declared redundant
+
+Wred(y0,s1)
+                (.LO, .L, .UP, .M = 0, 0, 0, 1)
+     -200       redundancycosts(y0)
+       -1       objfunc
+
+Wred(y0,s2)
+                (.LO, .L, .UP, .M = 0, 0, 0, 1)
+     -500       redundancycosts(y0)
+       -1       objfunc
+
+Wred(y0,s3)
+                (.LO, .L, .UP, .M = 0, 0, 0, 1)
+     -500       redundancycosts(y0)
+       -1       objfunc
+
+Wred(y1,s1)
+                (.LO, .L, .UP, .M = 0, 450, +INF, 1)
+        1       total(y1,s1)
+     -200       redundancycosts(y1)
+       -1       objfunc
+
+Wred(y1,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 1)
+        1       total(y1,s2)
+     -500       redundancycosts(y1)
+       -1       objfunc
+
+Wred(y1,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 1)
+        1       total(y1,s3)
+     -500       redundancycosts(y1)
+       -1       objfunc
+
+Wred(y2,s1)
+                (.LO, .L, .UP, .M = 0, 185, +INF, 1)
+        1       total(y2,s1)
+     -200       redundancycosts(y2)
+       -1       objfunc
+
+Wred(y2,s2)
+                (.LO, .L, .UP, .M = 0, 1, +INF, 1)
+        1       total(y2,s2)
+     -500       redundancycosts(y2)
+       -1       objfunc
+
+Wred(y2,s3)
+                (.LO, .L, .UP, .M = 0, 1, +INF, 1)
+        1       total(y2,s3)
+     -500       redundancycosts(y2)
+       -1       objfunc
+
+Wred(y3,s1)
+                (.LO, .L, .UP, .M = 0, 235, +INF, 1)
+        1       total(y3,s1)
+     -200       redundancycosts(y3)
+       -1       objfunc
+
+Wred(y3,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 1)
+        1       total(y3,s2)
+     -500       redundancycosts(y3)
+       -1       objfunc
+
+Wred(y3,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 1)
+        1       total(y3,s3)
+     -500       redundancycosts(y3)
+       -1       objfunc
+
+
+---- Wsho  number of workers on short work
+
+Wsho(y0,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        0.5     overman(y0,s1)
+     -500       shorttimecosts(y0)
+
+Wsho(y0,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        0.5     overman(y0,s2)
+     -400       shorttimecosts(y0)
+
+Wsho(y0,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        0.5     overman(y0,s3)
+     -400       shorttimecosts(y0)
+
+Wsho(y1,s1)
+                (.LO, .L, .UP, .M = 0, 300, +INF, EPS)
+        0.5     overman(y1,s1)
+     -500       shorttimecosts(y1)
+
+Wsho(y1,s2)
+                (.LO, .L, .UP, .M = 0, 300, +INF, EPS)
+        0.5     overman(y1,s2)
+     -400       shorttimecosts(y1)
+
+Wsho(y1,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        0.5     overman(y1,s3)
+     -400       shorttimecosts(y1)
+
+Wsho(y2,s1)
+                (.LO, .L, .UP, .M = 0, 300, +INF, EPS)
+        0.5     overman(y2,s1)
+     -500       shorttimecosts(y2)
+
+Wsho(y2,s2)
+                (.LO, .L, .UP, .M = 0, 300, +INF, EPS)
+        0.5     overman(y2,s2)
+     -400       shorttimecosts(y2)
+
+Wsho(y2,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        0.5     overman(y2,s3)
+     -400       shorttimecosts(y2)
+
+Wsho(y3,s1)
+                (.LO, .L, .UP, .M = 0, 300, +INF, EPS)
+        0.5     overman(y3,s1)
+     -500       shorttimecosts(y3)
+
+Wsho(y3,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        0.5     overman(y3,s2)
+     -400       shorttimecosts(y3)
+
+Wsho(y3,s3)
+                (.LO, .L, .UP, .M = 0, 9.99999999999892, +INF, EPS)
+        0.5     overman(y3,s3)
+     -400       shorttimecosts(y3)
+
+
+---- Wextra  number of extra workers each year. sum over categories
+
+Wextra(y0,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y0,s1)
+    -1500       overmancosts(y0)
+
+Wextra(y0,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y0,s2)
+    -2000       overmancosts(y0)
+
+Wextra(y0,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y0,s3)
+    -3000       overmancosts(y0)
+
+Wextra(y1,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y1,s1)
+    -1500       overmancosts(y1)
+
+Wextra(y1,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y1,s2)
+    -2000       overmancosts(y1)
+
+Wextra(y1,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y1,s3)
+    -3000       overmancosts(y1)
+
+Wextra(y2,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y2,s1)
+    -1500       overmancosts(y2)
+
+Wextra(y2,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y2,s2)
+    -2000       overmancosts(y2)
+
+Wextra(y2,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y2,s3)
+    -3000       overmancosts(y2)
+
+Wextra(y3,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y3,s1)
+    -1500       overmancosts(y3)
+
+Wextra(y3,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y3,s2)
+    -2000       overmancosts(y3)
+
+Wextra(y3,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       overman(y3,s3)
+    -3000       overmancosts(y3)
+
+
+---- Watt  number of workers leaving. includes current and past year workers
+
+Watt(y0,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       attrition(y0,s1)
+
+Watt(y0,s2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       attrition(y0,s2)
+
+Watt(y0,s3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       attrition(y0,s3)
+
+Watt(y1,s1)
+                (.LO, .L, .UP, .M = 0, 200, +INF, EPS)
+        1       total(y1,s1)
+        1       attrition(y1,s1)
+
+Watt(y1,s2)
+                (.LO, .L, .UP, .M = 0, 100, +INF, EPS)
+        1       total(y1,s2)
+        1       attrition(y1,s2)
+
+Watt(y1,s3)
+                (.LO, .L, .UP, .M = 0, 50, +INF, EPS)
+        1       total(y1,s3)
+        1       attrition(y1,s3)
+
+Watt(y2,s1)
+                (.LO, .L, .UP, .M = 0, 115, +INF, EPS)
+        1       total(y2,s1)
+        1       attrition(y2,s1)
+
+Watt(y2,s2)
+                (.LO, .L, .UP, .M = 0, 223, +INF, EPS)
+        1       total(y2,s2)
+        1       attrition(y2,s2)
+
+Watt(y2,s3)
+                (.LO, .L, .UP, .M = 0, 100, +INF, EPS)
+        1       total(y2,s3)
+        1       attrition(y2,s3)
+
+Watt(y3,s1)
+                (.LO, .L, .UP, .M = 0, 65, +INF, EPS)
+        1       total(y3,s1)
+        1       attrition(y3,s1)
+
+Watt(y3,s2)
+                (.LO, .L, .UP, .M = 0, 268, +INF, EPS)
+        1       total(y3,s2)
+        1       attrition(y3,s2)
+
+Watt(y3,s3)
+                (.LO, .L, .UP, .M = 0, 97, +INF, EPS)
+        1       total(y3,s3)
+        1       attrition(y3,s3)
+
+
+---- Wdown  number of workers downgraded
+
+Wdown(y0,s2,s1)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+       -0.5     attrition(y0,s1)
+
+Wdown(y0,s3,s1)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+       -0.5     attrition(y0,s1)
+
+Wdown(y0,s3,s2)
+                (.LO, .L, .UP, .M = 0, 0, 0, EPS)
+       -0.5     attrition(y0,s2)
+
+Wdown(y1,s2,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+       -1       total(y1,s1)
+        1       total(y1,s2)
+       -0.5     attrition(y1,s1)
+
+Wdown(y1,s3,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+       -1       total(y1,s1)
+        1       total(y1,s3)
+       -0.5     attrition(y1,s1)
+
+Wdown(y1,s3,s2)
+                (.LO, .L, .UP, .M = 0, 50, +INF, EPS)
+       -1       total(y1,s2)
+        1       total(y1,s3)
+       -0.5     attrition(y1,s2)
+
+Wdown(y2,s2,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+       -1       total(y2,s1)
+        1       total(y2,s2)
+       -0.5     attrition(y2,s1)
+
+Wdown(y2,s3,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+       -1       total(y2,s1)
+        1       total(y2,s3)
+       -0.5     attrition(y2,s1)
+
+Wdown(y2,s3,s2)
+                (.LO, .L, .UP, .M = 0, 1.00000000000073, +INF, EPS)
+       -1       total(y2,s2)
+        1       total(y2,s3)
+       -0.5     attrition(y2,s2)
+
+Wdown(y3,s2,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+       -1       total(y3,s1)
+        1       total(y3,s2)
+       -0.5     attrition(y3,s1)
+
+Wdown(y3,s3,s1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+       -1       total(y3,s1)
+        1       total(y3,s3)
+       -0.5     attrition(y3,s1)
+
+Wdown(y3,s3,s2)
+                (.LO, .L, .UP, .M = 0, 1.00000000000063, +INF, EPS)
+       -1       total(y3,s2)
+        1       total(y3,s3)
+       -0.5     attrition(y3,s2)
+
+
+---- Wtot   total number of manpower in each category each year
+
+Wtot(y0,s1)
+                (.LO, .L, .UP, .M = 2000, 2000, 2000, EPS)
+       -1       total(y1,s1)
+       -0.1     attrition(y1,s1)
+       -1       overman(y0,s1)
+
+Wtot(y0,s2)
+                (.LO, .L, .UP, .M = 1500, 1500, 1500, EPS)
+       -1       total(y1,s2)
+       -0.05    attrition(y1,s2)
+       -1       overman(y0,s2)
+
+Wtot(y0,s3)
+                (.LO, .L, .UP, .M = 1000, 1000, 1000, EPS)
+       -1       total(y1,s3)
+       -0.05    attrition(y1,s3)
+       -1       overman(y0,s3)
+       -0.25    retrainlim(y0,s1)
+       -0.25    retrainlim(y0,s2)
+       -0.25    retrainlim(y0,s3)
+
+Wtot(y1,s1)
+                (.LO, .L, .UP, .M = 1000, 1150, 1150, EPS)
+        1       total(y1,s1)
+       -1       total(y2,s1)
+       -0.1     attrition(y2,s1)
+       -1       overman(y1,s1)
+
+Wtot(y1,s2)
+                (.LO, .L, .UP, .M = 1400, 1550, 1550, EPS)
+        1       total(y1,s2)
+       -1       total(y2,s2)
+       -0.05    attrition(y2,s2)
+       -1       overman(y1,s2)
+
+Wtot(y1,s3)
+                (.LO, .L, .UP, .M = 1000, 1000, 1150, EPS)
+        1       total(y1,s3)
+       -1       total(y2,s3)
+       -0.05    attrition(y2,s3)
+       -1       overman(y1,s3)
+       -0.25    retrainlim(y1,s1)
+       -0.25    retrainlim(y1,s2)
+       -0.25    retrainlim(y1,s3)
+
+Wtot(y2,s1)
+                (.LO, .L, .UP, .M = 500, 650, 650, EPS)
+        1       total(y2,s1)
+       -1       total(y3,s1)
+       -0.1     attrition(y3,s1)
+       -1       overman(y2,s1)
+
+Wtot(y2,s2)
+                (.LO, .L, .UP, .M = 2000, 2150, 2150, EPS)
+        1       total(y2,s2)
+       -1       total(y3,s2)
+       -0.05    attrition(y3,s2)
+       -1       overman(y2,s2)
+
+Wtot(y2,s3)
+                (.LO, .L, .UP, .M = 1500, 1500, 1650, EPS)
+        1       total(y2,s3)
+       -1       total(y3,s3)
+       -0.05    attrition(y3,s3)
+       -1       overman(y2,s3)
+       -0.25    retrainlim(y2,s1)
+       -0.25    retrainlim(y2,s2)
+       -0.25    retrainlim(y2,s3)
+
+Wtot(y3,s1)
+                (.LO, .L, .UP, .M = 0, 150, 150, EPS)
+        1       total(y3,s1)
+       -1       overman(y3,s1)
+
+Wtot(y3,s2)
+                (.LO, .L, .UP, .M = 2500, 2500, 2650, EPS)
+        1       total(y3,s2)
+       -1       overman(y3,s2)
+
+Wtot(y3,s3)
+                (.LO, .L, .UP, .M = 2000, 2005, 2150, EPS)
+        1       total(y3,s3)
+       -1       overman(y3,s3)
+       -0.25    retrainlim(y3,s1)
+       -0.25    retrainlim(y3,s2)
+       -0.25    retrainlim(y3,s3)
+
+
+---- Cret  Cost of retraining
+
+Cret(y0)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       retraincosts(y0)
+       -1       totalcosts
+
+Cret(y1)
+                (.LO, .L, .UP, .M = -INF, 130000, +INF, 0)
+        1       retraincosts(y1)
+       -1       totalcosts
+
+Cret(y2)
+                (.LO, .L, .UP, .M = -INF, 131000, +INF, 0)
+        1       retraincosts(y2)
+       -1       totalcosts
+
+Cret(y3)
+                (.LO, .L, .UP, .M = -INF, 271500, +INF, 0)
+        1       retraincosts(y3)
+       -1       totalcosts
+
+
+---- Cred  Redundancy cost each year
+
+Cred(y0)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       redundancycosts(y0)
+       -1       totalcosts
+
+Cred(y1)
+                (.LO, .L, .UP, .M = -INF, 90000, +INF, 0)
+        1       redundancycosts(y1)
+       -1       totalcosts
+
+Cred(y2)
+                (.LO, .L, .UP, .M = -INF, 38000, +INF, 0)
+        1       redundancycosts(y2)
+       -1       totalcosts
+
+Cred(y3)
+                (.LO, .L, .UP, .M = -INF, 47000, +INF, 0)
+        1       redundancycosts(y3)
+       -1       totalcosts
+
+
+---- Cextra  extraworker costs each year
+
+Cextra(y0)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       overmancosts(y0)
+       -1       totalcosts
+
+Cextra(y1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       overmancosts(y1)
+       -1       totalcosts
+
+Cextra(y2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       overmancosts(y2)
+       -1       totalcosts
+
+Cextra(y3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       overmancosts(y3)
+       -1       totalcosts
+
+
+---- Csho  short time worker cost
+
+Csho(y0)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       shorttimecosts(y0)
+       -1       totalcosts
+
+Csho(y1)
+                (.LO, .L, .UP, .M = -INF, 270000, +INF, 0)
+        1       shorttimecosts(y1)
+       -1       totalcosts
+
+Csho(y2)
+                (.LO, .L, .UP, .M = -INF, 270000, +INF, 0)
+        1       shorttimecosts(y2)
+       -1       totalcosts
+
+Csho(y3)
+                (.LO, .L, .UP, .M = -INF, 154000, +INF, 0)
+        1       shorttimecosts(y3)
+       -1       totalcosts
+
+
+---- TotCTC  total cost to company
+
+TotCTC
+                (.LO, .L, .UP, .M = -INF, 1401500, +INF, 0)
+        1       totalcosts
+
+
+---- objval  total number of layoffs / redundancy workers
+
+objval
+                (.LO, .L, .UP, .M = -INF, 872, +INF, 0)
+        1       objfunc
+
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE manpowerplan Using RMIP From line 124
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS          10     SINGLE EQUATIONS           63
+BLOCKS OF VARIABLES          14     SINGLE VARIABLES          113
+NON ZERO ELEMENTS           273     DISCRETE VARIABLES         78
+
+
+GENERATION TIME      =        0.016 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
+
+
+EXECUTION TIME       =        0.016 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE manpowerplan Using RMIP From line 124
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   manpowerplan        OBJECTIVE  TotCTC
+     TYPE    RMIP                DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  124
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE           488000.0000
+
+ RESOURCE USAGE, LIMIT          0.016      1000.000
+ ITERATION COUNT, LIMIT         6    2000000000
+
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.00sec (det. 0.15 ticks)
+Optimal solution found.
+Objective :      488000.000000
+
+
+---- EQU total  total workers each year per skill level
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y1.s1          .              .              .           200.0000      
+y1.s2          .              .              .           100.0000      
+y1.s3          .              .              .             EPS         
+y2.s1          .              .              .           200.0000      
+y2.s2          .              .              .          -200.0000      
+y2.s3          .              .              .          -700.0000      
+y3.s1          .              .              .           200.0000      
+y3.s2          .              .              .          -200.0000      
+y3.s3          .              .              .          -700.0000      
+
+---- EQU attrition  attrition each year per skill level
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .              .             EPS         
+y0.s2          .              .              .             EPS         
+y0.s3          .              .              .             EPS         
+y1.s1          .              .              .          -200.0000      
+y1.s2          .              .              .          -100.0000      
+y1.s3          .              .              .             EPS         
+y2.s1          .              .              .          -200.0000      
+y2.s2          .              .              .           200.0000      
+y2.s3          .              .              .           700.0000      
+y3.s1          .              .              .          -200.0000      
+y3.s2          .              .              .           200.0000      
+y3.s3          .              .              .           700.0000      
+
+---- EQU overman  number of extra workers per year per skill level
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1     -2000.0000     -2000.0000     -2000.0000          .          
+y0.s2     -1500.0000     -1500.0000     -1500.0000          .          
+y0.s3     -1000.0000     -1000.0000     -1000.0000          .          
+y1.s1     -1000.0000     -1000.0000     -1000.0000      1000.0000      
+y1.s2     -1400.0000     -1400.0000     -1400.0000       800.0000      
+y1.s3     -1000.0000     -1000.0000     -1000.0000       800.0000      
+y2.s1      -500.0000      -500.0000      -500.0000      1000.0000      
+y2.s2     -2000.0000     -2000.0000     -2000.0000       800.0000      
+y2.s3     -1500.0000     -1500.0000     -1500.0000       800.0000      
+y3.s1          .              .              .          1000.0000      
+y3.s2     -2500.0000     -2500.0000     -2500.0000       800.0000      
+y3.s3     -2000.0000     -2000.0000     -2000.0000       800.0000      
+
+---- EQU retrainlim  retrainlim equations
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1        -INF         -250.0000          .              .          
+y0.s2        -INF         -250.0000          .              .          
+y0.s3        -INF         -250.0000          .              .          
+y1.s1        -INF         -250.0000          .              .          
+y1.s2        -INF         -250.0000          .              .          
+y1.s3        -INF         -250.0000          .              .          
+y2.s1        -INF         -275.0000          .              .          
+y2.s2        -INF         -275.0000          .              .          
+y2.s3        -INF         -275.0000          .              .          
+y3.s1        -INF         -375.0000          .              .          
+y3.s2        -INF         -375.0000          .              .          
+y3.s3        -INF         -375.0000          .              .          
+
+---- EQU retraincosts  cost to retrain
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0          .              .              .             1.0000      
+y1          .              .              .             1.0000      
+y2          .              .              .             1.0000      
+y3          .              .              .             1.0000      
+
+---- EQU overmancosts  cost of overmanning
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0          .              .              .             1.0000      
+y1          .              .              .             1.0000      
+y2          .              .              .             1.0000      
+y3          .              .              .             1.0000      
+
+---- EQU redundancycosts  cost of redundancy
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0          .              .              .             1.0000      
+y1          .              .              .             1.0000      
+y2          .              .              .             1.0000      
+y3          .              .              .             1.0000      
+
+---- EQU shorttimecosts  
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0          .              .              .             1.0000      
+y1          .              .              .             1.0000      
+y2          .              .              .             1.0000      
+y3          .              .              .             1.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU totalcosts          .              .              .             1.0000      
+---- EQU objfunc             .              .              .             EPS         
+
+  totalcosts  total costs for 3 years
+  objfunc  cumulative redundancy minimization
+
+---- VAR Wrec  number of recruits at end of each year
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .              .             EPS         
+y0.s2          .              .              .             EPS         
+y0.s3          .              .              .             EPS         
+y1.s1          .              .           500.0000       150.0000      
+y1.s2          .              .           800.0000        80.0000      
+y1.s3          .            55.5556       500.0000          .          
+y2.s1          .              .           500.0000       150.0000      
+y2.s2          .           800.0000       800.0000      -160.0000      
+y2.s3          .           500.0000       500.0000      -630.0000      
+y3.s1          .              .           500.0000       150.0000      
+y3.s2          .           800.0000       800.0000      -160.0000      
+y3.s3          .           500.0000       500.0000      -630.0000      
+
+---- VAR Wret  number of retrained personnel
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .              .           400.0000      
+y0.s2          .              .              .           500.0000      
+y1.s1          .              .           200.0000       300.0000      
+y1.s2          .              .            +INF          400.0000      
+y1.s3          .              .              .             EPS         
+y2.s1          .           130.0000       200.0000          .          
+y2.s2          .           100.0000        +INF             .          
+y2.s3          .              .              .           700.0000      
+y3.s1          .            85.0000       200.0000          .          
+y3.s2          .           125.0000        +INF             .          
+y3.s3          .              .              .           700.0000      
+
+---- VAR Wred  number of workers declared redundant
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .              .           200.0000      
+y0.s2          .              .              .           500.0000      
+y0.s3          .              .              .           500.0000      
+y1.s1          .           812.5000        +INF             .          
+y1.s2          .              .            +INF          400.0000      
+y1.s3          .              .            +INF          500.0000      
+y2.s1          .           270.0000        +INF             .          
+y2.s2          .              .            +INF          700.0000      
+y2.s3          .              .            +INF         1200.0000      
+y3.s1          .           365.0000        +INF             .          
+y3.s2          .              .            +INF          700.0000      
+y3.s3          .              .            +INF         1200.0000      
+
+---- VAR Wsho  number of workers on short work
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .            +INF          500.0000      
+y0.s2          .              .            +INF          400.0000      
+y0.s3          .              .            +INF          400.0000      
+y1.s1          .              .            +INF             .          
+y1.s2          .              .            +INF             .          
+y1.s3          .              .            +INF             .          
+y2.s1          .              .            +INF             .          
+y2.s2          .              .            +INF             .          
+y2.s3          .              .            +INF             .          
+y3.s1          .              .            +INF             .          
+y3.s2          .              .            +INF             .          
+y3.s3          .              .            +INF             .          
+
+---- VAR Wextra  number of extra workers each year. sum over categories
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .            +INF         1500.0000      
+y0.s2          .              .            +INF         2000.0000      
+y0.s3          .              .            +INF         3000.0000      
+y1.s1          .              .            +INF          500.0000      
+y1.s2          .              .            +INF         1200.0000      
+y1.s3          .              .            +INF         2200.0000      
+y2.s1          .              .            +INF          500.0000      
+y2.s2          .              .            +INF         1200.0000      
+y2.s3          .              .            +INF         2200.0000      
+y3.s1          .              .            +INF          500.0000      
+y3.s2          .              .            +INF         1200.0000      
+y3.s3          .              .            +INF         2200.0000      
+
+---- VAR Watt  number of workers leaving. includes current and past year workers
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1          .              .            +INF             .          
+y0.s2          .              .            +INF             .          
+y0.s3          .              .            +INF             .          
+y1.s1          .           212.5000        +INF             .          
+y1.s2          .            75.0000        +INF             .          
+y1.s3          .            55.5556        +INF             .          
+y2.s1          .           100.0000        +INF             .          
+y2.s2          .           230.0000        +INF             .          
+y2.s3          .           100.0000        +INF             .          
+y3.s1          .            50.0000        +INF             .          
+y3.s2          .           260.0000        +INF             .          
+y3.s3          .           125.0000        +INF             .          
+
+---- VAR Wdown  number of workers downgraded
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s2.s1          .              .              .             EPS         
+y0.s3.s1          .              .              .             EPS         
+y0.s3.s2          .              .              .             EPS         
+y1.s2.s1          .            25.0000        +INF             .          
+y1.s3.s1          .              .            +INF          100.0000      
+y1.s3.s2          .              .            +INF           50.0000      
+y2.s2.s1          .              .            +INF          300.0000      
+y2.s3.s1          .              .            +INF          800.0000      
+y2.s3.s2          .              .            +INF          600.0000      
+y3.s2.s1          .              .            +INF          300.0000      
+y3.s3.s1          .              .            +INF          800.0000      
+y3.s3.s2          .              .            +INF          600.0000      
+
+---- VAR Wtot   total number of manpower in each category each year
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+y0.s1      2000.0000      2000.0000      2000.0000       180.0000      
+y0.s2      1500.0000      1500.0000      1500.0000        95.0000      
+y0.s3      1000.0000      1000.0000      1000.0000         EPS         
+y1.s1      1000.0000      1000.0000      1150.0000       980.0000      
+y1.s2      1400.0000      1400.0000      1550.0000       510.0000      
+y1.s3      1000.0000      1000.0000      1150.0000       135.0000      
+y2.s1       500.0000       500.0000       650.0000       980.0000      
+y2.s2      2000.0000      2000.0000      2150.0000       810.0000      
+y2.s3      1500.0000      1500.0000      1650.0000       835.0000      
+y3.s1          .              .           150.0000       800.0000      
+y3.s2      2500.0000      2500.0000      2650.0000      1000.0000      
+y3.s3      2000.0000      2000.0000      2150.0000      1500.0000      
+
+---- VAR Cret  Cost of retraining
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0        -INF             .            +INF             .          
+y1        -INF             .            +INF             .          
+y2        -INF       102000.0000        +INF             .          
+y3        -INF        96500.0000        +INF             .          
+
+---- VAR Cred  Redundancy cost each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0        -INF             .            +INF             .          
+y1        -INF       162500.0000        +INF             .          
+y2        -INF        54000.0000        +INF             .          
+y3        -INF        73000.0000        +INF             .          
+
+---- VAR Cextra  extraworker costs each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0        -INF             .            +INF             .          
+y1        -INF             .            +INF             .          
+y2        -INF             .            +INF             .          
+y3        -INF             .            +INF             .          
+
+---- VAR Csho  short time worker cost
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+y0        -INF             .            +INF             .          
+y1        -INF             .            +INF             .          
+y2        -INF             .            +INF             .          
+y3        -INF             .            +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR TotCTC            -INF       488000.0000        +INF             .          
+---- VAR objval            -INF         1447.5000        +INF             .          
+
+  TotCTC  total cost to company
+  objval  total number of layoffs / redundancy workers
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+
+****
+****  8 Integer levels greater than 100
+****
+
+
+EXECUTION TIME       =        0.016 SECONDS      2 MB  25.1.1 r66732 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\manpower_12.5\man2.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\manpower_12.5\man2.lst

@@ -1,4 +1,4 @@
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/16/18 15:10:28 Page 1
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:21 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -69,7 +69,7 @@ C o m p i l a t i o n
   66      storage(p,month) 'units stored at the end of each month'
   67      profit
   68      ;
-  69  *variable bounds
+  69   
   70   
   71  positive variable produced(p,month);
   72  prodsold.up(p,month) = marketlim(p,month);
@@ -106,7 +106,7 @@ C o m p i l a t i o n
 
 
 COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/16/18 15:10:28 Page 2
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:21 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE eqchk Using LP From line 99
 
@@ -345,7 +345,7 @@ objfunc..  - 10*prodsold(p1,Jan) - 10*prodsold(p1,Feb) - 10*prodsold(p1,Mar) - 1
      
       + 0.5*storage(p6,Jun) + 0.5*storage(p7,Jan) + 0.5*storage(p7,Feb) + 0.5*storage(p7,Mar) + 0.5*storage(p7,Apr) + 0.5*storage(p7,May) + 0.5*storage(p7,Jun) + profit =E= 0 ; (LHS = 175, INFES = 175 ****)
      
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/16/18 15:10:28 Page 3
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:21 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE eqchk Using LP From line 99
 
@@ -444,7 +444,7 @@ profit
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       objfunc
 
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/16/18 15:10:28 Page 4
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:21 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE eqchk Using LP From line 99
 
@@ -456,11 +456,11 @@ BLOCKS OF VARIABLES           5     SINGLE VARIABLES          157
 NON ZERO ELEMENTS           426
 
 
-GENERATION TIME      =        0.000 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
+GENERATION TIME      =        0.031 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
 
 
-EXECUTION TIME       =        0.000 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/16/18 15:10:28 Page 5
+EXECUTION TIME       =        0.031 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:21 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE eqchk Using LP From line 99
 
@@ -475,7 +475,7 @@ Solution Report     SOLVE eqchk Using LP From line 99
 **** MODEL STATUS      1 Optimal                   
 **** OBJECTIVE VALUE            93715.1786
 
- RESOURCE USAGE, LIMIT          0.000      1000.000
+ RESOURCE USAGE, LIMIT          0.015      1000.000
  ITERATION COUNT, LIMIT         3    2000000000
 
 IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
@@ -799,7 +799,7 @@ p7.Jun        50.0000        50.0000        50.0000        -3.5000
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/16/18 15:10:28 Page 6
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:21 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -855,5 +855,5 @@ USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
 
 **** FILE SUMMARY
 
-Input      C:\Users\cnbho\Documents\GitHub\HPW\factory plan 1\factoryplan1LP.gms
-Output     C:\Users\cnbho\Documents\GitHub\HPW\factory plan 1\factoryplan1LP.lst
+Input      C:\Users\cnbho\Documents\GitHub\HPW\factoryplan1\factoryplan1LP.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\factoryplan1\factoryplan1LP.lst

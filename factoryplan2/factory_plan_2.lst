@@ -1,4 +1,4 @@
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/16/18 17:25:23 Page 1
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:10:39 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -108,7 +108,7 @@ C o m p i l a t i o n
 
 
 COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/16/18 17:25:23 Page 2
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:10:39 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE eqchk Using MIP From line 101
 
@@ -371,7 +371,7 @@ Gschedule..  avail(G1,Jan) + avail(G1,Feb) + avail(G1,Mar) + avail(G1,Apr) + ava
      
       + avail(G3,Apr) + avail(G3,May) + avail(G3,Jun) + avail(G4,Jan) + avail(G4,Feb) + avail(G4,Mar) + avail(G4,Apr) + avail(G4,May) + avail(G4,Jun) =E= 22 ; (LHS = 0, INFES = 22 ****)
      
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/16/18 17:25:23 Page 3
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:10:39 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE eqchk Using MIP From line 101
 
@@ -489,7 +489,7 @@ avail(G1,Mar)
         1       Gschedule
 
 REMAINING 63 ENTRIES SKIPPED
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/16/18 17:25:23 Page 4
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:10:39 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE eqchk Using MIP From line 101
 
@@ -505,7 +505,7 @@ GENERATION TIME      =        0.015 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
 
 
 EXECUTION TIME       =        0.015 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/16/18 17:25:23 Page 5
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:10:39 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE eqchk Using MIP From line 101
 
@@ -520,7 +520,7 @@ Solution Report     SOLVE eqchk Using MIP From line 101
 **** MODEL STATUS      1 Optimal                   
 **** OBJECTIVE VALUE           108855.0000
 
- RESOURCE USAGE, LIMIT          0.015      1000.000
+ RESOURCE USAGE, LIMIT          0.062      1000.000
  ITERATION COUNT, LIMIT        62    2000000000
 
 IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
@@ -530,7 +530,7 @@ Cplex 12.8.0.0
 Space for names approximately 0.01 Mb
 Use option 'names no' to turn use of names off
 MIP status(101): integer optimal solution
-Cplex Time: 0.01sec (det. 3.17 ticks)
+Cplex Time: 0.03sec (det. 3.17 ticks)
 Fixing integer variables, and solving final LP...
 Fixed MIP status(1): optimal
 Cplex Time: 0.00sec (det. 0.15 ticks)
@@ -943,7 +943,7 @@ planer.Jun          .             1.0000         1.0000         EPS
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/16/18 17:25:23 Page 6
+GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:10:39 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -1016,5 +1016,5 @@ USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
 
 **** FILE SUMMARY
 
-Input      C:\Users\cnbho\Documents\GitHub\HPW\factory plan 2\factory_plan_2.gms
-Output     C:\Users\cnbho\Documents\GitHub\HPW\factory plan 2\factory_plan_2.lst
+Input      C:\Users\cnbho\Documents\GitHub\HPW\factoryplan2\factory_plan_2.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\factoryplan2\factory_plan_2.lst

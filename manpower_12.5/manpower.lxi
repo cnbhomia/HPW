@@ -1,0 +1,53 @@
+B 2 C o m p i l a t i o n
+B 156 Equation Listing    SOLVE manpowerplan Using RMIP From line 149
+D 157 attrition
+D 179 workers
+D 200 extramanning
+D 221 overmanning
+D 230 redundantworkers
+D 236 retraincosts
+D 245 redundancycosts
+D 254 extraworkercosts
+D 263 shorttimecosts
+D 272 totalcosts
+B 279 Column Listing      SOLVE manpowerplan Using RMIP From line 149
+E 280 Wrec
+E 300 Wret
+E 320 Wred
+E 336 Wsho
+E 352 Wextra
+E 374 Woverman
+E 389 Watt
+E 408 Wtotal
+E 427 Cret
+E 445 Cred
+E 463 Cextra
+E 481 Csho
+E 499 TotCTC
+E 506 objval
+B 519 Model Statistics    SOLVE manpowerplan Using RMIP From line 149
+B 535 Solution Report     SOLVE manpowerplan Using RMIP From line 149
+F 567 attrition
+F 581 workers
+F 595 extramanning
+F 609 overmanning
+F 615 redundantworkers
+F 623 retraincosts
+F 631 redundancycosts
+F 639 extraworkercosts
+F 647 shorttimecosts
+F 653 totalcosts
+G 656 Wrec
+G 670 Wret
+G 684 Wred
+G 701 Wsho
+G 715 Wextra
+G 729 Woverman
+G 737 Watt
+G 751 Wtotal
+G 768 Cret
+G 777 Cred
+G 786 Cextra
+G 795 Csho
+G 804 TotCTC
+G 808 objval
