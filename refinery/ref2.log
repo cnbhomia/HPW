@@ -1,0 +1,48 @@
+--- Job ref2.gms Start 07/26/18 17:34:03 25.1.1 r66732 WEX-WEI x86 64bit/MS Windows
+GAMS 25.1.1   Copyright (C) 1987-2018 GAMS Development. All rights reserved
+Licensee: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+          GAMS Development, Fairfax                                 DC14199
+          cbhomia@gams.com                                                 
+--- Starting compilation
+--- ref2.gms(112) 3 Mb
+--- Starting execution: elapsed 0:00:00.005[LST:122]
+--- ref2.gms(59) 4 Mb
+--- Generating NLP model refinery[LST:122]
+--- ref2.gms(111) 6 Mb
+---   19 rows  28 columns  100 non-zeroes
+---   142 nl-code  64 nl-non-zeroes
+--- ref2.gms(111) 4 Mb
+--- Executing CONOPT: elapsed 0:00:00.008[LST:292]
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+ 
+ 
+    C O N O P T 3   version 3.17I
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+   Iter Phase Ninf   Infeasibility   RGmax    NSB   Step InItr MX OK
+      0   0        1.0000000000E+03 (Input point)
+ 
+                   Pre-triangular equations:   1
+                   Post-triangular equations:  2
+                   Definitional equations:     7
+ 
+      1   0        5.0000000000E+02 (After pre-processing)
+      2   0        1.9531250000E+00 (After scaling)
+ 
+ ** Feasible solution. Value of objective =    2523.94011032
+ 
+   Iter Phase Ninf     Objective     RGmax    NSB   Step InItr MX OK
+      6   3        4.2175268856E+04 1.1E+04     6 1.0E+00    2 T  T
+     11   3        7.3769949012E+04 1.6E+04     4 0.0E+00      T  T
+     17   3        8.2214682540E+04 0.0E+00     0
+ 
+ ** Optimal solution. There are no superbasic variables.
+ 
+--- Restarting execution
+--- ref2.gms(111) 2 Mb
+--- Reading solution for model refinery[LST:307]
+*** Status: Normal completion[LST:481]
+--- Job ref2.gms Stop 07/26/18 17:34:03 elapsed 0:00:00.087
