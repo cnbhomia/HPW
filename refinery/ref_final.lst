@@ -1,0 +1,921 @@
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/15/18 08:35:15 Page 1
+Refinery Production Strategy (REFINERY, SEQ =xx)
+C o m p i l a t i o n
+
+
+   2   
+      This LP problem uses a refinery model to decide operation strategy for producing Petrol, Jet Fuel, Fuel Oil
+      and Lube Oil using two different variety of Crudes.
+      Some produts like petrol and jet fuel have an associated property which must be within certain bounds in the product.
+      The model consists of mass balances across the units, and the process streams. 
+       
+      Model Building in Mathematical Programming, Fifth Edition,
+      H. Paul Williams, Model 12.5 : Refinery
+      Wiley Publication, 2013
+  13   
+  14  Sets
+  15      Crude   'crude oil available'  /C1,C2/
+  16      ;
+  17   
+  18  Positive Variables
+  19  *following variables are mass flow rates in Barrels
+  20      C1      'Crude 1 available for refining'
+  21      C2      'Crude 2 available for refining'
+  22   
+  23      LN      'Light Naptha produced at distillation'
+  24      MN      'Medium Naptha produced at distillation'
+  25      HN      'Heavy Naptha produced at distillation'
+  26      LO      'Light Oil produced at distillation'
+  27      HO      'Heavy Oil produced at distillation'
+  28      RS      'Residue produced at distillation'
+  29      RG      'Reformed Gasoline produced in the reformer'
+  30      LN2REF  'LN sent to Reformer'
+  31      LN2PRE  'LN for blending for Premium Petrol'
+  32      LN2REG  'LN for blending for Regular Petrol'
+  33      MN2REF  'MN sent to Reformer'
+  34      MN2PRE  'MN used for Premium Petrol'
+  35      MN2REG  'MN used for Regular Petrol'
+  36      HN2REF  'HN sent to Reformer'
+  37      HN2PRE  'HN used for Premium Petrol'
+  38      HN2REG  'HN used for Regular Petrol'
+  39   
+  40      RG2REG  'Reformed Gas for Regular Petrol'
+  41      RG2PRE  'Reformed Gas for Premium Petrol'
+  42      LO2CRK  'LO sent to cracking'
+  43      LO2COL  'part of LO2CRK used for making crack oil'
+  44      LO2CGS  'part of LO2CRK used for making crack gas'
+  45      LO2BJF  'LO sent to Jet Fuel(JF) Blending'
+  46      LO2BFO  'LO sent to Fuel Oil(FO) Blending'
+  47      HO2CRK  'HO sent to cracking'
+  48      HO2COL  'part of HO2CRK used for making crack oil'
+  49      HO2CGS  'part of HO2CRK used for making crack gas'
+  50      HO2BJF  'HO sent to Jet Fuel(JF) Blending'
+  51      HO2BFO  'HO sent to Fuel Oil(FO) Blending'
+  52      RS2CRK  'Residuum sent for cracking'
+  53      RS2BJF  'Residuum sent for Jet Fuel(JF) Blending'
+  54      RS2BFO  'Residuum sent for Jet Fuel(FO) Blending'
+  55      CRKGAS  'Cracked Gasoline(CRKGAS/CG) produced in cracking'
+  56      CG2PRE  'Cracked Gasoline used for Premium Petrol'
+  57      CG2REG  'Cracked Gasoline used for Regular Petrol'
+  58   
+  59      CRKLOL  'Lube Oil (LO) produced by cracker'
+  60      CO2BJF  'Cracked Oil to blending of jet fuel'
+  61      CO2BFO  'Cracked Oil to blending of fuel oil'
+  62      REGPET  'Regular Petrol from blending'
+  63      PREPET  'Premium Petrol from blending'
+  64      JETFUL  'Jet Fuel from blending'
+  65      FULOIL  'Fuel Oil from blending'
+  66      ;
+  67  Free Variable PROFIT  'Objective Variable, to be maximized, Pounds/Barrel'
+  68      ;
+  69   
+  70  Equations
+  71      LNaptha 'Production of Light Naptha by distillation column'
+  72      MNaptha 'Production of Medium Naptha by distillation column'
+  73      HNaptha 'Production of Heavy Naptha by distillation column'
+  74      LightOL 'Production of Light Oilby distillation column'
+  75      HeavyOL 'Production of Heavy Oilby distillation column'
+  76      Residum ' Production of Residuum by distillation column'
+  77      Reformr 'Reformer Mass Balance'
+  78   
+  79      CrkrLOP 'Mass balance for Light oil sent for cracking'
+  80      CrkrHOP 'Mass balance for Heavy oil sent for cracking'
+  81      CrkrRSP 'Mass balance for Residumm sent for cracking'
+  82      CrkrOIL 'Total cracked oil produced'
+  83      CrkrGAS 'Total cracked gas produced'
+  84   
+  85   
+  86      BlenPRE 'Mass balance, blending motor fuels to make Premiun(PREPET) petrol'
+  87      BlenREG 'Mass balance, blending motor fuels to make Regular(REGPET) petrol'
+  88      BlendJF 'Mass balance, blending jet fuel '
+  89   
+  90  *    BlendFO 'Mass balance, blending fuel oil '
+  91      DistCap 'Capacty of Distillation'
+  92      RefrCap 'Capacity of Reformer'
+  93      CrkrCap 'Capacity of Cracker'
+  94      PetBlen 'Petrol, minimum Premium petrol production'
+  95      PREOcNo 'Limits on Octane number for premium petrol'
+  96      REGOcNo 'Limits on Octane number for Regular petrol'
+  97      JETPres 'Vapor Pressure contraint on Jet Fuel'
+  98  *    FORatio 'Ratio of blanding to make fuel oil'
+  99      ObjEqtn 'Objective Equation, maximization of Profit'
+ 100   
+ 101   
+ 102      LNbal
+ 103      MNbal
+ 104      HNbal
+ 105      LObal
+ 106      HObal
+ 107      RSbal
+ 108      RGbal
+ 109      ;
+ 110   
+ 111  *flow rate bounds
+ 112  C1.up = 20000;
+ 113  C2.up = 30000;
+ 114  CRKLOL.lo = 500;
+ 115  CRKLOL.up = 1000;
+ 116   
+ 117  *distillation column balances
+ 118  LNbal.. LN =E= LN2REF + LN2REG + LN2PRE ;
+ 119  MNbal.. MN =E= MN2REF + MN2REG + MN2PRE ;
+ 120  HNbal.. HN =E= HN2REF + HN2REG + HN2PRE ;
+ 121  LObal.. LO =E= LO2CRK + LO2BJF + (10/18)* FULOIL ;
+ 122  HObal.. HO =E= HO2CRK + HO2BJF + (3/18)* FULOIL ;
+ 123  RSbal.. RS =E= RS2CRK + RS2BJF + (1/18)* FULOIL ;
+ 124  RGbal.. RG =E= RG2PRE + RG2REG ;
+ 125   
+ 126  LNaptha.. LN =E= 0.10 * C1 + 0.15 * C2;
+ 127  MNaptha.. MN =E= 0.20 * C1 + 0.25 * C2;
+ 128  HNaptha.. HN =E= 0.20 * C1 + 0.18 * C2;
+ 129  LightOL.. LO =E= 0.12 * C1 + 0.08 * C2;
+ 130  HeavyOL.. HO =E= 0.20 * C1 + 0.19 * C2;
+ 131  Residum.. RS =E= 0.13 * C1 + 0.12 * C2;
+ 132   
+ 133  *reforming and cracking balances
+ 134  Reformr.. RG =E= 0.60 * LN2REF + 0.52 * MN2REF + 0.45 * HN2REF ;
+ 135  CrkrLOP.. LO2CRK  =E=  LO2COL + LO2CGS ;
+ 136  CrkrHOP.. HO2CRK  =E=  HO2COL + HO2CGS ;
+ 137  CrkrOIL.. CO2BJF + (4/18)* FULOIL =E= 0.68 * LO2COL + 0.75 * HO2COL ;
+ 138  CrkrGAS.. CG2PRE + CG2REG  =E= 0.28 * LO2CGS + 0.20 * HO2CGS ;
+ 139  CrkrRSP.. CRKLOL =E= RS2CRK*0.5  ;
+ 140   
+ 141  *blending balances
+ 142  BlenPRE.. PREPET =E= RG2PRE + LN2PRE + MN2PRE + HN2PRE + CG2PRE ;
+ 143  BlenREG.. REGPET =E= RG2REG + LN2REG + MN2REG + HN2REG + CG2REG ;
+ 144  BlendJF.. JETFUL =E= LO2BJF + HO2BJF + CO2BJF + RS2BJF ;
+ 145   
+ 146  *BlendFO.. FULOIL =E= LO2BFO + HO2BFO + CO2BFO + RS2BFO ;
+ 147   
+ 148  *contraints and capacitites
+ 149  DistCap.. C1 + C2 =L= 45000;
+ 150  RefrCap.. LN2REF +  MN2REF + HN2REF =L= 10000 ;
+ 151  CrkrCap.. LO2CRK + HO2CRK =L= 8000;
+ 152  PetBlen.. PREPET =G= 0.4*REGPET ;
+ 153  PREOcNo.. 115 * RG2PRE + 90 * LN2PRE + 80 * MN2PRE + 70 * HN2PRE + 105 * CG2PRE =G= 94*PREPET ;
+ 154  REGOcNo.. 115 * RG2REG + 90 * LN2REG + 80 * MN2REG + 70 * HN2REG + 105 * CG2REG =G= 84*REGPET ;
+ 155  JETPres.. 1.0* LO2BJF + 0.6* HO2BJF + 1.5* CO2BJF + 0.05* RS2BJF =L= 1.0* JETFUL ;
+ 156   
+ 157  ObjEqtn.. PROFIT =E= PREPET*7 +  REGPET*6 + JETFUL*4 + FULOIL*3.5 + CRKLOL*1.50 ;
+ 158   
+ 159   
+ 160  *initial points
+ 161  LN2REF.L = 0;
+ 162  MN2REF.L = 0;
+ 163  HN2REF.L = 5406.85;
+ 164   
+ 165  C1.L=15000;
+ 166  C2.L=30000;
+ 167  LO.L =4200;
+ 168  HO.L = 8700;
+ 169  LN.L =6000;
+ 170  RS.L = 5550;
+ 171  LN2REG.L = 6000;
+ 172  LN2PRE.L = 0;
+ 173  MN.L=10500;
+ 174  HN.L=8400;
+ 175   
+ 176  MN2PRE.L = 3537;
+ 177  MN2REG.L = 6962;
+ 178  HN2PRE.L = 0;
+ 179  HN2REG.L = 2993 ;
+ 180   
+ 181  RG2PRE.L = 1344 ;
+ 182  RG2REG.L = 1089 ;
+ 183  RG.L = 2433;
+ 184   
+ 185  CG2PRE.L = 1936 ;
+ 186  CG2REG.L=0 ;
+ 187  HO2BJF.L = 4900 ;
+ 188  RS2BJF.L = 4550 ;
+ 189   
+ 190  LO2CRK.L = 4200 ;
+ 191  HO2CRK.L = 3800 ;
+ 192   
+ 193  CO2BJF.L = 5706 ;
+ 194  RS2CRK.L = 1000 ;
+ 195   
+ 196  CRKLOL.L = 500;
+ 197  FULOIL.L = 0;
+ 198   
+ 199  PREPET.L = 6818;
+ 200  REGPET.L = 17044;
+ 201  JETFUL.L = 15156 ;
+ 202   
+ 203  Model refinery /all/;
+ 204   
+ 205  solve refinery using LP maximizing PROFIT;
+ 206   
+ 207   
+ 208   
+ 209   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/15/18 08:35:15 Page 2
+Refinery Production Strategy (REFINERY, SEQ =xx)
+Equation Listing    SOLVE refinery Using LP From line 205
+
+
+---- LNaptha  =E=  Production of Light Naptha by distillation column
+
+LNaptha..  - 0.1*C1 - 0.15*C2 + LN =E= 0 ; (LHS = 0)
+     
+
+---- MNaptha  =E=  Production of Medium Naptha by distillation column
+
+MNaptha..  - 0.2*C1 - 0.25*C2 + MN =E= 0 ; (LHS = 0)
+     
+
+---- HNaptha  =E=  Production of Heavy Naptha by distillation column
+
+HNaptha..  - 0.2*C1 - 0.18*C2 + HN =E= 0 ; (LHS = 0)
+     
+
+---- LightOL  =E=  Production of Light Oilby distillation column
+
+LightOL..  - 0.12*C1 - 0.08*C2 + LO =E= 0 ; (LHS = 0)
+     
+
+---- HeavyOL  =E=  Production of Heavy Oilby distillation column
+
+HeavyOL..  - 0.2*C1 - 0.19*C2 + HO =E= 0 ; (LHS = 0)
+     
+
+---- Residum  =E=   Production of Residuum by distillation column
+
+Residum..  - 0.13*C1 - 0.12*C2 + RS =E= 0 ; (LHS = 0)
+     
+
+---- Reformr  =E=  Reformer Mass Balance
+
+Reformr..  RG - 0.6*LN2REF - 0.52*MN2REF - 0.45*HN2REF =E= 0 ; (LHS = -0.0825000000004366, INFES = 0.0825000000004366 ****)
+     
+
+---- CrkrLOP  =E=  Mass balance for Light oil sent for cracking
+
+CrkrLOP..  LO2CRK - LO2COL - LO2CGS =E= 0 ; (LHS = 4200, INFES = 4200 ****)
+     
+
+---- CrkrHOP  =E=  Mass balance for Heavy oil sent for cracking
+
+CrkrHOP..  HO2CRK - HO2COL - HO2CGS =E= 0 ; (LHS = 3800, INFES = 3800 ****)
+     
+
+---- CrkrRSP  =E=  Mass balance for Residumm sent for cracking
+
+CrkrRSP..  - 0.5*RS2CRK + CRKLOL =E= 0 ; (LHS = 0)
+     
+
+---- CrkrOIL  =E=  Total cracked oil produced
+
+CrkrOIL..  - 0.68*LO2COL - 0.75*HO2COL + CO2BJF + 0.222222222222222*FULOIL =E= 0 ; (LHS = 5706, INFES = 5706 ****)
+     
+
+---- CrkrGAS  =E=  Total cracked gas produced
+
+CrkrGAS..  - 0.28*LO2CGS - 0.2*HO2CGS + CG2PRE + CG2REG =E= 0 ; (LHS = 1936, INFES = 1936 ****)
+     
+
+---- BlenPRE  =E=  Mass balance, blending motor fuels to make Premiun(PREPET) petrol
+
+BlenPRE..  - LN2PRE - MN2PRE - HN2PRE - RG2PRE - CG2PRE + PREPET =E= 0 ; (LHS = 1, INFES = 1 ****)
+     
+
+---- BlenREG  =E=  Mass balance, blending motor fuels to make Regular(REGPET) petrol
+
+BlenREG..  - LN2REG - MN2REG - HN2REG - RG2REG - CG2REG + REGPET =E= 0 ; (LHS = 0)
+     
+
+---- BlendJF  =E=  Mass balance, blending jet fuel 
+
+BlendJF..  - LO2BJF - HO2BJF - RS2BJF - CO2BJF + JETFUL =E= 0 ; (LHS = 0)
+     
+
+---- DistCap  =L=  Capacty of Distillation
+
+DistCap..  C1 + C2 =L= 45000 ; (LHS = 45000)
+     
+
+---- RefrCap  =L=  Capacity of Reformer
+
+RefrCap..  LN2REF + MN2REF + HN2REF =L= 10000 ; (LHS = 5406.85)
+     
+
+---- CrkrCap  =L=  Capacity of Cracker
+
+CrkrCap..  LO2CRK + HO2CRK =L= 8000 ; (LHS = 8000)
+     
+
+---- PetBlen  =G=  Petrol, minimum Premium petrol production
+
+PetBlen..  - 0.4*REGPET + PREPET =G= 0 ; (LHS = 0.399999999999636)
+     
+
+---- PREOcNo  =G=  Limits on Octane number for premium petrol
+
+PREOcNo..  90*LN2PRE + 80*MN2PRE + 70*HN2PRE + 115*RG2PRE + 105*CG2PRE - 94*PREPET =G= 0 ; (LHS = -92, INFES = 92 ****)
+     
+
+---- REGOcNo  =G=  Limits on Octane number for Regular petrol
+
+REGOcNo..  90*LN2REG + 80*MN2REG + 70*HN2REG + 115*RG2REG + 105*CG2REG - 84*REGPET =G= 0 ; (LHS = 9)
+     
+
+---- JETPres  =L=  Vapor Pressure contraint on Jet Fuel
+
+JETPres..  LO2BJF + 0.6*HO2BJF + 0.05*RS2BJF + 1.5*CO2BJF - JETFUL =L= 0 ; (LHS = -3429.5)
+     
+
+---- ObjEqtn  =E=  Objective Equation, maximization of Profit
+
+ObjEqtn..  - 1.5*CRKLOL - 6*REGPET - 7*PREPET - 4*JETFUL - 3.5*FULOIL + PROFIT =E= 0 ; (LHS = -211364, INFES = 211364 ****)
+     
+
+---- LNbal  =E=  
+
+LNbal..  LN - LN2REF - LN2PRE - LN2REG =E= 0 ; (LHS = 0)
+     
+
+---- MNbal  =E=  
+
+MNbal..  MN - MN2REF - MN2PRE - MN2REG =E= 0 ; (LHS = 1, INFES = 1 ****)
+     
+
+---- HNbal  =E=  
+
+HNbal..  HN - HN2REF - HN2PRE - HN2REG =E= 0 ; (LHS = 0.149999999999636, INFES = 0.149999999999636 ****)
+     
+
+---- LObal  =E=  
+
+LObal..  LO - LO2CRK - LO2BJF - 0.555555555555556*FULOIL =E= 0 ; (LHS = 0)
+     
+
+---- HObal  =E=  
+
+HObal..  HO - HO2CRK - HO2BJF - 0.166666666666667*FULOIL =E= 0 ; (LHS = 0)
+     
+
+---- RSbal  =E=  
+
+RSbal..  RS - RS2CRK - RS2BJF - 0.0555555555555556*FULOIL =E= 0 ; (LHS = 0)
+     
+
+---- RGbal  =E=  
+
+RGbal..  RG - RG2REG - RG2PRE =E= 0 ; (LHS = 0)
+     
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/15/18 08:35:15 Page 3
+Refinery Production Strategy (REFINERY, SEQ =xx)
+Column Listing      SOLVE refinery Using LP From line 205
+
+
+---- C1  Crude 1 available for refining
+
+C1
+                (.LO, .L, .UP, .M = 0, 15000, 20000, 0)
+       -0.1     LNaptha
+       -0.2     MNaptha
+       -0.2     HNaptha
+       -0.12    LightOL
+       -0.2     HeavyOL
+       -0.13    Residum
+        1       DistCap
+
+
+---- C2  Crude 2 available for refining
+
+C2
+                (.LO, .L, .UP, .M = 0, 30000, 30000, 0)
+       -0.15    LNaptha
+       -0.25    MNaptha
+       -0.18    HNaptha
+       -0.08    LightOL
+       -0.19    HeavyOL
+       -0.12    Residum
+        1       DistCap
+
+
+---- LN  Light Naptha produced at distillation
+
+LN
+                (.LO, .L, .UP, .M = 0, 6000, +INF, 0)
+        1       LNaptha
+        1       LNbal
+
+
+---- MN  Medium Naptha produced at distillation
+
+MN
+                (.LO, .L, .UP, .M = 0, 10500, +INF, 0)
+        1       MNaptha
+        1       MNbal
+
+
+---- HN  Heavy Naptha produced at distillation
+
+HN
+                (.LO, .L, .UP, .M = 0, 8400, +INF, 0)
+        1       HNaptha
+        1       HNbal
+
+
+---- LO  Light Oil produced at distillation
+
+LO
+                (.LO, .L, .UP, .M = 0, 4200, +INF, 0)
+        1       LightOL
+        1       LObal
+
+
+---- HO  Heavy Oil produced at distillation
+
+HO
+                (.LO, .L, .UP, .M = 0, 8700, +INF, 0)
+        1       HeavyOL
+        1       HObal
+
+
+---- RS  Residue produced at distillation
+
+RS
+                (.LO, .L, .UP, .M = 0, 5550, +INF, 0)
+        1       Residum
+        1       RSbal
+
+
+---- RG  Reformed Gasoline produced in the reformer
+
+RG
+                (.LO, .L, .UP, .M = 0, 2433, +INF, 0)
+        1       Reformr
+        1       RGbal
+
+
+---- LN2REF  LN sent to Reformer
+
+LN2REF
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -0.6     Reformr
+        1       RefrCap
+       -1       LNbal
+
+
+---- LN2PRE  LN for blending for Premium Petrol
+
+LN2PRE
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       BlenPRE
+       90       PREOcNo
+       -1       LNbal
+
+
+---- LN2REG  LN for blending for Regular Petrol
+
+LN2REG
+                (.LO, .L, .UP, .M = 0, 6000, +INF, 0)
+       -1       BlenREG
+       90       REGOcNo
+       -1       LNbal
+
+
+---- MN2REF  MN sent to Reformer
+
+MN2REF
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -0.52    Reformr
+        1       RefrCap
+       -1       MNbal
+
+
+---- MN2PRE  MN used for Premium Petrol
+
+MN2PRE
+                (.LO, .L, .UP, .M = 0, 3537, +INF, 0)
+       -1       BlenPRE
+       80       PREOcNo
+       -1       MNbal
+
+
+---- MN2REG  MN used for Regular Petrol
+
+MN2REG
+                (.LO, .L, .UP, .M = 0, 6962, +INF, 0)
+       -1       BlenREG
+       80       REGOcNo
+       -1       MNbal
+
+
+---- HN2REF  HN sent to Reformer
+
+HN2REF
+                (.LO, .L, .UP, .M = 0, 5406.85, +INF, 0)
+       -0.45    Reformr
+        1       RefrCap
+       -1       HNbal
+
+
+---- HN2PRE  HN used for Premium Petrol
+
+HN2PRE
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       BlenPRE
+       70       PREOcNo
+       -1       HNbal
+
+
+---- HN2REG  HN used for Regular Petrol
+
+HN2REG
+                (.LO, .L, .UP, .M = 0, 2993, +INF, 0)
+       -1       BlenREG
+       70       REGOcNo
+       -1       HNbal
+
+
+---- RG2REG  Reformed Gas for Regular Petrol
+
+RG2REG
+                (.LO, .L, .UP, .M = 0, 1089, +INF, 0)
+       -1       BlenREG
+      115       REGOcNo
+       -1       RGbal
+
+
+---- RG2PRE  Reformed Gas for Premium Petrol
+
+RG2PRE
+                (.LO, .L, .UP, .M = 0, 1344, +INF, 0)
+       -1       BlenPRE
+      115       PREOcNo
+       -1       RGbal
+
+
+---- LO2CRK  LO sent to cracking
+
+LO2CRK
+                (.LO, .L, .UP, .M = 0, 4200, +INF, 0)
+        1       CrkrLOP
+        1       CrkrCap
+       -1       LObal
+
+
+---- LO2COL  part of LO2CRK used for making crack oil
+
+LO2COL
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       CrkrLOP
+       -0.68    CrkrOIL
+
+
+---- LO2CGS  part of LO2CRK used for making crack gas
+
+LO2CGS
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       CrkrLOP
+       -0.28    CrkrGAS
+
+
+---- LO2BJF  LO sent to Jet Fuel(JF) Blending
+
+LO2BJF
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       BlendJF
+        1       JETPres
+       -1       LObal
+
+
+---- HO2CRK  HO sent to cracking
+
+HO2CRK
+                (.LO, .L, .UP, .M = 0, 3800, +INF, 0)
+        1       CrkrHOP
+        1       CrkrCap
+       -1       HObal
+
+
+---- HO2COL  part of HO2CRK used for making crack oil
+
+HO2COL
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       CrkrHOP
+       -0.75    CrkrOIL
+
+
+---- HO2CGS  part of HO2CRK used for making crack gas
+
+HO2CGS
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       CrkrHOP
+       -0.2     CrkrGAS
+
+
+---- HO2BJF  HO sent to Jet Fuel(JF) Blending
+
+HO2BJF
+                (.LO, .L, .UP, .M = 0, 4900, +INF, 0)
+       -1       BlendJF
+        0.6     JETPres
+       -1       HObal
+
+
+---- RS2CRK  Residuum sent for cracking
+
+RS2CRK
+                (.LO, .L, .UP, .M = 0, 1000, +INF, 0)
+       -0.5     CrkrRSP
+       -1       RSbal
+
+
+---- RS2BJF  Residuum sent for Jet Fuel(JF) Blending
+
+RS2BJF
+                (.LO, .L, .UP, .M = 0, 4550, +INF, 0)
+       -1       BlendJF
+        0.05    JETPres
+       -1       RSbal
+
+
+---- CG2PRE  Cracked Gasoline used for Premium Petrol
+
+CG2PRE
+                (.LO, .L, .UP, .M = 0, 1936, +INF, 0)
+        1       CrkrGAS
+       -1       BlenPRE
+      105       PREOcNo
+
+
+---- CG2REG  Cracked Gasoline used for Regular Petrol
+
+CG2REG
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       CrkrGAS
+       -1       BlenREG
+      105       REGOcNo
+
+
+---- CRKLOL  Lube Oil (LO) produced by cracker
+
+CRKLOL
+                (.LO, .L, .UP, .M = 500, 500, 1000, 0)
+        1       CrkrRSP
+       -1.5     ObjEqtn
+
+
+---- CO2BJF  Cracked Oil to blending of jet fuel
+
+CO2BJF
+                (.LO, .L, .UP, .M = 0, 5706, +INF, 0)
+        1       CrkrOIL
+       -1       BlendJF
+        1.5     JETPres
+
+
+---- REGPET  Regular Petrol from blending
+
+REGPET
+                (.LO, .L, .UP, .M = 0, 17044, +INF, 0)
+        1       BlenREG
+       -0.4     PetBlen
+      -84       REGOcNo
+       -6       ObjEqtn
+
+
+---- PREPET  Premium Petrol from blending
+
+PREPET
+                (.LO, .L, .UP, .M = 0, 6818, +INF, 0)
+        1       BlenPRE
+        1       PetBlen
+      -94       PREOcNo
+       -7       ObjEqtn
+
+
+---- JETFUL  Jet Fuel from blending
+
+JETFUL
+                (.LO, .L, .UP, .M = 0, 15156, +INF, 0)
+        1       BlendJF
+       -1       JETPres
+       -4       ObjEqtn
+
+
+---- FULOIL  Fuel Oil from blending
+
+FULOIL
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        0.2222  CrkrOIL
+       -3.5     ObjEqtn
+       -0.5556  LObal
+       -0.1667  HObal
+       -0.0556  RSbal
+
+
+---- PROFIT  Objective Variable, to be maximized, Pounds/Barrel
+
+PROFIT
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       ObjEqtn
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/15/18 08:35:15 Page 4
+Refinery Production Strategy (REFINERY, SEQ =xx)
+Model Statistics    SOLVE refinery Using LP From line 205
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS          30     SINGLE EQUATIONS           30
+BLOCKS OF VARIABLES          39     SINGLE VARIABLES           39
+NON ZERO ELEMENTS           114
+
+
+GENERATION TIME      =        0.093 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.093 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/15/18 08:35:15 Page 5
+Refinery Production Strategy (REFINERY, SEQ =xx)
+Solution Report     SOLVE refinery Using LP From line 205
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   refinery            OBJECTIVE  PROFIT
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  205
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE           204258.6862
+
+ RESOURCE USAGE, LIMIT          0.031      1000.000
+ ITERATION COUNT, LIMIT        23    2000000000
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.00sec (det. 0.09 ticks)
+Optimal solution found.
+Objective :      204258.686184
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU LNaptha             .              .              .             6.6538      
+---- EQU MNaptha             .              .              .             5.4827      
+---- EQU HNaptha             .              .              .             4.3116      
+---- EQU LightOL             .              .              .             4.0000      
+---- EQU HeavyOL             .              .              .             4.0000      
+---- EQU Residum             .              .              .             4.0000      
+---- EQU Reformr             .              .              .             9.5814      
+---- EQU CrkrLOP             .              .              .            -4.0000      
+---- EQU CrkrHOP             .              .              .            -4.0000      
+---- EQU CrkrRSP             .              .              .             8.0000      
+---- EQU CrkrOIL             .              .              .             5.3333      
+---- EQU CrkrGAS             .              .              .             8.4104      
+---- EQU BlenPRE             .              .              .            -3.8858      
+---- EQU BlenREG             .              .              .            -3.8858      
+---- EQU BlendJF             .              .              .             4.0000      
+---- EQU DistCap           -INF        45000.0000     45000.0000         4.4242      
+---- EQU RefrCap           -INF         6596.6610     10000.0000          .          
+---- EQU CrkrCap           -INF             .          8000.0000          .          
+---- EQU PetBlen             .              .            +INF           -0.1222      
+---- EQU PREOcNo             .              .            +INF           -0.1171      
+---- EQU REGOcNo             .              .            +INF           -0.1171      
+---- EQU JETPres           -INF        -7802.5000          .              .          
+---- EQU ObjEqtn             .              .              .             1.0000      
+---- EQU LNbal               .              .              .            -6.6538      
+---- EQU MNbal               .              .              .            -5.4827      
+---- EQU HNbal               .              .              .            -4.3116      
+---- EQU LObal               .              .              .            -4.0000      
+---- EQU HObal               .              .              .            -4.0000      
+---- EQU RSbal               .              .              .            -4.0000      
+---- EQU RGbal               .              .              .            -9.5814      
+
+  LNaptha  Production of Light Naptha by distillation column
+  MNaptha  Production of Medium Naptha by distillation column
+  HNaptha  Production of Heavy Naptha by distillation column
+  LightOL  Production of Light Oilby distillation column
+  HeavyOL  Production of Heavy Oilby distillation column
+  Residum   Production of Residuum by distillation column
+  Reformr  Reformer Mass Balance
+  CrkrLOP  Mass balance for Light oil sent for cracking
+  CrkrHOP  Mass balance for Heavy oil sent for cracking
+  CrkrRSP  Mass balance for Residumm sent for cracking
+  CrkrOIL  Total cracked oil produced
+  CrkrGAS  Total cracked gas produced
+  BlenPRE  Mass balance, blending motor fuels to make Premiun(PREPET) petrol
+  BlenREG  Mass balance, blending motor fuels to make Regular(REGPET) petrol
+  BlendJF  Mass balance, blending jet fuel 
+  DistCap  Capacty of Distillation
+  RefrCap  Capacity of Reformer
+  CrkrCap  Capacity of Cracker
+  PetBlen  Petrol, minimum Premium petrol production
+  PREOcNo  Limits on Octane number for premium petrol
+  REGOcNo  Limits on Octane number for Regular petrol
+  JETPres  Vapor Pressure contraint on Jet Fuel
+  ObjEqtn  Objective Equation, maximization of Profit
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR C1                  .         15000.0000     20000.0000          .          
+---- VAR C2                  .         30000.0000     30000.0000         0.2806      
+---- VAR LN                  .          6000.0000        +INF             .          
+---- VAR MN                  .         10500.0000        +INF             .          
+---- VAR HN                  .          8400.0000        +INF             .          
+---- VAR LO                  .          4200.0000        +INF             .          
+---- VAR HO                  .          8700.0000        +INF             .          
+---- VAR RS                  .          5550.0000        +INF             .          
+---- VAR RG                  .          2968.4975        +INF             .          
+---- VAR LN2REF              .              .            +INF           -0.9049      
+---- VAR LN2PRE              .          1859.2306        +INF             .          
+---- VAR LN2REG              .          4140.7694        +INF             .          
+---- VAR MN2REF              .              .            +INF           -0.5004      
+---- VAR MN2PRE              .              .            +INF      1.776357E-15      
+---- VAR MN2REG              .         10500.0000        +INF             .          
+---- VAR HN2REF              .          6596.6610        +INF             .          
+---- VAR HN2PRE              .          1803.3390        +INF             .          
+---- VAR HN2REG              .              .            +INF            EPS         
+---- VAR RG2REG              .           553.3995        +INF             .          
+---- VAR RG2PRE              .          2415.0980        +INF             .          
+---- VAR LO2CRK              .              .            +INF             .          
+---- VAR LO2COL              .              .            +INF           -0.3733      
+---- VAR LO2CGS              .              .            +INF           -1.6451      
+---- VAR LO2BJF              .          4200.0000        +INF             .          
+---- VAR HO2CRK              .              .            +INF             .          
+---- VAR HO2COL              .              .            +INF             .          
+---- VAR HO2CGS              .              .            +INF           -2.3179      
+---- VAR HO2BJF              .          8700.0000        +INF             .          
+---- VAR RS2CRK              .          1000.0000        +INF             .          
+---- VAR RS2BJF              .          4550.0000        +INF             .          
+---- VAR CG2PRE              .              .            +INF            EPS         
+---- VAR CG2REG              .              .            +INF             .          
+---- VAR CRKLOL           500.0000       500.0000      1000.0000        -6.5000      
+---- VAR CO2BJF              .              .            +INF           -1.3333      
+---- VAR REGPET              .         15194.1689        +INF             .          
+---- VAR PREPET              .          6077.6676        +INF             .          
+---- VAR JETFUL              .         17450.0000        +INF             .          
+---- VAR FULOIL              .              .            +INF           -0.7963      
+---- VAR PROFIT            -INF       204258.6862        +INF             .          
+
+  C1  Crude 1 available for refining
+  C2  Crude 2 available for refining
+  LN  Light Naptha produced at distillation
+  MN  Medium Naptha produced at distillation
+  HN  Heavy Naptha produced at distillation
+  LO  Light Oil produced at distillation
+  HO  Heavy Oil produced at distillation
+  RS  Residue produced at distillation
+  RG  Reformed Gasoline produced in the reformer
+  LN2REF  LN sent to Reformer
+  LN2PRE  LN for blending for Premium Petrol
+  LN2REG  LN for blending for Regular Petrol
+  MN2REF  MN sent to Reformer
+  MN2PRE  MN used for Premium Petrol
+  MN2REG  MN used for Regular Petrol
+  HN2REF  HN sent to Reformer
+  HN2PRE  HN used for Premium Petrol
+  HN2REG  HN used for Regular Petrol
+  RG2REG  Reformed Gas for Regular Petrol
+  RG2PRE  Reformed Gas for Premium Petrol
+  LO2CRK  LO sent to cracking
+  LO2COL  part of LO2CRK used for making crack oil
+  LO2CGS  part of LO2CRK used for making crack gas
+  LO2BJF  LO sent to Jet Fuel(JF) Blending
+  HO2CRK  HO sent to cracking
+  HO2COL  part of HO2CRK used for making crack oil
+  HO2CGS  part of HO2CRK used for making crack gas
+  HO2BJF  HO sent to Jet Fuel(JF) Blending
+  RS2CRK  Residuum sent for cracking
+  RS2BJF  Residuum sent for Jet Fuel(JF) Blending
+  CG2PRE  Cracked Gasoline used for Premium Petrol
+  CG2REG  Cracked Gasoline used for Regular Petrol
+  CRKLOL  Lube Oil (LO) produced by cracker
+  CO2BJF  Cracked Oil to blending of jet fuel
+  REGPET  Regular Petrol from blending
+  PREPET  Premium Petrol from blending
+  JETFUL  Jet Fuel from blending
+  FULOIL  Fuel Oil from blending
+  PROFIT  Objective Variable, to be maximized, Pounds/Barrel
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+
+
+EXECUTION TIME       =        0.015 SECONDS      2 MB  25.1.2 r67455 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\refinery\ref_final.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\refinery\ref_final.lst

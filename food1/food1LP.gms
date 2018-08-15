@@ -9,6 +9,8 @@ sets
     nonveg(oil)/oil1*oil3/
     month 'mons in planning' / Jan,Feb, Mar, Apr,May, June/
     ;
+* hellooo dlkahgkjahgklrah
+
 
 table price(month,oil) 'cost price of veg oil in the future'
       veg1      veg2    oil1    oil2    oil3
@@ -32,7 +34,7 @@ parameters
     RefineLimVeg /200/
     RefineLimNVeg /250/
     sellprice ' selling price of product ' /150/
-    ; 
+    ;
 
 positive variables
     RMpur(oil,month) ' amount of oil purchased each month'
@@ -46,7 +48,6 @@ variable
 *fixing stocks
 RMstock.fx(oil,'Jan') = 500;
 RMstock.up(oil,month) = 1000;
-
 
 equations
     stockcalc(oil,month) 'stock calculation'
@@ -74,8 +75,8 @@ profitcalc.. profit =e= sum(month,product(month)*sellprice) - sum((oil,month), R
 
 
 model food1 /all/;
-*option limrow=100
+option limrow=100
 solve food1 using LP maximizing profit;
 
-   
-        
+
+

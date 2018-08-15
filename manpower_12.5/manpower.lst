@@ -1,4 +1,4 @@
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:07:55 Page 1
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:45:22 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -151,8 +151,8 @@ C o m p i l a t i o n
  149  solve manpowerplan using RMIP minimizing objval ;
 
 
-COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:07:55 Page 2
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:45:22 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE manpowerplan Using RMIP From line 149
 
@@ -275,7 +275,7 @@ shorttimecosts(y3)..  - 500*Wsho(y3,unskill) - 400*Wsho(y3,semskill) - 400*Wsho(
 
 totalcosts..  - Cret(y0) - Cret(y1) - Cret(y2) - Cret(y3) - Cred(y0) - Cred(y1) - Cred(y2) - Cred(y3) - Cextra(y0) - Cextra(y1) - Cextra(y2) - Cextra(y3) - Csho(y0) - Csho(y1) - Csho(y2) - Csho(y3) + TotCTC =E= 0 ; (LHS = 0)
      
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:07:55 Page 3
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:45:22 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE manpowerplan Using RMIP From line 149
 
@@ -515,7 +515,7 @@ objval
 ****
 ****  42 Integer +INF Bounds have been reset to 100 (see Option IntVarUp)
 ****
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:07:55 Page 4
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:45:22 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE manpowerplan Using RMIP From line 149
 
@@ -527,11 +527,11 @@ BLOCKS OF VARIABLES          14     SINGLE VARIABLES           90
 NON ZERO ELEMENTS           183     DISCRETE VARIABLES         66
 
 
-GENERATION TIME      =        0.016 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
+GENERATION TIME      =        0.016 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
 
 
-EXECUTION TIME       =        0.016 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:07:55 Page 5
+EXECUTION TIME       =        0.016 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:45:22 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE manpowerplan Using RMIP From line 149
 
@@ -546,10 +546,10 @@ Solution Report     SOLVE manpowerplan Using RMIP From line 149
 **** MODEL STATUS      4 Infeasible                
 **** OBJECTIVE VALUE            23015.0000
 
- RESOURCE USAGE, LIMIT          0.016      1000.000
+ RESOURCE USAGE, LIMIT          0.000      1000.000
  ITERATION COUNT, LIMIT        22    2000000000
 
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
 Cplex 12.8.0.0
 
 Space for names approximately 0.00 Mb
@@ -820,7 +820,7 @@ y3        -INF             .            +INF            EPS
                              0  UNBOUNDED
 
 
-EXECUTION TIME       =        0.000 SECONDS      2 MB  25.1.1 r66732 WEX-WEI
+EXECUTION TIME       =        0.000 SECONDS      2 MB  25.1.2 r67455 WEX-WEI
 
 
 USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN

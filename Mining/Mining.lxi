@@ -1,0 +1,40 @@
+B 2 C o m p i l a t i o n
+B 145 Include File Summary
+B 157 Equation Listing    SOLVE mining Using MIP From line 105
+D 158 MaxMining
+D 202 MaxOperate
+D 215 TotalOre
+D 228 Blending
+D 241 OperCond
+D 284 OpenCond
+D 327 Royalties
+D 370 ObjFunc
+B 381 Column Listing      SOLVE mining Using MIP From line 105
+E 382 qmined
+E 405 totore
+E 427 ifopen
+E 454 ifoper
+E 476 Droyal
+E 492 profit
+B 501 Model Statistics    SOLVE mining Using MIP From line 105
+B 517 Solution Report     SOLVE mining Using MIP From line 105
+F 557 MaxMining
+F 582 MaxOperate
+F 592 TotalOre
+F 602 Blending
+F 612 OperCond
+F 637 OpenCond
+F 662 Royalties
+F 685 ObjFunc
+G 688 qmined
+G 713 totore
+G 723 ifopen
+G 748 ifoper
+G 773 Droyal
+G 798 profit
+B 811 E x e c u t i o n
+I 812 ifopen
+I 823 ifoper
+I 833 qmined
+I 843 totore
+I 848 dSellPr
