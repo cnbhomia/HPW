@@ -40,13 +40,11 @@ Positive Variables
     RG2REG  'Reformed Gas for Regular Petrol' 
     RG2PRE  'Reformed Gas for Premium Petrol' 
     LO2CRK  'LO sent to cracking'
-    LO2COL  'part of LO2CRK used for making crack oil'
-    LO2CGS  'part of LO2CRK used for making crack gas'
+
     LO2BJF  'LO sent to Jet Fuel(JF) Blending'
     LO2BFO  'LO sent to Fuel Oil(FO) Blending'
     HO2CRK  'HO sent to cracking'
-    HO2COL  'part of HO2CRK used for making crack oil'
-    HO2CGS  'part of HO2CRK used for making crack gas'
+
     HO2BJF  'HO sent to Jet Fuel(JF) Blending'
     HO2BFO  'HO sent to Fuel Oil(FO) Blending'
     RS2CRK  'Residuum sent for cracking'
@@ -76,8 +74,7 @@ Equations
     Residum ' Production of Residuum by distillation column'
     Reformr 'Reformer Mass Balance' 
 
-    CrkrLOP 'Mass balance for Light oil sent for cracking'
-    CrkrHOP 'Mass balance for Heavy oil sent for cracking'
+
     CrkrRSP 'Mass balance for Residumm sent for cracking'
     CrkrOIL 'Total cracked oil produced'
     CrkrGAS 'Total cracked gas produced'
@@ -131,11 +128,9 @@ Residum.. RS =E= 0.13 * C1 + 0.12 * C2;
 
 *reforming and cracking balances
 Reformr.. RG =E= 0.60 * LN2REF + 0.52 * MN2REF + 0.45 * HN2REF ;
-CrkrLOP.. LO2CRK  =E=  LO2COL + LO2CGS ;
-*CrkrHOP.. HO2CRK  =E=  HO2COL + HO2CGS ;
-CrkrHOP.. HO2CRK  =E=  HO2COL + HO2CGS ;
-CrkrOIL.. CO2BJF + (4/18)* FULOIL =E= 0.68 * LO2COL + 0.75 * HO2COL ;
-CrkrGAS.. CG2PRE + CG2REG  =E= 0.28 * LO2CGS + 0.20 * HO2CGS ;
+
+CrkrOIL.. CO2BJF + (4/18)* FULOIL =E= 0.68 * LO2CRK + 0.75 * HO2CRK ;
+CrkrGAS.. CG2PRE + CG2REG  =E= 0.28 * LO2CRK + 0.20 * HO2CRK ;
 CrkrRSP.. CRKLOL =E= RS2CRK*0.5  ;
 
 *blending balances
@@ -165,7 +160,7 @@ HN.l = 8400;
 LO.l = 4200;
 HO.l = 8700;      
 RS.l = 5550;      
-RG.l = 2433      
+RG.l = 2433 ;     
 LN2REF.l = 0;  
 LN2PRE.l = 0;  
 LN2REG.l = 6000;  
@@ -178,21 +173,19 @@ HN2REG.l = 2993;
 RG2REG.l = 1089;
 RG2PRE.l = 1344;
 LO2CRK.l = 4200;
-LO2COL 
-LO2CGS  
+ 
 LO2BJF.l = 0;  
 LO2BFO.l = 0;  
 HO2CRK.l = 3800;  
-HO2COL  
-HO2CGS  
+ 
 HO2BJF.l = 4900;  
 HO2BFO.l = 0;  
 RS2CRK.l = 1000; 
 RS2BJF.l = 4550;  
 RS2BFO.l = 0;  
 CRKGAS.l = 1936;  
-CG2PRE  
-CG2REG  
+CG2PRE.l = 1937;  
+CG2REG.l = 0;  
 
 CRKLOL.l = 500;
 CO2BJF.l = 5706;   
@@ -203,54 +196,6 @@ JETFUL.l = 15156;
 FULOIL.l = 0;  
 
 
-
-
-
-
-$ontext
-*initial points
-LN2REF.L = 0;
-MN2REF.L = 0;
-HN2REF.L = 5406.85;
-
-C1.L=15000;
-C2.L=30000;
-LO.L =4200;
-HO.L = 8700;
-LN.L =6000;
-RS.L = 5550;
-LN2REG.L = 6000;
-LN2PRE.L = 0;
-MN.L=10500;
-HN.L=8400;
-
-MN2PRE.L = 3537;
-MN2REG.L = 6962;
-HN2PRE.L = 0;
-HN2REG.L = 2993 ;
-
-RG2PRE.L = 1344 ;
-RG2REG.L = 1089 ;
-RG.L = 2433;
-
-CG2PRE.L = 1936 ;
-CG2REG.L=0 ;
-HO2BJF.L = 4900 ;
-RS2BJF.L = 4550 ;
-
-LO2CRK.L = 4200 ;
-HO2CRK.L = 3800 ;
-
-CO2BJF.L = 5706 ;
-RS2CRK.L = 1000 ;
-
-CRKLOL.L = 500;
-FULOIL.L = 0;
-
-PREPET.L = 6818;
-REGPET.L = 17044;
-JETFUL.L = 15156 ; 
-$offtext
 Model refinery /all/;
 
 solve refinery using LP maximizing PROFIT;
