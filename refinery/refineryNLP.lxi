@@ -1,0 +1,43 @@
+B 2 C o m p i l a t i o n
+B 137 Equation Listing    SOLVE refinery Using NLP From line 126
+D 138 disprod
+D 154 dislimit
+D 159 reforming
+D 164 reflimit
+D 169 cracking
+D 178 cracklimit
+D 183 jetblend
+D 188 fuelblend
+D 193 market
+D 198 petrolblendREG
+D 205 petrolblendPRE
+D 212 gasolineproduction
+B 219 Column Listing      SOLVE refinery Using NLP From line 126
+E 220 frac1
+E 246 frac2
+E 265 frac3
+E 284 flow
+E 316 petoctane
+E 329 jetpress
+E 336 profit
+B 345 Model Statistics    SOLVE refinery Using NLP From line 126
+B 363 Solution Report     SOLVE refinery Using NLP From line 126
+F 416 disprod
+F 425 dislimit
+F 426 reforming
+F 427 reflimit
+F 437 cracking
+F 443 cracklimit
+F 444 jetblend
+F 445 fuelblend
+F 446 market
+F 447 petrolblendREG
+F 448 petrolblendPRE
+F 449 gasolineproduction
+G 455 frac1
+G 466 frac2
+G 475 frac3
+G 484 flow
+G 505 petoctane
+G 512 jetpress
+G 516 profit

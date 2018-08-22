@@ -1,0 +1,65 @@
+B 2 C o m p i l a t i o n
+B 135 Equation Listing    SOLVE farm Using RMIP From line 119
+D 136 totalherd
+D 152 newborns
+D 167 sellbulls
+D 182 newheifs
+D 197 milkcount
+D 224 heifcount
+D 251 foodneed
+D 278 feedbal
+D 305 area4grow
+D 320 area4roam
+D 335 grow1
+D 362 grow2
+D 389 expenses
+D 404 revenue
+D 419 ObjFunc
+B 426 Column Listing      SOLVE farm Using RMIP From line 119
+E 427 TotNum
+E 469 TotHerd
+E 485 Calves
+E 506 sellbull
+E 525 babyheif
+E 547 sellheif
+E 563 oldcowsold
+E 588 eaten
+E 607 produced
+E 629 purchased
+E 648 feedsold
+E 667 Abeet
+E 692 TotCost
+E 711 TotSell
+E 730 Profit
+B 739 Model Statistics    SOLVE farm Using RMIP From line 119
+B 755 Solution Report     SOLVE farm Using RMIP From line 119
+F 791 totalherd
+F 802 newborns
+F 813 sellbulls
+F 824 newheifs
+F 835 milkcount
+F 852 heifcount
+F 869 foodneed
+F 886 feedbal
+F 903 area4grow
+F 914 area4roam
+F 925 grow1
+F 942 grow2
+F 959 expenses
+F 970 revenue
+F 979 ObjFunc
+G 982 TotNum
+G 999 TotHerd
+G 1010 Calves
+G 1021 sellbull
+G 1032 babyheif
+G 1043 sellheif
+G 1054 oldcowsold
+G 1065 eaten
+G 1082 produced
+G 1099 purchased
+G 1116 feedsold
+G 1133 Abeet
+G 1144 TotCost
+G 1155 TotSell
+G 1166 Profit

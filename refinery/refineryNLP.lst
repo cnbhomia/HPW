@@ -1,0 +1,538 @@
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/27/18 13:23:04 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   1  sets
+   2           flu 'all fluids in the inventory' /C1,C2,LN,MN,HN,LO,HO,RES,RGAS,COIL,CGAS,LOIL,REG,PRE,JET,FO/
+   3           sell(flu) / PRE,REG,JET,FO,LOIL/
+   4           crude(flu) /C1,C2/
+   5           proddis(flu) 'products of distillation' /LN,MN,HN,LO,HO,RES/
+   6           naptha(flu) 'napthas' /LN,MN,HN/
+   7           oils(flu) /LO, HO/
+   8           rawcrack(flu) /LO,HO,RES/
+   9           prodcrack(flu) /COIL,CGAS,LOIL/
+  10           oper 'operations in the refinery' / DIS, REF ,CRACK/
+  11           prodref(flu) 'product of reforming' /RGAS/
+  12           petrol(flu) 'petrols' /REG,PRE/
+  13           price(sell)/ PRE 700, REG 600, JET 400, FO 350,LOIL 150/
+  14           ;
+  15  parameters
+  16           cap(oper) 'capacity of operation' /DIS 45000, REF 10000, CRACK 8000/
+  17           yieldref(naptha) 'conversion reforming'/ LN 0.6, MN 0.52, HN 0.45/
+  18           octane(flu) /LN 90, MN 80 , HN 70, RGAS 115, CGAS 105/
+  19           vpress(flu) /LO 1.0 , HO 0.6, COIL 1.5 , RES 0.05/
+  20           ;
+  21   
+  22  table yieldcrack(rawcrack,prodcrack)
+  23      COIL    CGAS    LOIL
+  24  LO  0.68    0.28
+  25  HO  0.75    0.2
+  26  RES                 0.5
+  27  ;
+  28   
+  29  table DISRAT(crude,proddis)
+  30           LN      MN      HN      LO      HO      RES
+  31  C1       0.1     0.2     0.2     0.12    0.2     0.13
+  32  C2       0.15    0.25    0.18    0.08    0.19    0.12
+  33  ;
+  34   
+  35  positive variable frac1(flu) 'fraction of product going into blending from distialltion';
+  36  positive variable frac2(flu) 'fraction of product going into blending from other opers';
+  37  positive variable frac3(flu) 'fraction of product going into blending from other opers';
+  38  frac1.up(flu) = 1;
+  39  frac1.fx('COIL') = 0;
+  40   
+  41  frac2.up(flu) = 1;
+  42  frac3.up(flu) = 1;
+  43  frac3.l(naptha) =0.5;
+  44   
+  45  variable
+  46           flow(flu)           'mass/barrel of each stream'
+  47           DWASTE
+  48           petoctane(petrol)  'octane number of petrols'
+  49           jetpress           'vapor pressure of jet fuel'
+  50           profit
+  51           ;
+  52  flow.up(flu)$(not crude(flu)) =500000;
+  53  flow.up('C1')  = 20000;
+  54  flow.up('C2') = 30000;
+  55  flow.lo('LOIL') = 500 ;
+  56  flow.up('LOIL') = 1000;
+  57   
+  58  petoctane.lo('REG') =84;
+  59  petoctane.up('REG') =94;
+  60  petoctane.lo('PRE') =94;
+  61  positive variable jetpress /l 0.7/;
+  62   
+  63  equation
+  64           disprod(proddis) 'calculate flowrates of distillation products'
+  65           dislimit 'capacity limit on distillation'
+  66           reforming 'mass balance for reforming'
+  67           reflimit 'limit on reforming'
+  68           cracking(prodcrack) 'mass balances in cracking'
+  69           cracklimit 'limit on cracking'
+  70  *        petrolblend(flu) 'blending of petrol'
+  71           jetblend  'blending of jet fuel'
+  72           fuelblend  'blending of fuel oil'
+  73           market 'profit calc equation'
+  74           petrolblendREG
+  75           petrolblendPRE
+  76           gasolineproduction;
+  77           ;
+  78   
+  79   
+  80  *variable initializations
+  81  frac1.l(flu) =0.5;
+  82  frac2.l(flu) =0.5;
+  83  frac3.l(flu) =0.5;
+  84   
+  85  *distillation equations
+  86  disprod(proddis).. flow(proddis) =e= flow('C1')*DISRAT('C1',proddis) +  flow('C2')*DISRAT('C2',proddis) ;
+  87   
+  88  dislimit..      sum(crude,flow(crude)) =l= cap("DIS");
+  89   
+  90  *reforming
+  91  reforming..     flow('RGAS') =e= sum(naptha,(1-frac1(naptha))*flow(naptha)*yieldref(naptha));
+  92   
+  93  reflimit..      sum(naptha,(1-frac1(naptha))*flow(naptha)) =l= cap('REF') ;
+  94   
+  95  *cracking
+  96  cracking(prodcrack).. flow(prodcrack) =e= sum(rawcrack,(1-frac1(rawcrack))*flow(rawcrack)*yieldcrack(rawcrack,prodcrack));
+  97   
+  98  cracklimit.. sum(oils,(1-frac1(oils))*flow(oils))=l= cap('CRACK');
+  99   
+ 100  *petrol blend
+ 101   
+ 102  petrolblendREG..  flow('REG')*petoctane('REG')  =e=  sum(naptha,flow(naptha)*octane(naptha)*frac1(naptha)*frac3(naptha)) + flow('RGAS')*octane('RGAS')*frac3('RGAS')
+ 103                                                                                  +  flow('CGAS')*octane('CGAS')*frac3('RGAS') ;
+ 104  petrolblendPRE..  flow('PRE')*petoctane('PRE')  =e=  sum(naptha,flow(naptha)*octane(naptha)*frac1(naptha)*(1-frac3(naptha))) +
+ 105                                                                  flow('RGAS')*octane('RGAS')*(1-frac3('RGAS')) +  flow('CGAS')*octane('CGAS')*(1-frac3('RGAS')) ;
+ 106   
+ 107  *jetfuel blend
+ 108   
+ 109  jetblend.. flow('JET')*jetpress =e= sum(oils,flow(oils)*frac1(oils)*(1-frac2(oils))*vpress(oils)) + flow('COIL')*vpress('COIL')*(1-frac2('COIL'))
+ 110                                                  + flow('RES')*vpress('RES')*frac1('RES')*(1-frac2('RES'));
+ 111   
+ 112  *fueloil blend
+ 113   
+ 114  fuelblend..    10* flow('LO')*frac1('LO')*frac2('LO') + 4*flow('COIL')*frac2('COIL') + 3*flow('HO')*frac1('HO')*frac2('HO')
+ 115                                                          + flow('RES')*frac1('RES')*frac2('RES') =e= 18* flow('FO') ;
+ 116   
+ 117  *profit
+ 118  market.. profit =e= sum(sell,flow(sell)*price(sell));
+ 119   
+ 120  * minimum premium production
+ 121  gasolineproduction.. flow('PRE') =g= 0.4*flow('REG') ;
+ 122   
+ 123  model refinery /all/;
+ 124  option limrow =50;
+ 125   
+ 126  solve refinery using NLP maximizing profit;
+ 127   
+
+
+COMPILATION TIME     =        0.001 SECONDS      3 MB  25.1.1 r66732 DEX-DEG
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/27/18 13:23:04 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE refinery Using NLP From line 126
+
+
+---- disprod  =E=  calculate flowrates of distillation products
+
+disprod(LN)..  - 0.1*flow(C1) - 0.15*flow(C2) + flow(LN) =E= 0 ; (LHS = 0)
+     
+disprod(MN)..  - 0.2*flow(C1) - 0.25*flow(C2) + flow(MN) =E= 0 ; (LHS = 0)
+     
+disprod(HN)..  - 0.2*flow(C1) - 0.18*flow(C2) + flow(HN) =E= 0 ; (LHS = 0)
+     
+disprod(LO)..  - 0.12*flow(C1) - 0.08*flow(C2) + flow(LO) =E= 0 ; (LHS = 0)
+     
+disprod(HO)..  - 0.2*flow(C1) - 0.19*flow(C2) + flow(HO) =E= 0 ; (LHS = 0)
+     
+disprod(RES)..  - 0.13*flow(C1) - 0.12*flow(C2) + flow(RES) =E= 0 ; (LHS = 0)
+     
+
+---- dislimit  =L=  capacity limit on distillation
+
+dislimit..  flow(C1) + flow(C2) =L= 45000 ; (LHS = 0)
+     
+
+---- reforming  =E=  mass balance for reforming
+
+reforming..  (0)*frac1(LN) + (0)*frac1(MN) + (0)*frac1(HN) - (0.3)*flow(LN) - (0.26)*flow(MN) - (0.225)*flow(HN) + flow(RGAS) =E= 0 ; (LHS = 0)
+     
+
+---- reflimit  =L=  limit on reforming
+
+reflimit..  (0)*frac1(LN) + (0)*frac1(MN) + (0)*frac1(HN) + (0.5)*flow(LN) + (0.5)*flow(MN) + (0.5)*flow(HN) =L= 10000 ; (LHS = 0)
+     
+
+---- cracking  =E=  mass balances in cracking
+
+cracking(COIL)..  (0)*frac1(LO) + (0)*frac1(HO) - (0.34)*flow(LO) - (0.375)*flow(HO) + flow(COIL) =E= 0 ; (LHS = 0)
+     
+cracking(CGAS)..  (0)*frac1(LO) + (0)*frac1(HO) - (0.14)*flow(LO) - (0.1)*flow(HO) + flow(CGAS) =E= 0 ; (LHS = 0)
+     
+cracking(LOIL)..  (0)*frac1(RES) - (0.25)*flow(RES) + flow(LOIL) =E= 0 ; (LHS = 500, INFES = 500 ****)
+     
+
+---- cracklimit  =L=  limit on cracking
+
+cracklimit..  (0)*frac1(LO) + (0)*frac1(HO) + (0.5)*flow(LO) + (0.5)*flow(HO) =L= 8000 ; (LHS = 0)
+     
+
+---- jetblend  =E=  blending of jet fuel
+
+jetblend..  (0)*frac1(LO) + (0)*frac1(HO) + (0)*frac1(RES) + (0)*frac2(LO) + (0)*frac2(HO) + (0)*frac2(RES) + (0)*frac2(COIL) - (0.25)*flow(LO) - (0.15)*flow(HO) - (0.0125)*flow(RES) - (0.75)*flow(COIL) + (0.7)*flow(JET) + (0)*jetpress =E= 0 ; (LHS = 0)
+     
+
+---- fuelblend  =E=  blending of fuel oil
+
+fuelblend..  (0)*frac1(LO) + (0)*frac1(HO) + (0)*frac1(RES) + (0)*frac2(LO) + (0)*frac2(HO) + (0)*frac2(RES) + (0)*frac2(COIL) + (2.5)*flow(LO) + (0.75)*flow(HO) + (0.25)*flow(RES) + (2)*flow(COIL) - 18*flow(FO) =E= 0 ; (LHS = 0)
+     
+
+---- market  =E=  profit calc equation
+
+market..  - flow(LOIL) - flow(REG) - flow(PRE) - flow(JET) - flow(FO) + profit =E= 0 ; (LHS = -500, INFES = 500 ****)
+     
+
+---- petrolblendREG  =E=  
+
+petrolblendREG..  (0)*frac1(LN) + (0)*frac1(MN) + (0)*frac1(HN) + (0)*frac3(LN) + (0)*frac3(MN) + (0)*frac3(HN) + (0)*frac3(RGAS) - (22.5)*flow(LN) - (20)*flow(MN) - (17.5)*flow(HN) - (57.5)*flow(RGAS) - (52.5)*flow(CGAS) + (84)*flow(REG)
+     
+      + (0)*petoctane(REG) =E= 0 ; (LHS = 0)
+     
+
+---- petrolblendPRE  =E=  
+
+petrolblendPRE..  (0)*frac1(LN) + (0)*frac1(MN) + (0)*frac1(HN) + (0)*frac3(LN) + (0)*frac3(MN) + (0)*frac3(HN) + (0)*frac3(RGAS) - (22.5)*flow(LN) - (20)*flow(MN) - (17.5)*flow(HN) - (57.5)*flow(RGAS) - (52.5)*flow(CGAS) + (94)*flow(PRE)
+     
+      + (0)*petoctane(PRE) =E= 0 ; (LHS = 0)
+     
+
+---- gasolineproduction  =G=  
+
+gasolineproduction..  - 0.4*flow(REG) + flow(PRE) =G= 0 ; (LHS = 0)
+     
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/27/18 13:23:04 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE refinery Using NLP From line 126
+
+
+---- frac1  fraction of product going into blending from distialltion
+
+frac1(LN)
+                (.LO, .L, .UP, .M = 0, 0.5, 1, 0)
+       (0)      reforming
+       (0)      reflimit
+       (0)      petrolblendREG
+       (0)      petrolblendPRE
+
+frac1(MN)
+                (.LO, .L, .UP, .M = 0, 0.5, 1, 0)
+       (0)      reforming
+       (0)      reflimit
+       (0)      petrolblendREG
+       (0)      petrolblendPRE
+
+frac1(HN)
+                (.LO, .L, .UP, .M = 0, 0.5, 1, 0)
+       (0)      reforming
+       (0)      reflimit
+       (0)      petrolblendREG
+       (0)      petrolblendPRE
+
+REMAINING 3 ENTRIES SKIPPED
+
+---- frac2  fraction of product going into blending from other opers
+
+frac2(LO)
+                (.LO, .L, .UP, .M = 0, 0.5, 1, 0)
+       (0)      jetblend
+       (0)      fuelblend
+
+frac2(HO)
+                (.LO, .L, .UP, .M = 0, 0.5, 1, 0)
+       (0)      jetblend
+       (0)      fuelblend
+
+frac2(RES)
+                (.LO, .L, .UP, .M = 0, 0.5, 1, 0)
+       (0)      jetblend
+       (0)      fuelblend
+
+REMAINING ENTRY SKIPPED
+
+---- frac3  fraction of product going into blending from other opers
+
+frac3(LN)
+                (.LO, .L, .UP, .M = 0, 0.5, 1, 0)
+       (0)      petrolblendREG
+       (0)      petrolblendPRE
+
+frac3(MN)
+                (.LO, .L, .UP, .M = 0, 0.5, 1, 0)
+       (0)      petrolblendREG
+       (0)      petrolblendPRE
+
+frac3(HN)
+                (.LO, .L, .UP, .M = 0, 0.5, 1, 0)
+       (0)      petrolblendREG
+       (0)      petrolblendPRE
+
+REMAINING ENTRY SKIPPED
+
+---- flow  mass/barrel of each stream
+
+flow(C1)
+                (.LO, .L, .UP, .M = -INF, 0, 20000, 0)
+       -0.1     disprod(LN)
+       -0.2     disprod(MN)
+       -0.2     disprod(HN)
+       -0.12    disprod(LO)
+       -0.2     disprod(HO)
+       -0.13    disprod(RES)
+        1       dislimit
+
+flow(C2)
+                (.LO, .L, .UP, .M = -INF, 0, 30000, 0)
+       -0.15    disprod(LN)
+       -0.25    disprod(MN)
+       -0.18    disprod(HN)
+       -0.08    disprod(LO)
+       -0.19    disprod(HO)
+       -0.12    disprod(RES)
+        1       dislimit
+
+flow(LN)
+                (.LO, .L, .UP, .M = -INF, 0, 500000, 0)
+        1       disprod(LN)
+      (-0.3)    reforming
+       (0.5)    reflimit
+     (-22.5)    petrolblendREG
+     (-22.5)    petrolblendPRE
+
+REMAINING 13 ENTRIES SKIPPED
+
+---- petoctane  octane number of petrols
+
+petoctane(REG)
+                (.LO, .L, .UP, .M = 84, 84, 94, 0)
+       (0)      petrolblendREG
+        0       (OLD LEVEL ****)
+
+petoctane(PRE)
+                (.LO, .L, .UP, .M = 94, 94, +INF, 0)
+       (0)      petrolblendPRE
+        0       (OLD LEVEL ****)
+
+
+---- jetpress  vapor pressure of jet fuel
+
+jetpress
+                (.LO, .L, .UP, .M = 0, 0.7, +INF, 0)
+       (0)      jetblend
+
+
+---- profit  
+
+profit
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       market
+
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/27/18 13:23:04 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE refinery Using NLP From line 126
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS          12     SINGLE EQUATIONS           19
+BLOCKS OF VARIABLES           7     SINGLE VARIABLES           34  3 projected
+NON ZERO ELEMENTS           111     NON LINEAR N-Z             78
+DERIVATIVE POOL              20     CONSTANT POOL              30
+CODE LENGTH                 178
+
+
+GENERATION TIME      =        0.002 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
+
+
+EXECUTION TIME       =        0.002 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/27/18 13:23:04 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE refinery Using NLP From line 126
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   refinery            OBJECTIVE  profit
+     TYPE    NLP                 DIRECTION  MAXIMIZE
+     SOLVER  CONOPT              FROM LINE  126
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      2 Locally Optimal           
+**** OBJECTIVE VALUE           529572.6608
+
+ RESOURCE USAGE, LIMIT          0.002      1000.000
+ ITERATION COUNT, LIMIT        18    2000000000
+ EVALUATION ERRORS              0             0
+CONOPT 3         25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
+ 
+ 
+    C O N O P T 3   version 3.17I
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+    The model has 34 variables and 19 constraints
+    with 111 Jacobian elements, 78 of which are nonlinear.
+    The Hessian of the Lagrangian has 0 elements on the diagonal,
+    24 elements below the diagonal, and 29 nonlinear variables.
+ 
+ ** Warning **  The number of nonlinear derivatives equal to zero
+                in the initial point is large (= 39 percent).
+                A better initial point will probably help the
+                optimization.
+ 
+ 
+                   Pre-triangular equations:   0
+                   Post-triangular equations:  2
+                   Definitional equations:     7
+ 
+ 
+ ** Optimal solution. Reduced gradient less than tolerance.
+ 
+ 
+ CONOPT time Total                            0.002 seconds
+   of which: Function evaluations             0.002 =100.0%
+             1st Derivative evaluations       0.000 =  0.0%
+ 
+
+---- EQU disprod  calculate flowrates of distillation products
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+LN           .              .              .             1.0362      
+MN           .              .              .             0.9211      
+HN           .              .              .             0.8059      
+LO           .              .              .             0.5556      
+HO           .              .              .             0.1667      
+RES          .              .              .             0.0556      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU dislimit          -INF        45000.0000     45000.0000         0.5562      
+---- EQU reforming           .              .              .             1.3240      
+---- EQU reflimit          -INF             .         10000.0000          .          
+
+  dislimit  capacity limit on distillation
+  reforming  mass balance for reforming
+  reflimit  limit on reforming
+
+---- EQU cracking  mass balances in cracking
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+COIL          .              .              .             0.2222      
+CGAS          .              .              .             1.2089      
+LOIL          .              .              .             0.1111      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU cracklimit        -INF         8000.0000      8000.0000         0.2418      
+---- EQU jetblend            .              .              .             0.1481      
+---- EQU fuelblend           .              .              .            -0.0556      
+---- EQU market              .              .              .             1.0000      
+---- EQU petrolble~          .              .              .             0.0115      
+---- EQU petrolble~          .              .              .             0.0115      
+---- EQU gasolinep~          .              .            +INF           -0.0822      
+
+  cracklimit  limit on cracking
+  jetblend  blending of jet fuel
+  fuelblend  blending of fuel oil
+  market  profit calc equation
+
+---- VAR frac1  fraction of product going into blending from distialltion
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+LN           .             1.0000         1.0000      1450.6579      
+MN           .             1.0000         1.0000      2441.9408      
+HN           .             1.0000         1.0000      1764.9671      
+LO           .             1.0000         1.0000      1292.4825      
+HO           .             0.0805         1.0000          .          
+RES          .             0.6396         1.0000          .          
+
+---- VAR frac2  fraction of product going into blending from other opers
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+LO            .             1.0000         1.0000      1711.1111      
+HO            .             1.0000         1.0000        54.4444      
+RES           .             1.0000         1.0000       170.9259      
+COIL          .             1.0000         1.0000          .          
+
+---- VAR frac3  fraction of product going into blending from other opers
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+LN            .             0.6849         1.0000          .          
+MN            .             0.7061         1.0000         EPS         
+HN            .             0.6570         1.0000         EPS         
+RGAS          .             0.7510         1.0000         EPS         
+
+---- VAR flow  mass/barrel of each stream
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+C1          -INF        15000.0000     20000.0000          .          
+C2          -INF        30000.0000     30000.0000         0.0573      
+LN          -INF         6000.0000    500000.0000          .          
+MN          -INF        10500.0000    500000.0000          .          
+HN          -INF         8400.0000    500000.0000          .          
+LO          -INF         4200.0000    500000.0000          .          
+HO          -INF         8700.0000    500000.0000          .          
+RES         -INF         5550.0000    500000.0000          .          
+RGAS        -INF             .        500000.0000          .          
+COIL        -INF         6000.0000    500000.0000          .          
+CGAS        -INF         1600.0000    500000.0000          .          
+LOIL       500.0000      1000.0000      1000.0000         0.8889      
+REG         -INF        17565.7895    500000.0000          .          
+PRE         -INF         7026.3158    500000.0000          .          
+JET         -INF       500000.0000    500000.0000         1.0000      
+FO          -INF         3980.5556    500000.0000          .          
+
+---- VAR petoctane  octane number of petrols
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+REG        84.0000        84.0000        94.0000      -202.2377      
+PRE        94.0000        94.0000        +INF          -80.8951      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR jetpress            .              .            +INF       -74074.0741      
+---- VAR profit            -INF       529572.6608        +INF             .          
+
+  jetpress  vapor pressure of jet fuel
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+
+
+EXECUTION TIME       =        0.001 SECONDS      2 MB  25.1.1 r66732 DEX-DEG
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      /Users/cbhomia/Documents/GitHub/HPW/refinery/refineryNLP.gms
+Output     /Users/cbhomia/Documents/GitHub/HPW/refinery/refineryNLP.lst

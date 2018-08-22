@@ -1,85 +1,700 @@
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/25/18 10:18:50 Page 1
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/30/18 12:50:05 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
 
-       
-      This model is the refinery model from HPWilliams book.
-       
-   6   
-   7  sets
-   8      fluid 'all flows in refinery' /c1,c2,LN,MN,HN,LO,HO,RES,RGAS,COIL,CGAS,REG, PRE, JET, OIL, LUB/
-   9      crude 'crude oils' /c1,c2/
-  10      oper 'refinery operations' /DIS,REF,CRK1,CRK2,BLD1,BLD2,BLD3/
-  11      inter 'intermediates in the operation' /LN,MN,HN,LO,HO,RES,RGAS,COIL,CGAS/
-  12      products 'final products' /REG, PRE, JET, OIL, LUB/
-  13      direc /in , out/
+   1  sets
+   2      crude   /CRD1,CRD2/
+   3      distil  / LN,MN,HN,LO,HO,RES/
+   4      reform(distil) /LN,MN,HN/
+   5      cracking(distil) /LO,HO,RES/
+   6      intermediates /RGAS, COIL,CGAS,LOIL/
+   7      gasblendD(distil)/LN,MN,HN/
+   8      jetblendD(distil)   /LO,HO,RES/
+   9      fuelblendD(distil) / LO, HO, RES/
+  10      gasblendI(intermediates) /RGAS,CGAS/
+  11      jetblendI(intermediates) / COIL/
+  12      fuelblendI(intermediates) /COIL/
+  13      gasoline    /REG,PRE/
   14      ;
   15   
   16   
-  17  set flow(oper,direc,fluid);
-  18   
-  19  table flow(oper,direc,fluid)
-  20            c1    c2  LN  MN  HN  LO  HO  RES RGAS COIL CGAS REG PRE   JET OIL LUB
-  21  DIS.in     1    1
-  22  DIS.out             1   1   1   1   1    1
-  23  REF.in              1   1   1
-  24  REF.out                                       1
-  25  CRK1.in                         1   1
-  26  CRK1.out                                           1    1
-  27  CRK2.in                                  1
-  28  CRK2.out                                                                       1
-  29  BLD1.in             1   1   1
-  30  BLD1.out                                                    1   1
-  31  BLD2.in                         1   1    1          1
-  32  BLD2.out                                                             1
-  33  BLD3.in                         1   1    1          1
-  34  BLD3.out                                                                  1
-  35   
-  36  ;
-  37   
-  38  variable mass(oper,direc,fluid);
-  39   
-  40  equation
-  41      DISmassbal(oper) 'mass balance across distillation';
-  42   
-  43  massbal(oper)$(val(oper)='DIS').. sum((direc,fluid)$ flow(flow,'in',fluid),mass(oper,,direc,fluid)) =e= sum((direc,fluid)$ flow(flow,'out',fluid),mass(oper,,direc,fluid));
-****        $140       $140    $119,140,8,36,409
-****   8  ')' expected
-****  36  '=' or '..' or ':=' or '$=' operator expected
-****      rest of statement ignored
-**** 119  Number (primary) expected
-**** 140  Unknown symbol
-**** 409  Unrecognizable item - skip to find a new statement
-****        looking for a ';' or a key word to get started again
-  44   
-  45   
-  46   
-      table proflo(process,flow) 'massflow in and out of processes'
-              c1  c2  LN  MN  HN  LO HO   RES RGAS    COIL CGAS REG PRE JET OIL LUB
-      dist    -1  -1  1   1   1   1   1   1   0       0      0   0   0   0   0    0
-      refo    0   0   -1  -1  -1  0   0   0   1       0      0   0   0   0   0    0
-      cracoil 0   0   0   0   0   -1  -1  0   0       1      1   0   0   0   0    0
-      cracres 0   0   0   0   0   0   0   -1  0       0      0   0   0   0   0    1
-      blend1  0   0   -1  -1  -1  0   0   0   -1      0     -1   1   1   0   0    0
-      blend2  0   0   0   0   0   -1  -1  -1  0       0      0   0   0   1   0    0
-      blend3  0   0   0   0   0   -1  -1  -1   0      -1     0   0   0   0   1    0
-      ;
-       
-       
-       
-      variable mass(flow) 'mass flow of each R/M , intermediate and product';
-       
-       
-      equations distillation(flow,process);
-       
-      distillation(flow,process).. sum(proflo(process,flow)$
-       
+  17  parameters
+  18      octaneD(gasblendD) / LN 90, MN 80, HN 70/
+  19      octaneI(gasblendI) /RGAS 115, CGAS 105/
+  20      octane(gasoline) /REG 84 , PRE 94/
+  21      vapPresD(jetblendD) /LO 1.0,HO 0.6, RES 0.05/
+  22      vapPresI(jetblendI) / COIL 1.5/
+  23   
+  24      ;
+  25   
+  26  table Dratio(crude,distil)
+  27           LN      MN      HN      LO      HO      RES
+  28  CRD1     0.1     0.2     0.2     0.12    0.2     0.13
+  29  CRD2     0.15    0.25    0.18    0.08    0.19    0.12
+  30  ;
+  31   
+  32  parameter yieldRef(distil) 'yield in reforming' /LN 0.6 , MN 0.52, HN 0.45/ ;
+  33   
+  34  table yieldcrack(cracking,intermediates)
+  35      COIL    CGAS    LOIL
+  36  LO  0.68    0.28
+  37  HO  0.75    0.2
+  38  RES                 0.5
+  39  ;
+  40  positive variables
+  41      mCrude(crude)       'mass of crude'
+  42      mDistil(distil)        'mass of distillation products'
+  43      mReform(distil)     'mass of distillation products to reformer'
+  44      mCrack(distil)      'mass of distillation products to cracking'
+  45      mGasblendD(distil)       "mass of distialltion product to gasoline blending"
+  46      mJetblendD(distil)   'mass of distillation product to jet ful blending'
+  47      mFuelblendD(distil)  'mass of distillation product to fuel oil blending'
+  48      mInter(intermediates) 'mass of intermediates produced'
+  49      mGasblendI(intermediates) 'mass of intermediates for gasoline blending'
+  50      mJetblendI(intermediates) 'mass of intermediates for jet fuel blending'
+  51      mFuelblendI(intermediates) 'mass of intermediates fuel oil blending'
+  52   
+  53      mGasSell(gasoline)    'mass of gasoline produced'
+  54      mJetfuel
+  55      mFueloil
+  56      mLOILsell
+  57      ;
+  58  variable profit
+  59      ;
+  60   
+  61  mCrude.up('CRD1') = 20000;
+  62  mCrude.up('CRD2') = 30000;
+  63  mInter.up('LOIL') = 1000;
+  64  mInter.lo('LOIL') = 500;
+  65   
+  66   
+  67   
+  68  equation
+  69      distillation(distil) "mass balance for distillation"
+  70      massbalance1(distil) "mass balance for distiallates between processes"
+  71      mbalreform(intermediates)           'mass balance for reforming'
+  72      mbalcrack(intermediates)
+  73  *    mbalGasblend(gasoline)
+  74   
+  75      massbalance2(intermediates) "mass balance for intermediates between processses"
+  76      gasblending         "mass balance inside gas blender"
+  77      gasblendratio   "ratio of PRE to REG"
+  78      jetblending     "mass balance jetfuel blending"
+  79      fuelblending    "mass balance fuel oil blending"
+  80      decisions
+  81      distillimit     "limit on crude distillation capacity"
+  82      reformlimit     "limit on crude distillation capacity"
+  83      cracklimit      "limit on crude distillation capacity"
+  84      ;
+  85   
+  86   
+  87  distillation(distil).. mDistil(distil) =e= sum(crude,Dratio(crude,distil)*mCrude(crude))    ;
+  88   
+  89   
+  90  massbalance1(distil).. mDistil(distil) =e= mReform(distil)$reform(distil) + mCrack(distil)$cracking(distil)
+  91                                             +  mGasblendD(distil)$gasblendD(distil) +mJetblendD(distil)$jetblendD(distil)
+  92                                               + mFuelblendD(distil)$fuelblendD(distil)  ;
+  93   
+  94  mbalreform(intermediates)$(ord(intermediates)=1).. mInter(intermediates) =e= sum(distil, mReform(distil)* yieldRef(distil));
+  95   
+  96  mbalcrack(intermediates)$(ord(intermediates)>1).. mInter(intermediates) =e=
+  97                                                      sum(cracking, mCrack(cracking)*yieldcrack(cracking,intermediates));
+  98   
+  99   
+      mbalGasblend(gasoline).. sum((gasoline),mGassell(gasoline)) =e=
+                                                  sum(distil,mGasblendD(distil)) + sum(gasblendI,mInter(gasblendI))
+ 104   
+ 105   
+ 106  massbalance2(intermediates).. mInter(intermediates) =e= mGasblendI(intermediates)$gasblendI(intermediates)
+ 107                                                              +  mJetblendI(intermediates)$jetblendI(intermediates)
+ 108                                                              + mFuelblendI(intermediates)$fuelblendI(intermediates)
+ 109                                                              + mLOILsell$(ord(intermediates) = 4);
+ 110   
+ 111  *gasoline production
+ 112   
+ 113  gasblending.. sum(gasoline, mGasSell(gasoline)*octane(gasoline)) =e= sum(gasblendD,mGasblendD(gasblendD)*octaneD(gasblendD)) +
+ 114                                                                  sum(gasblendI,mGasblendI(gasblendI)*octaneI(gasblendI)) ;
+ 115   
+ 116  gasblendratio.. mGassell('PRE') =g= 0.4 * mGassell('REG');
+ 117   
+ 118  jetblending.. mJetfuel =l= sum(jetblendD,mJetblendD(jetblendD)*vapPresD(jetblendD))
+ 119                                                          + sum(jetblendI,mJetblendI(jetblendI)*vapPresI(jetblendI)) ;
+ 120   
+ 121  fuelblending.. 18* mFueloil =e= 10*mFuelblendD('LO') + 3*mFuelblendD('HO') + mFuelblendD('RES') + mFuelblendI('COIL')*4 ;
+ 122   
+ 123  distillimit.. sum(crude,mCrude(crude)) =l= 45000;
+ 124   
+ 125  reformlimit.. sum(reform,mReform(reform)) =l= 10000 ;
+ 126   
+ 127  cracklimit.. sum(cracking,mCrack(cracking)) =l= 8000;
+ 128   
+ 129  decisions.. profit =e= mGassell('PRE')*700 + mGassell('REG')*600 + mJetfuel*400 + mFueloil*350 + mLOILsell* 150;
+ 130   
+ 131  model refinery /all/
+ 132   
+ 133  option limrow =10;
+ 134   
+ 135  solve refinery using LP maximizing profit;
+ 136   
+ 137   
+ 138   
 
-**** 7 ERROR(S)   0 WARNING(S)
+
+COMPILATION TIME     =        0.001 SECONDS      3 MB  25.1.1 r66732 DEX-DEG
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/30/18 12:50:05 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE refinery Using LP From line 135
 
 
-COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
+---- distillation  =E=  mass balance for distillation
+
+distillation(LN)..  - 0.1*mCrude(CRD1) - 0.15*mCrude(CRD2) + mDistil(LN) =E= 0 ; (LHS = 0)
+     
+distillation(MN)..  - 0.2*mCrude(CRD1) - 0.25*mCrude(CRD2) + mDistil(MN) =E= 0 ; (LHS = 0)
+     
+distillation(HN)..  - 0.2*mCrude(CRD1) - 0.18*mCrude(CRD2) + mDistil(HN) =E= 0 ; (LHS = 0)
+     
+distillation(LO)..  - 0.12*mCrude(CRD1) - 0.08*mCrude(CRD2) + mDistil(LO) =E= 0 ; (LHS = 0)
+     
+distillation(HO)..  - 0.2*mCrude(CRD1) - 0.19*mCrude(CRD2) + mDistil(HO) =E= 0 ; (LHS = 0)
+     
+distillation(RES)..  - 0.13*mCrude(CRD1) - 0.12*mCrude(CRD2) + mDistil(RES) =E= 0 ; (LHS = 0)
+     
+
+---- massbalance1  =E=  mass balance for distiallates between processes
+
+massbalance1(LN)..  mDistil(LN) - mReform(LN) - mGasblendD(LN) =E= 0 ; (LHS = 0)
+     
+massbalance1(MN)..  mDistil(MN) - mReform(MN) - mGasblendD(MN) =E= 0 ; (LHS = 0)
+     
+massbalance1(HN)..  mDistil(HN) - mReform(HN) - mGasblendD(HN) =E= 0 ; (LHS = 0)
+     
+massbalance1(LO)..  mDistil(LO) - mCrack(LO) - mJetblendD(LO) - mFuelblendD(LO) =E= 0 ; (LHS = 0)
+     
+massbalance1(HO)..  mDistil(HO) - mCrack(HO) - mJetblendD(HO) - mFuelblendD(HO) =E= 0 ; (LHS = 0)
+     
+massbalance1(RES)..  mDistil(RES) - mCrack(RES) - mJetblendD(RES) - mFuelblendD(RES) =E= 0 ; (LHS = 0)
+     
+
+---- mbalreform  =E=  mass balance for reforming
+
+mbalreform(RGAS)..  - 0.6*mReform(LN) - 0.52*mReform(MN) - 0.45*mReform(HN) + mInter(RGAS) =E= 0 ; (LHS = 0)
+     
+
+---- mbalcrack  =E=  
+
+mbalcrack(COIL)..  - 0.68*mCrack(LO) - 0.75*mCrack(HO) + mInter(COIL) =E= 0 ; (LHS = 0)
+     
+mbalcrack(CGAS)..  - 0.28*mCrack(LO) - 0.2*mCrack(HO) + mInter(CGAS) =E= 0 ; (LHS = 0)
+     
+mbalcrack(LOIL)..  - 0.5*mCrack(RES) + mInter(LOIL) =E= 0 ; (LHS = 500, INFES = 500 ****)
+     
+
+---- massbalance2  =E=  mass balance for intermediates between processses
+
+massbalance2(RGAS)..  mInter(RGAS) - mGasblendI(RGAS) =E= 0 ; (LHS = 0)
+     
+massbalance2(COIL)..  mInter(COIL) - mJetblendI(COIL) - mFuelblendI(COIL) =E= 0 ; (LHS = 0)
+     
+massbalance2(CGAS)..  mInter(CGAS) - mGasblendI(CGAS) =E= 0 ; (LHS = 0)
+     
+massbalance2(LOIL)..  mInter(LOIL) - mLOILsell =E= 0 ; (LHS = 500, INFES = 500 ****)
+     
+
+---- gasblending  =E=  mass balance inside gas blender
+
+gasblending..  - 90*mGasblendD(LN) - 80*mGasblendD(MN) - 70*mGasblendD(HN) - 115*mGasblendI(RGAS) - 105*mGasblendI(CGAS) + 84*mGasSell(REG) + 94*mGasSell(PRE) =E= 0 ; (LHS = 0)
+     
+
+---- gasblendratio  =G=  ratio of PRE to REG
+
+gasblendratio..  - 0.4*mGasSell(REG) + mGasSell(PRE) =G= 0 ; (LHS = 0)
+     
+
+---- jetblending  =L=  mass balance jetfuel blending
+
+jetblending..  - mJetblendD(LO) - 0.6*mJetblendD(HO) - 0.05*mJetblendD(RES) - 1.5*mJetblendI(COIL) + mJetfuel =L= 0 ; (LHS = 0)
+     
+
+---- fuelblending  =E=  mass balance fuel oil blending
+
+fuelblending..  - 10*mFuelblendD(LO) - 3*mFuelblendD(HO) - mFuelblendD(RES) - 4*mFuelblendI(COIL) + 18*mFueloil =E= 0 ; (LHS = 0)
+     
+
+---- decisions  =E=  
+
+decisions..  - 600*mGasSell(REG) - 700*mGasSell(PRE) - 400*mJetfuel - 350*mFueloil - 150*mLOILsell + profit =E= 0 ; (LHS = 0)
+     
+
+---- distillimit  =L=  limit on crude distillation capacity
+
+distillimit..  mCrude(CRD1) + mCrude(CRD2) =L= 45000 ; (LHS = 0)
+     
+
+---- reformlimit  =L=  limit on crude distillation capacity
+
+reformlimit..  mReform(LN) + mReform(MN) + mReform(HN) =L= 10000 ; (LHS = 0)
+     
+
+---- cracklimit  =L=  limit on crude distillation capacity
+
+cracklimit..  mCrack(LO) + mCrack(HO) + mCrack(RES) =L= 8000 ; (LHS = 0)
+     
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/30/18 12:50:05 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE refinery Using LP From line 135
+
+
+---- mCrude  mass of crude
+
+mCrude(CRD1)
+                (.LO, .L, .UP, .M = 0, 0, 20000, 0)
+       -0.1     distillation(LN)
+       -0.2     distillation(MN)
+       -0.2     distillation(HN)
+       -0.12    distillation(LO)
+       -0.2     distillation(HO)
+       -0.13    distillation(RES)
+        1       distillimit
+
+mCrude(CRD2)
+                (.LO, .L, .UP, .M = 0, 0, 30000, 0)
+       -0.15    distillation(LN)
+       -0.25    distillation(MN)
+       -0.18    distillation(HN)
+       -0.08    distillation(LO)
+       -0.19    distillation(HO)
+       -0.12    distillation(RES)
+        1       distillimit
+
+
+---- mDistil  mass of distillation products
+
+mDistil(LN)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       distillation(LN)
+        1       massbalance1(LN)
+
+mDistil(MN)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       distillation(MN)
+        1       massbalance1(MN)
+
+mDistil(HN)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       distillation(HN)
+        1       massbalance1(HN)
+
+REMAINING 3 ENTRIES SKIPPED
+
+---- mReform  mass of distillation products to reformer
+
+mReform(LN)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance1(LN)
+       -0.6     mbalreform(RGAS)
+        1       reformlimit
+
+mReform(MN)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance1(MN)
+       -0.52    mbalreform(RGAS)
+        1       reformlimit
+
+mReform(HN)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance1(HN)
+       -0.45    mbalreform(RGAS)
+        1       reformlimit
+
+
+---- mCrack  mass of distillation products to cracking
+
+mCrack(LO)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance1(LO)
+       -0.68    mbalcrack(COIL)
+       -0.28    mbalcrack(CGAS)
+        1       cracklimit
+
+mCrack(HO)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance1(HO)
+       -0.75    mbalcrack(COIL)
+       -0.2     mbalcrack(CGAS)
+        1       cracklimit
+
+mCrack(RES)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance1(RES)
+       -0.5     mbalcrack(LOIL)
+        1       cracklimit
+
+
+---- mGasblendD  mass of distialltion product to gasoline blending
+
+mGasblendD(LN)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance1(LN)
+      -90       gasblending
+
+mGasblendD(MN)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance1(MN)
+      -80       gasblending
+
+mGasblendD(HN)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance1(HN)
+      -70       gasblending
+
+
+---- mJetblendD  mass of distillation product to jet ful blending
+
+mJetblendD(LO)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance1(LO)
+       -1       jetblending
+
+mJetblendD(HO)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance1(HO)
+       -0.6     jetblending
+
+mJetblendD(RES)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance1(RES)
+       -0.05    jetblending
+
+
+---- mFuelblendD  mass of distillation product to fuel oil blending
+
+mFuelblendD(LO)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance1(LO)
+      -10       fuelblending
+
+mFuelblendD(HO)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance1(HO)
+       -3       fuelblending
+
+mFuelblendD(RES)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance1(RES)
+       -1       fuelblending
+
+
+---- mInter  mass of intermediates produced
+
+mInter(RGAS)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       mbalreform(RGAS)
+        1       massbalance2(RGAS)
+
+mInter(COIL)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       mbalcrack(COIL)
+        1       massbalance2(COIL)
+
+mInter(CGAS)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       mbalcrack(CGAS)
+        1       massbalance2(CGAS)
+
+REMAINING ENTRY SKIPPED
+
+---- mGasblendI  mass of intermediates for gasoline blending
+
+mGasblendI(RGAS)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance2(RGAS)
+     -115       gasblending
+
+mGasblendI(CGAS)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance2(CGAS)
+     -105       gasblending
+
+
+---- mJetblendI  mass of intermediates for jet fuel blending
+
+mJetblendI(COIL)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance2(COIL)
+       -1.5     jetblending
+
+
+---- mFuelblendI  mass of intermediates fuel oil blending
+
+mFuelblendI(COIL)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance2(COIL)
+       -4       fuelblending
+
+
+---- mGasSell  mass of gasoline produced
+
+mGasSell(REG)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       84       gasblending
+       -0.4     gasblendratio
+     -600       decisions
+
+mGasSell(PRE)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       94       gasblending
+        1       gasblendratio
+     -700       decisions
+
+
+---- mJetfuel  
+
+mJetfuel
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       jetblending
+     -400       decisions
+
+
+---- mFueloil  
+
+mFueloil
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       18       fuelblending
+     -350       decisions
+
+
+---- mLOILsell  
+
+mLOILsell
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbalance2(LOIL)
+     -150       decisions
+
+
+---- profit  
+
+profit
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       decisions
+
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/30/18 12:50:05 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE refinery Using LP From line 135
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS          13     SINGLE EQUATIONS           28
+BLOCKS OF VARIABLES          16     SINGLE VARIABLES           37  1 projected
+NON ZERO ELEMENTS            93
+
+
+GENERATION TIME      =        0.007 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
+
+
+EXECUTION TIME       =        0.007 SECONDS      4 MB  25.1.1 r66732 DEX-DEG
+GAMS 25.1.1  r66732 Released May 19, 2018 DEX-DEG x86 64bit/Mac OS X - 07/30/18 12:50:05 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE refinery Using LP From line 135
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   refinery            OBJECTIVE  profit
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  135
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE         21154000.0000
+
+ RESOURCE USAGE, LIMIT          0.007      1000.000
+ ITERATION COUNT, LIMIT         8    2000000000
+
+IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 DEG x86 64bit/Mac OS X   
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.00sec (det. 0.05 ticks)
+Optimal solution found.
+Objective :    21154000.000000
+
+
+---- EQU distillation  mass balance for distillation
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+LN           .              .              .           670.2128      
+MN           .              .              .           595.7447      
+HN           .              .              .           521.2766      
+LO           .              .              .           400.0000      
+HO           .              .              .           240.0000      
+RES          .              .              .            20.0000      
+
+---- EQU massbalance1  mass balance for distiallates between processes
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+LN           .              .              .          -670.2128      
+MN           .              .              .          -595.7447      
+HN           .              .              .          -521.2766      
+LO           .              .              .          -400.0000      
+HO           .              .              .          -240.0000      
+RES          .              .              .           -20.0000      
+
+---- EQU mbalreform  mass balance for reforming
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+RGAS          .              .              .           856.3830      
+
+---- EQU mbalcrack  
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+COIL          .              .              .           600.0000      
+CGAS          .              .              .           781.9149      
+LOIL          .              .              .           772.7660      
+
+---- EQU massbalance2  mass balance for intermediates between processses
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+RGAS          .              .              .          -856.3830      
+COIL          .              .              .          -600.0000      
+CGAS          .              .              .          -781.9149      
+LOIL          .              .              .          -150.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU gasblendi~          .              .              .             7.4468      
+---- EQU gasblendr~          .         22500.0000        +INF             .          
+---- EQU jetblendi~        -INF             .              .           400.0000      
+---- EQU fuelblend~          .              .              .            19.4444      
+---- EQU decisions           .              .              .             1.0000      
+---- EQU distillim~        -INF        45000.0000     45000.0000       389.0255      
+---- EQU reformlim~        -INF             .         10000.0000          .          
+---- EQU cracklimit        -INF         8000.0000      8000.0000       366.3830      
+
+  gasblending  mass balance inside gas blender
+  gasblendratio  ratio of PRE to REG
+  jetblending  mass balance jetfuel blending
+  fuelblending  mass balance fuel oil blending
+  distillimit  limit on crude distillation capacity
+  reformlimit  limit on crude distillation capacity
+  cracklimit  limit on crude distillation capacity
+
+---- VAR mCrude  mass of crude
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+CRD1          .         15000.0000     20000.0000          .          
+CRD2          .         30000.0000     30000.0000        34.2723      
+
+---- VAR mDistil  mass of distillation products
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+LN           .          6000.0000        +INF             .          
+MN           .         10500.0000        +INF             .          
+HN           .          8400.0000        +INF             .          
+LO           .          4200.0000        +INF             .          
+HO           .          8700.0000        +INF             .          
+RES          .          5550.0000        +INF             .          
+
+---- VAR mReform  mass of distillation products to reformer
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+LN          .              .            +INF         -156.3830      
+MN          .              .            +INF         -150.4255      
+HN          .              .            +INF         -135.9043      
+
+---- VAR mCrack  mass of distillation products to cracking
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+LO           .              .            +INF         -139.4468      
+HO           .          7000.0000        +INF             .          
+RES          .          1000.0000        +INF             .          
+
+---- VAR mGasblendD  mass of distialltion product to gasoline blending
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+LN          .          6000.0000        +INF             .          
+MN          .         10500.0000        +INF             .          
+HN          .          8400.0000        +INF             .          
+
+---- VAR mJetblendD  mass of distillation product to jet ful blending
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+LO           .          4200.0000        +INF             .          
+HO           .          1700.0000        +INF             .          
+RES          .          4550.0000        +INF             .          
+
+---- VAR mFuelblendD  mass of distillation product to fuel oil blending
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+LO           .              .            +INF         -205.5556      
+HO           .              .            +INF         -181.6667      
+RES          .              .            +INF           -0.5556      
+
+---- VAR mInter  mass of intermediates produced
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+RGAS          .              .            +INF             .          
+COIL          .          5250.0000        +INF             .          
+CGAS          .          1400.0000        +INF             .          
+LOIL       500.0000       500.0000      1000.0000      -622.7660      
+
+---- VAR mGasblendI  mass of intermediates for gasoline blending
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+RGAS          .              .            +INF             .          
+CGAS          .          1400.0000        +INF             .          
+
+---- VAR mJetblendI  mass of intermediates for jet fuel blending
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+COIL          .          5250.0000        +INF             .          
+
+---- VAR mFuelblendI  mass of intermediates fuel oil blending
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+COIL          .              .            +INF         -522.2222      
+
+---- VAR mGasSell  mass of gasoline produced
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+REG          .              .            +INF          -25.5319      
+PRE          .         22500.0000        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR mJetfuel            .         13322.5000        +INF             .          
+---- VAR mFueloil            .              .            +INF             .          
+---- VAR mLOILsell           .           500.0000        +INF             .          
+---- VAR profit            -INF      2.1154000E+7        +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+
+
+EXECUTION TIME       =        0.002 SECONDS      2 MB  25.1.1 r66732 DEX-DEG
 
 
 USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
@@ -88,7 +703,5 @@ USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
 
 **** FILE SUMMARY
 
-Input      C:\Users\cnbho\Documents\GitHub\HPW\refinery\refinery.gms
-Output     C:\Users\cnbho\Documents\GitHub\HPW\refinery\refinery.lst
-
-**** USER ERROR(S) ENCOUNTERED
+Input      /Users/cbhomia/Documents/GitHub/HPW/refinery/refinery.gms
+Output     /Users/cbhomia/Documents/GitHub/HPW/refinery/refinery.lst

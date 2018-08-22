@@ -1,0 +1,2680 @@
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/22/18 11:20:53 Page 1
+Farm Planning (REFINERY, SEQ =xx)
+C o m p i l a t i o n
+
+
+   2  *                                                                             \\\\
+      The model addresses the planning of farm activities over a period of 5 years.
+      The goal is to maximize profit over constraints of herd size, feed requirements
+      of the herd, land available for growing the feed and labor constraints.
+       
+      Additionally, the model also covers loan/capital outlay repayments taken in the
+      five years over 10 years from the year of issue. 
+       
+      Model Building in Mathematical Programming, Fifth Edition,
+      H. Paul Williams, Model 12.8 : Farm Planning
+      Wiley Publication, 2013
+  15   
+  16  Sets
+  17      Cows                'different categories of cows'      /heifer , milkcow/
+  18      Feed                'types of feedstock for milkcow'    /grain , beet/
+  19      Group               'Group of land for grain'           /G1*G4/
+  20      Years               'Decision years'                    /Y0*Y5/
+  21      Age                 'Age of cows'                       /0*12/
+  22      ;
+  23   
+  24  Scalars
+  25      BirthRate           'Rate of Birth each year'                       /1.1/
+  26      MaxArea             'Max size of land [acre]'                       /200/
+  27      Ysbeet              'Yield for growing sugar beet [ton/acre]'       /1.5/
+  28      CapOut              'Capital for extra cattle (>130) [£/cow]'       /200/
+  29      ;
+  30   
+  31  Parameters
+  32      GrazAr(cows)        'grazing/support area needed by cows[acre/cow]'
+  33                          /heifer 0.6666666667 , milkcow 1/
+  34      Ygrain(group)       'Yield of grain per group of land [ton/acre]'
+  35                          /G1 1.1, G2 0.9, G3 0.8, G4 0.65/
+  36      ArGrMx(group)       'Max area utilization for growing grain in each group[acre]'
+  37                          /G1 20, G2 30,G3 20,G4 10/
+  38      Diet(cows,feed)     'Feed requirement by each milking cow [ton/year]'
+  39                          /milkcow.grain 0.6 , milkcow.beet 0.7/
+  40      LabCow(cows)        'Labor hours required for herding cows, [hr/year]'
+  41                          /milkcow 42, heifer 10/
+  42      LabFeed(feed)       'Labor hours for Feed growing , [hr/year]'
+  43                          /grain 4, beet 14/
+  44      CostPr(feed)        'Cost price of buying feed [£/ton]'
+  45                          /grain 90, beet 70/
+  46      SellPr(feed)        'Sell price of extra feed produced [£/ton]'
+  47                          /grain 75, beet 58/
+  48      MiscCow(cows)       'Miscelleneous/other cost for cows [£/year]'
+  49                          /heifer 50, milkcow 100/
+  50      MiscFeed(feed)       'Miscelleneous/other cost growing feed [£/acre/year]'
+  51                          /grain 15, beet 10/
+  52      ;
+  53   
+  54  Alias(Years,yr,CapYr)
+  55  Alias(Feed,f);
+  56  Alias(Group,g);
+  57  Alias(Age,a);
+  58  Alias(cows,c);
+  59   
+  60  Positive Variables
+  61   
+  62      NewBorns(yr)        'number of NewBorns each year, Age 0'
+  63      CowCount(a,yr)      'number of cows of age a per year'
+  64      BullSold(yr)        'number of bulls sold'
+  65      HeifSold(yr)        'number of heifers sold'
+  66   
+  67      ExtraCows(yr)       'over population, >130 each year'
+  68      OldCow(yr)          'number of old cows Age 12, sold '
+  69      HerdSize(yr)        'total size of the herd each year'
+  70   
+  71      Ar4Gr(g,yr)         'Area allotted for growing grain each year [acre/year]'
+  72      Ar4Sb(yr)           'Area allotted for growing sugarbeet each year[acre/year]'
+  73      fgrow(f,yr)         'Amount of feed grown each year [ton/year]'
+  74      fneed(f,yr)         'Amount of feed needed each year [ton/year]'
+  75      fbuy(f,yr)          'Amount of feed bought each year [ton/year]'
+  76      fsold(f,yr)         'Amount of feed sold each year [ton/year]'
+  77   
+  78      ExtraLabor(yr)      'Extra Labor beyond  5500 hr/year, [hours/year]'
+  79   
+  80      LaborCost(yr)       'Total cost for labor [£/year]'
+  81   
+  82      OtherCost(yr)       'Total other expenses [£/year]'
+  83   
+  84      Revenue(yr)         'Total Revenue generated [£/year]'
+  85      Expense(yr)         'Total Expense each year [£/year]'
+  86      Capital(yr)         'Capital Outlay /loan taken each year for extra cows[£/£200]'
+  87      Profit(yr)          'Profit each year'
+  88      ;
+  89   
+  90  Variables
+  91      Profit(yr)          'Total profit [£/year]'
+  92      NetProfit           'Net profit over 5 years, with future loan repayments'
+  93      ;
+  94  Positive Variables
+  95      Pop(cows,yr)        'population of cow each year'
+  96      ;
+  97   
+  98   
+  99  *initial population of cows, year Y0
+ 100  CowCount.fx(Age,'Y0')$[ord(Age)<13]= 10;
+ 101  CowCount.fx('12','Y0') = 0;
+ 102   
+ 103  *Limits and constraints
+ 104  herdsize.up('Y5') = 1.75 * 120 ;
+ 105  herdsize.lo('Y5') = 0.5 * 120 ;
+ 106  Ar4Gr.up(g,yr) = ArGrMx(g) ;
+ 107   
+ 108  ExtraCows.l(yr) = 10;
+ 109   
+ 110  Equations
+ 111      Births(yr)              'calculating NewBorns each year'
+ 112      SellingBulls (yr)       'calculating BullSold(yr)'
+ 113      HeiferBal1(yr)          'calculating heifers kept in the herd after birth'
+ 114      HeiferBal2(yr)          'Heifers Age 0  to Age 1'
+ 115      HeiferBal3(yr)          'Heifers Age 1  to Age 2'
+ 116      MilkCowBal(Age,yr)      'Milking cows continuity, Age 3  to Age 12'
+ 117      Totalherd(yr)           'Herd size calculation'
+ 118      populae1(cows,yr)       'calculating total heifers in herd each year'
+ 119      populae2(cows,yr)       'calculating total milking cows in herd each year'
+ 120      SellCow(yr)             'Selling cows of Age 12'
+ 121      grazing(yr)             'land area constraint for animal roaming'
+ 122      growing(yr)             'land area constraint for feed growing'
+ 123      grainproduce(yr)        'amount of grain produced'
+ 124      beetproduce(yr)         'amount of sugar beet produced'
+ 125      FeedNeed(f,yr)          'amount of Feed required by cows'
+ 126      FeedBal(f,yr)           'feed balance equation'
+ 127      Labor1(yr)              'net labour hours calculation'
+ 128      Labor2(yr)              'calculating yearly labor cost'
+ 129      MiscCosts(yr)           'calculating Misc/other costs'
+ 130      OverPopulae(yr)         'calculate number fo extra cows'
+ 131      CapOutlay(yr)           'calculating capital outlay for extra cattle'
+ 132      Income(yr)              'Net income each year'
+ 133      Expenditure(yr)         'Net expenditure each year'
+ 134      ProfitPerYr(yr)         'yearly profit calculation'
+ 135      ObjFunc                 'profit over 5 years'
+ 136      ;
+ 137   
+ 138  *continuity equations
+ 139   
+ 140  Births(yr)$(ord(yr)>1)..           NewBorns(yr) =E= 1.1 * Pop('milkcow',yr) ;
+ 141   
+ 142  SellingBulls(yr)$(ord(yr)>1)..     BullSold(yr) =E= 0.5 * NewBorns(yr);
+ 143   
+ 144  HeiferBal1(yr)$(ord(yr)>1)..       CowCount('0',yr) =E= 0.5 * NewBorns(yr) - heifsold(yr) ;
+ 145   
+ 146  HeiferBal2(yr)$(ord(yr)>1)..       CowCount('1',yr) =E= 0.95 * CowCount('0',yr-1) ;
+ 147   
+ 148  HeiferBal3(yr)$(ord(yr)>1)..       CowCount('2',yr) =E= 0.95 * CowCount('1',yr-1) ;
+ 149   
+ 150  MilkCowBal(a,yr)$[ord(a)>3 and ord(yr)>1]..      CowCount(a,yr)=E=0.98 * CowCount(a-1,yr-1) ;
+ 151   
+ 152  populae1(cows,yr) ..               Pop('heifer',yr) =E= CowCount('0',yr) + CowCount('1',yr) ;
+ 153   
+ 154  populae2(cows,yr) ..               Pop('milkcow',yr) =E= sum(a$[ord(a)>2 and ord(a)<13] ,CowCount(a,yr)) ;
+ 155   
+ 156  totalherd(yr) ..                   herdsize(yr) =E= sum(c, Pop(c,yr));
+ 157   
+ 158  SellCow(yr)..                      oldcow(yr) =E= CowCount('12',yr) ;
+ 159   
+ 160  *growing and grazing area calculations
+ 161  grazing(yr)..                      sum(cows,Pop(cows,yr)*grazAr(cows)) =L= MaxArea;
+ 162   
+ 163  growing(yr)..                      Ar4Sb(yr) + sum(g,Ar4Gr(g,yr)) =L= MaxArea;
+ 164   
+ 165  *Feed production
+ 166  grainproduce(yr)..                 fgrow('grain',yr) =E= sum(g, Ar4Gr(g,yr)*Ygrain(g));
+ 167   
+ 168  beetproduce(yr)..                  fgrow('beet',yr) =E= Ar4Sb(yr) * Ysbeet ;
+ 169   
+ 170  Feedneed(f,yr)..                   fneed(f,yr) =E= sum(c, Pop(c,yr)* Diet(c,f));
+ 171   
+ 172  Feedbal(f,yr)..                    fgrow(f,yr) + fbuy(f,yr) =E= fneed(f,yr) + fsold(f,yr);
+ 173   
+ 174  Labor1(yr)..                       sum(cows, Pop(cows,yr)*LabCow(cows))
+ 175                                                                 + sum(f, fgrow(f,yr)*LabFeed(f))  =L= 5500 + extraLabor(yr) ;
+ 176   
+ 177  Labor2(yr)..                       LaborCost(yr) =E= 4000 + extraLabor(yr) * 1.2 ;
+ 178   
+ 179  MiscCosts(yr)..                    OtherCost(yr) =E= sum(c, pop(c,yr) * MiscCow(c)) + Ar4Sb(yr)*MiscFeed('beet')
+ 180                                                                  +  sum(g,Ar4Gr(g,yr))*MiscFeed('grain') ;
+ 181   
+ 182  OverPopulae(yr)..                  sum(cows,Pop(cows,yr)) =L= 130 + ExtraCows(yr)  ;
+ 183   
+ 184  CapOutlay(yr)..                    capital(yr) =E= ExtraCows(yr) * CapOut ;
+ 185   
+ 186  Income(yr)..                       Revenue(yr) =E= 370 * pop('milkcow',yr) + sum(f, fsold(f,yr)*SellPr(f))
+ 187                                                                      + 30 * bullsold(yr) + 40*heifsold(yr) +120 * oldcow(yr) ;
+ 188   
+ 189  Expenditure(yr)..                  Expense(yr) =E= LaborCost(yr) + capital(yr) +  sum(f, fbuy(f,yr)*CostPr(f)) + OtherCost(yr);
+ 190   
+ 191  ProfitPerYr(yr)$(ord(yr)>1)..      Profit(yr) =E= Revenue(yr) - Expense(yr) - 39.71* sum(CapYr $[ord(CapYr)>1 and
+ 192                                                                  ord(CapYr)<= ord(yr)],ExtraCows(CapYr)) ;
+ 193   
+ 194  ObjFunc..                           NetProfit =E= sum(yr$(ord(yr)>1),Profit(yr)) - 39.71* sum(yr$(ord(yr)>1), (4 + ord(yr)-1)*ExtraCows(Yr));
+ 195   
+ 196   
+ 197   
+ 198  model farm /all/;
+ 199  option limrow =100, limcol=20;
+ 200   
+ 201   
+ 202  Profit.l('Y1') = 21906 ;
+ 203  Profit.l('Y2') = 21888 ;
+ 204  Profit.l('Y3') = 25816 ;
+ 205  Profit.l('Y4') = 26826 ;
+ 206  Profit.l('Y5') = 25283 ;
+ 207   
+ 208   
+ 209  solve farm maximizing NetProfit using LP;
+ 210   
+ 211   
+ 212  display NewBorns.l,Pop.l, oldcow.l,bullsold.l,heifsold.l,extracows.l,herdsize.l;
+ 213   
+ 214   
+ 215   
+ 216   
+ 217   
+ 218   
+ 219   
+ 220   
+ 221   
+ 222   
+ 223   
+ 224   
+ 225   
+ 226   
+ 227   
+ 228   
+ 229   
+ 230   
+ 231   
+ 232   
+ 233   
+ 234   
+ 235   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/22/18 11:20:53 Page 2
+Farm Planning (REFINERY, SEQ =xx)
+Equation Listing    SOLVE farm Using LP From line 209
+
+
+---- Births  =E=  calculating NewBorns each year
+
+Births(Y1)..  NewBorns(Y1) - 1.1*Pop(milkcow,Y1) =E= 0 ; (LHS = 0)
+     
+Births(Y2)..  NewBorns(Y2) - 1.1*Pop(milkcow,Y2) =E= 0 ; (LHS = 0)
+     
+Births(Y3)..  NewBorns(Y3) - 1.1*Pop(milkcow,Y3) =E= 0 ; (LHS = 0)
+     
+Births(Y4)..  NewBorns(Y4) - 1.1*Pop(milkcow,Y4) =E= 0 ; (LHS = 0)
+     
+Births(Y5)..  NewBorns(Y5) - 1.1*Pop(milkcow,Y5) =E= 0 ; (LHS = 0)
+     
+
+---- SellingBulls  =E=  calculating BullSold(yr)
+
+SellingBulls(Y1)..  - 0.5*NewBorns(Y1) + BullSold(Y1) =E= 0 ; (LHS = 0)
+     
+SellingBulls(Y2)..  - 0.5*NewBorns(Y2) + BullSold(Y2) =E= 0 ; (LHS = 0)
+     
+SellingBulls(Y3)..  - 0.5*NewBorns(Y3) + BullSold(Y3) =E= 0 ; (LHS = 0)
+     
+SellingBulls(Y4)..  - 0.5*NewBorns(Y4) + BullSold(Y4) =E= 0 ; (LHS = 0)
+     
+SellingBulls(Y5)..  - 0.5*NewBorns(Y5) + BullSold(Y5) =E= 0 ; (LHS = 0)
+     
+
+---- HeiferBal1  =E=  calculating heifers kept in the herd after birth
+
+HeiferBal1(Y1)..  - 0.5*NewBorns(Y1) + CowCount(0,Y1) + HeifSold(Y1) =E= 0 ; (LHS = 0)
+     
+HeiferBal1(Y2)..  - 0.5*NewBorns(Y2) + CowCount(0,Y2) + HeifSold(Y2) =E= 0 ; (LHS = 0)
+     
+HeiferBal1(Y3)..  - 0.5*NewBorns(Y3) + CowCount(0,Y3) + HeifSold(Y3) =E= 0 ; (LHS = 0)
+     
+HeiferBal1(Y4)..  - 0.5*NewBorns(Y4) + CowCount(0,Y4) + HeifSold(Y4) =E= 0 ; (LHS = 0)
+     
+HeiferBal1(Y5)..  - 0.5*NewBorns(Y5) + CowCount(0,Y5) + HeifSold(Y5) =E= 0 ; (LHS = 0)
+     
+
+---- HeiferBal2  =E=  Heifers Age 0  to Age 1
+
+HeiferBal2(Y1)..  - 0.95*CowCount(0,Y0) + CowCount(1,Y1) =E= 0 ; (LHS = -9.5, INFES = 9.5 ****)
+     
+HeiferBal2(Y2)..  - 0.95*CowCount(0,Y1) + CowCount(1,Y2) =E= 0 ; (LHS = 0)
+     
+HeiferBal2(Y3)..  - 0.95*CowCount(0,Y2) + CowCount(1,Y3) =E= 0 ; (LHS = 0)
+     
+HeiferBal2(Y4)..  - 0.95*CowCount(0,Y3) + CowCount(1,Y4) =E= 0 ; (LHS = 0)
+     
+HeiferBal2(Y5)..  - 0.95*CowCount(0,Y4) + CowCount(1,Y5) =E= 0 ; (LHS = 0)
+     
+
+---- HeiferBal3  =E=  Heifers Age 1  to Age 2
+
+HeiferBal3(Y1)..  - 0.95*CowCount(1,Y0) + CowCount(2,Y1) =E= 0 ; (LHS = -9.5, INFES = 9.5 ****)
+     
+HeiferBal3(Y2)..  - 0.95*CowCount(1,Y1) + CowCount(2,Y2) =E= 0 ; (LHS = 0)
+     
+HeiferBal3(Y3)..  - 0.95*CowCount(1,Y2) + CowCount(2,Y3) =E= 0 ; (LHS = 0)
+     
+HeiferBal3(Y4)..  - 0.95*CowCount(1,Y3) + CowCount(2,Y4) =E= 0 ; (LHS = 0)
+     
+HeiferBal3(Y5)..  - 0.95*CowCount(1,Y4) + CowCount(2,Y5) =E= 0 ; (LHS = 0)
+     
+
+---- MilkCowBal  =E=  Milking cows continuity, Age 3  to Age 12
+
+MilkCowBal(3,Y1)..  - 0.98*CowCount(2,Y0) + CowCount(3,Y1) =E= 0 ; (LHS = -9.8, INFES = 9.8 ****)
+     
+MilkCowBal(3,Y2)..  - 0.98*CowCount(2,Y1) + CowCount(3,Y2) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(3,Y3)..  - 0.98*CowCount(2,Y2) + CowCount(3,Y3) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(3,Y4)..  - 0.98*CowCount(2,Y3) + CowCount(3,Y4) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(3,Y5)..  - 0.98*CowCount(2,Y4) + CowCount(3,Y5) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(4,Y1)..  - 0.98*CowCount(3,Y0) + CowCount(4,Y1) =E= 0 ; (LHS = -9.8, INFES = 9.8 ****)
+     
+MilkCowBal(4,Y2)..  - 0.98*CowCount(3,Y1) + CowCount(4,Y2) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(4,Y3)..  - 0.98*CowCount(3,Y2) + CowCount(4,Y3) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(4,Y4)..  - 0.98*CowCount(3,Y3) + CowCount(4,Y4) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(4,Y5)..  - 0.98*CowCount(3,Y4) + CowCount(4,Y5) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(5,Y1)..  - 0.98*CowCount(4,Y0) + CowCount(5,Y1) =E= 0 ; (LHS = -9.8, INFES = 9.8 ****)
+     
+MilkCowBal(5,Y2)..  - 0.98*CowCount(4,Y1) + CowCount(5,Y2) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(5,Y3)..  - 0.98*CowCount(4,Y2) + CowCount(5,Y3) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(5,Y4)..  - 0.98*CowCount(4,Y3) + CowCount(5,Y4) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(5,Y5)..  - 0.98*CowCount(4,Y4) + CowCount(5,Y5) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(6,Y1)..  - 0.98*CowCount(5,Y0) + CowCount(6,Y1) =E= 0 ; (LHS = -9.8, INFES = 9.8 ****)
+     
+MilkCowBal(6,Y2)..  - 0.98*CowCount(5,Y1) + CowCount(6,Y2) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(6,Y3)..  - 0.98*CowCount(5,Y2) + CowCount(6,Y3) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(6,Y4)..  - 0.98*CowCount(5,Y3) + CowCount(6,Y4) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(6,Y5)..  - 0.98*CowCount(5,Y4) + CowCount(6,Y5) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(7,Y1)..  - 0.98*CowCount(6,Y0) + CowCount(7,Y1) =E= 0 ; (LHS = -9.8, INFES = 9.8 ****)
+     
+MilkCowBal(7,Y2)..  - 0.98*CowCount(6,Y1) + CowCount(7,Y2) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(7,Y3)..  - 0.98*CowCount(6,Y2) + CowCount(7,Y3) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(7,Y4)..  - 0.98*CowCount(6,Y3) + CowCount(7,Y4) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(7,Y5)..  - 0.98*CowCount(6,Y4) + CowCount(7,Y5) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(8,Y1)..  - 0.98*CowCount(7,Y0) + CowCount(8,Y1) =E= 0 ; (LHS = -9.8, INFES = 9.8 ****)
+     
+MilkCowBal(8,Y2)..  - 0.98*CowCount(7,Y1) + CowCount(8,Y2) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(8,Y3)..  - 0.98*CowCount(7,Y2) + CowCount(8,Y3) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(8,Y4)..  - 0.98*CowCount(7,Y3) + CowCount(8,Y4) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(8,Y5)..  - 0.98*CowCount(7,Y4) + CowCount(8,Y5) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(9,Y1)..  - 0.98*CowCount(8,Y0) + CowCount(9,Y1) =E= 0 ; (LHS = -9.8, INFES = 9.8 ****)
+     
+MilkCowBal(9,Y2)..  - 0.98*CowCount(8,Y1) + CowCount(9,Y2) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(9,Y3)..  - 0.98*CowCount(8,Y2) + CowCount(9,Y3) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(9,Y4)..  - 0.98*CowCount(8,Y3) + CowCount(9,Y4) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(9,Y5)..  - 0.98*CowCount(8,Y4) + CowCount(9,Y5) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(10,Y1)..  - 0.98*CowCount(9,Y0) + CowCount(10,Y1) =E= 0 ; (LHS = -9.8, INFES = 9.8 ****)
+     
+MilkCowBal(10,Y2)..  - 0.98*CowCount(9,Y1) + CowCount(10,Y2) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(10,Y3)..  - 0.98*CowCount(9,Y2) + CowCount(10,Y3) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(10,Y4)..  - 0.98*CowCount(9,Y3) + CowCount(10,Y4) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(10,Y5)..  - 0.98*CowCount(9,Y4) + CowCount(10,Y5) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(11,Y1)..  - 0.98*CowCount(10,Y0) + CowCount(11,Y1) =E= 0 ; (LHS = -9.8, INFES = 9.8 ****)
+     
+MilkCowBal(11,Y2)..  - 0.98*CowCount(10,Y1) + CowCount(11,Y2) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(11,Y3)..  - 0.98*CowCount(10,Y2) + CowCount(11,Y3) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(11,Y4)..  - 0.98*CowCount(10,Y3) + CowCount(11,Y4) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(11,Y5)..  - 0.98*CowCount(10,Y4) + CowCount(11,Y5) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(12,Y1)..  - 0.98*CowCount(11,Y0) + CowCount(12,Y1) =E= 0 ; (LHS = -9.8, INFES = 9.8 ****)
+     
+MilkCowBal(12,Y2)..  - 0.98*CowCount(11,Y1) + CowCount(12,Y2) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(12,Y3)..  - 0.98*CowCount(11,Y2) + CowCount(12,Y3) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(12,Y4)..  - 0.98*CowCount(11,Y3) + CowCount(12,Y4) =E= 0 ; (LHS = 0)
+     
+MilkCowBal(12,Y5)..  - 0.98*CowCount(11,Y4) + CowCount(12,Y5) =E= 0 ; (LHS = 0)
+     
+
+---- Totalherd  =E=  Herd size calculation
+
+Totalherd(Y0)..  HerdSize(Y0) - Pop(heifer,Y0) - Pop(milkcow,Y0) =E= 0 ; (LHS = 0)
+     
+Totalherd(Y1)..  HerdSize(Y1) - Pop(heifer,Y1) - Pop(milkcow,Y1) =E= 0 ; (LHS = 0)
+     
+Totalherd(Y2)..  HerdSize(Y2) - Pop(heifer,Y2) - Pop(milkcow,Y2) =E= 0 ; (LHS = 0)
+     
+Totalherd(Y3)..  HerdSize(Y3) - Pop(heifer,Y3) - Pop(milkcow,Y3) =E= 0 ; (LHS = 0)
+     
+Totalherd(Y4)..  HerdSize(Y4) - Pop(heifer,Y4) - Pop(milkcow,Y4) =E= 0 ; (LHS = 0)
+     
+Totalherd(Y5)..  HerdSize(Y5) - Pop(heifer,Y5) - Pop(milkcow,Y5) =E= 0 ; (LHS = 60, INFES = 60 ****)
+     
+
+---- populae1  =E=  calculating total heifers in herd each year
+
+populae1(heifer,Y0)..  - CowCount(0,Y0) - CowCount(1,Y0) + Pop(heifer,Y0) =E= 0 ; (LHS = -20, INFES = 20 ****)
+     
+populae1(heifer,Y1)..  - CowCount(0,Y1) - CowCount(1,Y1) + Pop(heifer,Y1) =E= 0 ; (LHS = 0)
+     
+populae1(heifer,Y2)..  - CowCount(0,Y2) - CowCount(1,Y2) + Pop(heifer,Y2) =E= 0 ; (LHS = 0)
+     
+populae1(heifer,Y3)..  - CowCount(0,Y3) - CowCount(1,Y3) + Pop(heifer,Y3) =E= 0 ; (LHS = 0)
+     
+populae1(heifer,Y4)..  - CowCount(0,Y4) - CowCount(1,Y4) + Pop(heifer,Y4) =E= 0 ; (LHS = 0)
+     
+populae1(heifer,Y5)..  - CowCount(0,Y5) - CowCount(1,Y5) + Pop(heifer,Y5) =E= 0 ; (LHS = 0)
+     
+populae1(milkcow,Y0)..  - CowCount(0,Y0) - CowCount(1,Y0) + Pop(heifer,Y0) =E= 0 ; (LHS = -20, INFES = 20 ****)
+     
+populae1(milkcow,Y1)..  - CowCount(0,Y1) - CowCount(1,Y1) + Pop(heifer,Y1) =E= 0 ; (LHS = 0)
+     
+populae1(milkcow,Y2)..  - CowCount(0,Y2) - CowCount(1,Y2) + Pop(heifer,Y2) =E= 0 ; (LHS = 0)
+     
+populae1(milkcow,Y3)..  - CowCount(0,Y3) - CowCount(1,Y3) + Pop(heifer,Y3) =E= 0 ; (LHS = 0)
+     
+populae1(milkcow,Y4)..  - CowCount(0,Y4) - CowCount(1,Y4) + Pop(heifer,Y4) =E= 0 ; (LHS = 0)
+     
+populae1(milkcow,Y5)..  - CowCount(0,Y5) - CowCount(1,Y5) + Pop(heifer,Y5) =E= 0 ; (LHS = 0)
+     
+
+---- populae2  =E=  calculating total milking cows in herd each year
+
+populae2(heifer,Y0)..  - CowCount(2,Y0) - CowCount(3,Y0) - CowCount(4,Y0) - CowCount(5,Y0) - CowCount(6,Y0) - CowCount(7,Y0) - CowCount(8,Y0) - CowCount(9,Y0) - CowCount(10,Y0) - CowCount(11,Y0) + Pop(milkcow,Y0) =E= 0 ; (LHS = -100, INFES = 100 ****)
+     
+populae2(heifer,Y1)..  - CowCount(2,Y1) - CowCount(3,Y1) - CowCount(4,Y1) - CowCount(5,Y1) - CowCount(6,Y1) - CowCount(7,Y1) - CowCount(8,Y1) - CowCount(9,Y1) - CowCount(10,Y1) - CowCount(11,Y1) + Pop(milkcow,Y1) =E= 0 ; (LHS = 0)
+     
+populae2(heifer,Y2)..  - CowCount(2,Y2) - CowCount(3,Y2) - CowCount(4,Y2) - CowCount(5,Y2) - CowCount(6,Y2) - CowCount(7,Y2) - CowCount(8,Y2) - CowCount(9,Y2) - CowCount(10,Y2) - CowCount(11,Y2) + Pop(milkcow,Y2) =E= 0 ; (LHS = 0)
+     
+populae2(heifer,Y3)..  - CowCount(2,Y3) - CowCount(3,Y3) - CowCount(4,Y3) - CowCount(5,Y3) - CowCount(6,Y3) - CowCount(7,Y3) - CowCount(8,Y3) - CowCount(9,Y3) - CowCount(10,Y3) - CowCount(11,Y3) + Pop(milkcow,Y3) =E= 0 ; (LHS = 0)
+     
+populae2(heifer,Y4)..  - CowCount(2,Y4) - CowCount(3,Y4) - CowCount(4,Y4) - CowCount(5,Y4) - CowCount(6,Y4) - CowCount(7,Y4) - CowCount(8,Y4) - CowCount(9,Y4) - CowCount(10,Y4) - CowCount(11,Y4) + Pop(milkcow,Y4) =E= 0 ; (LHS = 0)
+     
+populae2(heifer,Y5)..  - CowCount(2,Y5) - CowCount(3,Y5) - CowCount(4,Y5) - CowCount(5,Y5) - CowCount(6,Y5) - CowCount(7,Y5) - CowCount(8,Y5) - CowCount(9,Y5) - CowCount(10,Y5) - CowCount(11,Y5) + Pop(milkcow,Y5) =E= 0 ; (LHS = 0)
+     
+populae2(milkcow,Y0)..  - CowCount(2,Y0) - CowCount(3,Y0) - CowCount(4,Y0) - CowCount(5,Y0) - CowCount(6,Y0) - CowCount(7,Y0) - CowCount(8,Y0) - CowCount(9,Y0) - CowCount(10,Y0) - CowCount(11,Y0) + Pop(milkcow,Y0) =E= 0 ; (LHS = -100, INFES = 100 ****)
+     
+populae2(milkcow,Y1)..  - CowCount(2,Y1) - CowCount(3,Y1) - CowCount(4,Y1) - CowCount(5,Y1) - CowCount(6,Y1) - CowCount(7,Y1) - CowCount(8,Y1) - CowCount(9,Y1) - CowCount(10,Y1) - CowCount(11,Y1) + Pop(milkcow,Y1) =E= 0 ; (LHS = 0)
+     
+populae2(milkcow,Y2)..  - CowCount(2,Y2) - CowCount(3,Y2) - CowCount(4,Y2) - CowCount(5,Y2) - CowCount(6,Y2) - CowCount(7,Y2) - CowCount(8,Y2) - CowCount(9,Y2) - CowCount(10,Y2) - CowCount(11,Y2) + Pop(milkcow,Y2) =E= 0 ; (LHS = 0)
+     
+populae2(milkcow,Y3)..  - CowCount(2,Y3) - CowCount(3,Y3) - CowCount(4,Y3) - CowCount(5,Y3) - CowCount(6,Y3) - CowCount(7,Y3) - CowCount(8,Y3) - CowCount(9,Y3) - CowCount(10,Y3) - CowCount(11,Y3) + Pop(milkcow,Y3) =E= 0 ; (LHS = 0)
+     
+populae2(milkcow,Y4)..  - CowCount(2,Y4) - CowCount(3,Y4) - CowCount(4,Y4) - CowCount(5,Y4) - CowCount(6,Y4) - CowCount(7,Y4) - CowCount(8,Y4) - CowCount(9,Y4) - CowCount(10,Y4) - CowCount(11,Y4) + Pop(milkcow,Y4) =E= 0 ; (LHS = 0)
+     
+populae2(milkcow,Y5)..  - CowCount(2,Y5) - CowCount(3,Y5) - CowCount(4,Y5) - CowCount(5,Y5) - CowCount(6,Y5) - CowCount(7,Y5) - CowCount(8,Y5) - CowCount(9,Y5) - CowCount(10,Y5) - CowCount(11,Y5) + Pop(milkcow,Y5) =E= 0 ; (LHS = 0)
+     
+
+---- SellCow  =E=  Selling cows of Age 12
+
+SellCow(Y0)..  - CowCount(12,Y0) + OldCow(Y0) =E= 0 ; (LHS = 0)
+     
+SellCow(Y1)..  - CowCount(12,Y1) + OldCow(Y1) =E= 0 ; (LHS = 0)
+     
+SellCow(Y2)..  - CowCount(12,Y2) + OldCow(Y2) =E= 0 ; (LHS = 0)
+     
+SellCow(Y3)..  - CowCount(12,Y3) + OldCow(Y3) =E= 0 ; (LHS = 0)
+     
+SellCow(Y4)..  - CowCount(12,Y4) + OldCow(Y4) =E= 0 ; (LHS = 0)
+     
+SellCow(Y5)..  - CowCount(12,Y5) + OldCow(Y5) =E= 0 ; (LHS = 0)
+     
+
+---- grazing  =L=  land area constraint for animal roaming
+
+grazing(Y0)..  0.6666666667*Pop(heifer,Y0) + Pop(milkcow,Y0) =L= 200 ; (LHS = 0)
+     
+grazing(Y1)..  0.6666666667*Pop(heifer,Y1) + Pop(milkcow,Y1) =L= 200 ; (LHS = 0)
+     
+grazing(Y2)..  0.6666666667*Pop(heifer,Y2) + Pop(milkcow,Y2) =L= 200 ; (LHS = 0)
+     
+grazing(Y3)..  0.6666666667*Pop(heifer,Y3) + Pop(milkcow,Y3) =L= 200 ; (LHS = 0)
+     
+grazing(Y4)..  0.6666666667*Pop(heifer,Y4) + Pop(milkcow,Y4) =L= 200 ; (LHS = 0)
+     
+grazing(Y5)..  0.6666666667*Pop(heifer,Y5) + Pop(milkcow,Y5) =L= 200 ; (LHS = 0)
+     
+
+---- growing  =L=  land area constraint for feed growing
+
+growing(Y0)..  Ar4Gr(G1,Y0) + Ar4Gr(G2,Y0) + Ar4Gr(G3,Y0) + Ar4Gr(G4,Y0) + Ar4Sb(Y0) =L= 200 ; (LHS = 0)
+     
+growing(Y1)..  Ar4Gr(G1,Y1) + Ar4Gr(G2,Y1) + Ar4Gr(G3,Y1) + Ar4Gr(G4,Y1) + Ar4Sb(Y1) =L= 200 ; (LHS = 0)
+     
+growing(Y2)..  Ar4Gr(G1,Y2) + Ar4Gr(G2,Y2) + Ar4Gr(G3,Y2) + Ar4Gr(G4,Y2) + Ar4Sb(Y2) =L= 200 ; (LHS = 0)
+     
+growing(Y3)..  Ar4Gr(G1,Y3) + Ar4Gr(G2,Y3) + Ar4Gr(G3,Y3) + Ar4Gr(G4,Y3) + Ar4Sb(Y3) =L= 200 ; (LHS = 0)
+     
+growing(Y4)..  Ar4Gr(G1,Y4) + Ar4Gr(G2,Y4) + Ar4Gr(G3,Y4) + Ar4Gr(G4,Y4) + Ar4Sb(Y4) =L= 200 ; (LHS = 0)
+     
+growing(Y5)..  Ar4Gr(G1,Y5) + Ar4Gr(G2,Y5) + Ar4Gr(G3,Y5) + Ar4Gr(G4,Y5) + Ar4Sb(Y5) =L= 200 ; (LHS = 0)
+     
+
+---- grainproduce  =E=  amount of grain produced
+
+grainproduce(Y0)..  - 1.1*Ar4Gr(G1,Y0) - 0.9*Ar4Gr(G2,Y0) - 0.8*Ar4Gr(G3,Y0) - 0.65*Ar4Gr(G4,Y0) + fgrow(grain,Y0) =E= 0 ; (LHS = 0)
+     
+grainproduce(Y1)..  - 1.1*Ar4Gr(G1,Y1) - 0.9*Ar4Gr(G2,Y1) - 0.8*Ar4Gr(G3,Y1) - 0.65*Ar4Gr(G4,Y1) + fgrow(grain,Y1) =E= 0 ; (LHS = 0)
+     
+grainproduce(Y2)..  - 1.1*Ar4Gr(G1,Y2) - 0.9*Ar4Gr(G2,Y2) - 0.8*Ar4Gr(G3,Y2) - 0.65*Ar4Gr(G4,Y2) + fgrow(grain,Y2) =E= 0 ; (LHS = 0)
+     
+grainproduce(Y3)..  - 1.1*Ar4Gr(G1,Y3) - 0.9*Ar4Gr(G2,Y3) - 0.8*Ar4Gr(G3,Y3) - 0.65*Ar4Gr(G4,Y3) + fgrow(grain,Y3) =E= 0 ; (LHS = 0)
+     
+grainproduce(Y4)..  - 1.1*Ar4Gr(G1,Y4) - 0.9*Ar4Gr(G2,Y4) - 0.8*Ar4Gr(G3,Y4) - 0.65*Ar4Gr(G4,Y4) + fgrow(grain,Y4) =E= 0 ; (LHS = 0)
+     
+grainproduce(Y5)..  - 1.1*Ar4Gr(G1,Y5) - 0.9*Ar4Gr(G2,Y5) - 0.8*Ar4Gr(G3,Y5) - 0.65*Ar4Gr(G4,Y5) + fgrow(grain,Y5) =E= 0 ; (LHS = 0)
+     
+
+---- beetproduce  =E=  amount of sugar beet produced
+
+beetproduce(Y0)..  - 1.5*Ar4Sb(Y0) + fgrow(beet,Y0) =E= 0 ; (LHS = 0)
+     
+beetproduce(Y1)..  - 1.5*Ar4Sb(Y1) + fgrow(beet,Y1) =E= 0 ; (LHS = 0)
+     
+beetproduce(Y2)..  - 1.5*Ar4Sb(Y2) + fgrow(beet,Y2) =E= 0 ; (LHS = 0)
+     
+beetproduce(Y3)..  - 1.5*Ar4Sb(Y3) + fgrow(beet,Y3) =E= 0 ; (LHS = 0)
+     
+beetproduce(Y4)..  - 1.5*Ar4Sb(Y4) + fgrow(beet,Y4) =E= 0 ; (LHS = 0)
+     
+beetproduce(Y5)..  - 1.5*Ar4Sb(Y5) + fgrow(beet,Y5) =E= 0 ; (LHS = 0)
+     
+
+---- FeedNeed  =E=  amount of Feed required by cows
+
+FeedNeed(grain,Y0)..  fneed(grain,Y0) - 0.6*Pop(milkcow,Y0) =E= 0 ; (LHS = 0)
+     
+FeedNeed(grain,Y1)..  fneed(grain,Y1) - 0.6*Pop(milkcow,Y1) =E= 0 ; (LHS = 0)
+     
+FeedNeed(grain,Y2)..  fneed(grain,Y2) - 0.6*Pop(milkcow,Y2) =E= 0 ; (LHS = 0)
+     
+FeedNeed(grain,Y3)..  fneed(grain,Y3) - 0.6*Pop(milkcow,Y3) =E= 0 ; (LHS = 0)
+     
+FeedNeed(grain,Y4)..  fneed(grain,Y4) - 0.6*Pop(milkcow,Y4) =E= 0 ; (LHS = 0)
+     
+FeedNeed(grain,Y5)..  fneed(grain,Y5) - 0.6*Pop(milkcow,Y5) =E= 0 ; (LHS = 0)
+     
+FeedNeed(beet,Y0)..  fneed(beet,Y0) - 0.7*Pop(milkcow,Y0) =E= 0 ; (LHS = 0)
+     
+FeedNeed(beet,Y1)..  fneed(beet,Y1) - 0.7*Pop(milkcow,Y1) =E= 0 ; (LHS = 0)
+     
+FeedNeed(beet,Y2)..  fneed(beet,Y2) - 0.7*Pop(milkcow,Y2) =E= 0 ; (LHS = 0)
+     
+FeedNeed(beet,Y3)..  fneed(beet,Y3) - 0.7*Pop(milkcow,Y3) =E= 0 ; (LHS = 0)
+     
+FeedNeed(beet,Y4)..  fneed(beet,Y4) - 0.7*Pop(milkcow,Y4) =E= 0 ; (LHS = 0)
+     
+FeedNeed(beet,Y5)..  fneed(beet,Y5) - 0.7*Pop(milkcow,Y5) =E= 0 ; (LHS = 0)
+     
+
+---- FeedBal  =E=  feed balance equation
+
+FeedBal(grain,Y0)..  fgrow(grain,Y0) - fneed(grain,Y0) + fbuy(grain,Y0) - fsold(grain,Y0) =E= 0 ; (LHS = 0)
+     
+FeedBal(grain,Y1)..  fgrow(grain,Y1) - fneed(grain,Y1) + fbuy(grain,Y1) - fsold(grain,Y1) =E= 0 ; (LHS = 0)
+     
+FeedBal(grain,Y2)..  fgrow(grain,Y2) - fneed(grain,Y2) + fbuy(grain,Y2) - fsold(grain,Y2) =E= 0 ; (LHS = 0)
+     
+FeedBal(grain,Y3)..  fgrow(grain,Y3) - fneed(grain,Y3) + fbuy(grain,Y3) - fsold(grain,Y3) =E= 0 ; (LHS = 0)
+     
+FeedBal(grain,Y4)..  fgrow(grain,Y4) - fneed(grain,Y4) + fbuy(grain,Y4) - fsold(grain,Y4) =E= 0 ; (LHS = 0)
+     
+FeedBal(grain,Y5)..  fgrow(grain,Y5) - fneed(grain,Y5) + fbuy(grain,Y5) - fsold(grain,Y5) =E= 0 ; (LHS = 0)
+     
+FeedBal(beet,Y0)..  fgrow(beet,Y0) - fneed(beet,Y0) + fbuy(beet,Y0) - fsold(beet,Y0) =E= 0 ; (LHS = 0)
+     
+FeedBal(beet,Y1)..  fgrow(beet,Y1) - fneed(beet,Y1) + fbuy(beet,Y1) - fsold(beet,Y1) =E= 0 ; (LHS = 0)
+     
+FeedBal(beet,Y2)..  fgrow(beet,Y2) - fneed(beet,Y2) + fbuy(beet,Y2) - fsold(beet,Y2) =E= 0 ; (LHS = 0)
+     
+FeedBal(beet,Y3)..  fgrow(beet,Y3) - fneed(beet,Y3) + fbuy(beet,Y3) - fsold(beet,Y3) =E= 0 ; (LHS = 0)
+     
+FeedBal(beet,Y4)..  fgrow(beet,Y4) - fneed(beet,Y4) + fbuy(beet,Y4) - fsold(beet,Y4) =E= 0 ; (LHS = 0)
+     
+FeedBal(beet,Y5)..  fgrow(beet,Y5) - fneed(beet,Y5) + fbuy(beet,Y5) - fsold(beet,Y5) =E= 0 ; (LHS = 0)
+     
+
+---- Labor1  =L=  net labour hours calculation
+
+Labor1(Y0)..  4*fgrow(grain,Y0) + 14*fgrow(beet,Y0) - ExtraLabor(Y0) + 10*Pop(heifer,Y0) + 42*Pop(milkcow,Y0) =L= 5500 ; (LHS = 0)
+     
+Labor1(Y1)..  4*fgrow(grain,Y1) + 14*fgrow(beet,Y1) - ExtraLabor(Y1) + 10*Pop(heifer,Y1) + 42*Pop(milkcow,Y1) =L= 5500 ; (LHS = 0)
+     
+Labor1(Y2)..  4*fgrow(grain,Y2) + 14*fgrow(beet,Y2) - ExtraLabor(Y2) + 10*Pop(heifer,Y2) + 42*Pop(milkcow,Y2) =L= 5500 ; (LHS = 0)
+     
+Labor1(Y3)..  4*fgrow(grain,Y3) + 14*fgrow(beet,Y3) - ExtraLabor(Y3) + 10*Pop(heifer,Y3) + 42*Pop(milkcow,Y3) =L= 5500 ; (LHS = 0)
+     
+Labor1(Y4)..  4*fgrow(grain,Y4) + 14*fgrow(beet,Y4) - ExtraLabor(Y4) + 10*Pop(heifer,Y4) + 42*Pop(milkcow,Y4) =L= 5500 ; (LHS = 0)
+     
+Labor1(Y5)..  4*fgrow(grain,Y5) + 14*fgrow(beet,Y5) - ExtraLabor(Y5) + 10*Pop(heifer,Y5) + 42*Pop(milkcow,Y5) =L= 5500 ; (LHS = 0)
+     
+
+---- Labor2  =E=  calculating yearly labor cost
+
+Labor2(Y0)..  - 1.2*ExtraLabor(Y0) + LaborCost(Y0) =E= 4000 ; (LHS = 0, INFES = 4000 ****)
+     
+Labor2(Y1)..  - 1.2*ExtraLabor(Y1) + LaborCost(Y1) =E= 4000 ; (LHS = 0, INFES = 4000 ****)
+     
+Labor2(Y2)..  - 1.2*ExtraLabor(Y2) + LaborCost(Y2) =E= 4000 ; (LHS = 0, INFES = 4000 ****)
+     
+Labor2(Y3)..  - 1.2*ExtraLabor(Y3) + LaborCost(Y3) =E= 4000 ; (LHS = 0, INFES = 4000 ****)
+     
+Labor2(Y4)..  - 1.2*ExtraLabor(Y4) + LaborCost(Y4) =E= 4000 ; (LHS = 0, INFES = 4000 ****)
+     
+Labor2(Y5)..  - 1.2*ExtraLabor(Y5) + LaborCost(Y5) =E= 4000 ; (LHS = 0, INFES = 4000 ****)
+     
+
+---- MiscCosts  =E=  calculating Misc/other costs
+
+MiscCosts(Y0)..  - 15*Ar4Gr(G1,Y0) - 15*Ar4Gr(G2,Y0) - 15*Ar4Gr(G3,Y0) - 15*Ar4Gr(G4,Y0) - 10*Ar4Sb(Y0) + OtherCost(Y0) - 50*Pop(heifer,Y0) - 100*Pop(milkcow,Y0) =E= 0 ; (LHS = 0)
+     
+MiscCosts(Y1)..  - 15*Ar4Gr(G1,Y1) - 15*Ar4Gr(G2,Y1) - 15*Ar4Gr(G3,Y1) - 15*Ar4Gr(G4,Y1) - 10*Ar4Sb(Y1) + OtherCost(Y1) - 50*Pop(heifer,Y1) - 100*Pop(milkcow,Y1) =E= 0 ; (LHS = 0)
+     
+MiscCosts(Y2)..  - 15*Ar4Gr(G1,Y2) - 15*Ar4Gr(G2,Y2) - 15*Ar4Gr(G3,Y2) - 15*Ar4Gr(G4,Y2) - 10*Ar4Sb(Y2) + OtherCost(Y2) - 50*Pop(heifer,Y2) - 100*Pop(milkcow,Y2) =E= 0 ; (LHS = 0)
+     
+MiscCosts(Y3)..  - 15*Ar4Gr(G1,Y3) - 15*Ar4Gr(G2,Y3) - 15*Ar4Gr(G3,Y3) - 15*Ar4Gr(G4,Y3) - 10*Ar4Sb(Y3) + OtherCost(Y3) - 50*Pop(heifer,Y3) - 100*Pop(milkcow,Y3) =E= 0 ; (LHS = 0)
+     
+MiscCosts(Y4)..  - 15*Ar4Gr(G1,Y4) - 15*Ar4Gr(G2,Y4) - 15*Ar4Gr(G3,Y4) - 15*Ar4Gr(G4,Y4) - 10*Ar4Sb(Y4) + OtherCost(Y4) - 50*Pop(heifer,Y4) - 100*Pop(milkcow,Y4) =E= 0 ; (LHS = 0)
+     
+MiscCosts(Y5)..  - 15*Ar4Gr(G1,Y5) - 15*Ar4Gr(G2,Y5) - 15*Ar4Gr(G3,Y5) - 15*Ar4Gr(G4,Y5) - 10*Ar4Sb(Y5) + OtherCost(Y5) - 50*Pop(heifer,Y5) - 100*Pop(milkcow,Y5) =E= 0 ; (LHS = 0)
+     
+
+---- OverPopulae  =L=  calculate number fo extra cows
+
+OverPopulae(Y0)..  - ExtraCows(Y0) + Pop(heifer,Y0) + Pop(milkcow,Y0) =L= 130 ; (LHS = -10)
+     
+OverPopulae(Y1)..  - ExtraCows(Y1) + Pop(heifer,Y1) + Pop(milkcow,Y1) =L= 130 ; (LHS = -10)
+     
+OverPopulae(Y2)..  - ExtraCows(Y2) + Pop(heifer,Y2) + Pop(milkcow,Y2) =L= 130 ; (LHS = -10)
+     
+OverPopulae(Y3)..  - ExtraCows(Y3) + Pop(heifer,Y3) + Pop(milkcow,Y3) =L= 130 ; (LHS = -10)
+     
+OverPopulae(Y4)..  - ExtraCows(Y4) + Pop(heifer,Y4) + Pop(milkcow,Y4) =L= 130 ; (LHS = -10)
+     
+OverPopulae(Y5)..  - ExtraCows(Y5) + Pop(heifer,Y5) + Pop(milkcow,Y5) =L= 130 ; (LHS = -10)
+     
+
+---- CapOutlay  =E=  calculating capital outlay for extra cattle
+
+CapOutlay(Y0)..  - 200*ExtraCows(Y0) + Capital(Y0) =E= 0 ; (LHS = -2000, INFES = 2000 ****)
+     
+CapOutlay(Y1)..  - 200*ExtraCows(Y1) + Capital(Y1) =E= 0 ; (LHS = -2000, INFES = 2000 ****)
+     
+CapOutlay(Y2)..  - 200*ExtraCows(Y2) + Capital(Y2) =E= 0 ; (LHS = -2000, INFES = 2000 ****)
+     
+CapOutlay(Y3)..  - 200*ExtraCows(Y3) + Capital(Y3) =E= 0 ; (LHS = -2000, INFES = 2000 ****)
+     
+CapOutlay(Y4)..  - 200*ExtraCows(Y4) + Capital(Y4) =E= 0 ; (LHS = -2000, INFES = 2000 ****)
+     
+CapOutlay(Y5)..  - 200*ExtraCows(Y5) + Capital(Y5) =E= 0 ; (LHS = -2000, INFES = 2000 ****)
+     
+
+---- Income  =E=  Net income each year
+
+Income(Y0)..  - 30*BullSold(Y0) - 40*HeifSold(Y0) - 120*OldCow(Y0) - 75*fsold(grain,Y0) - 58*fsold(beet,Y0) + Revenue(Y0) - 370*Pop(milkcow,Y0) =E= 0 ; (LHS = 0)
+     
+Income(Y1)..  - 30*BullSold(Y1) - 40*HeifSold(Y1) - 120*OldCow(Y1) - 75*fsold(grain,Y1) - 58*fsold(beet,Y1) + Revenue(Y1) - 370*Pop(milkcow,Y1) =E= 0 ; (LHS = 0)
+     
+Income(Y2)..  - 30*BullSold(Y2) - 40*HeifSold(Y2) - 120*OldCow(Y2) - 75*fsold(grain,Y2) - 58*fsold(beet,Y2) + Revenue(Y2) - 370*Pop(milkcow,Y2) =E= 0 ; (LHS = 0)
+     
+Income(Y3)..  - 30*BullSold(Y3) - 40*HeifSold(Y3) - 120*OldCow(Y3) - 75*fsold(grain,Y3) - 58*fsold(beet,Y3) + Revenue(Y3) - 370*Pop(milkcow,Y3) =E= 0 ; (LHS = 0)
+     
+Income(Y4)..  - 30*BullSold(Y4) - 40*HeifSold(Y4) - 120*OldCow(Y4) - 75*fsold(grain,Y4) - 58*fsold(beet,Y4) + Revenue(Y4) - 370*Pop(milkcow,Y4) =E= 0 ; (LHS = 0)
+     
+Income(Y5)..  - 30*BullSold(Y5) - 40*HeifSold(Y5) - 120*OldCow(Y5) - 75*fsold(grain,Y5) - 58*fsold(beet,Y5) + Revenue(Y5) - 370*Pop(milkcow,Y5) =E= 0 ; (LHS = 0)
+     
+
+---- Expenditure  =E=  Net expenditure each year
+
+Expenditure(Y0)..  - 90*fbuy(grain,Y0) - 70*fbuy(beet,Y0) - LaborCost(Y0) - OtherCost(Y0) + Expense(Y0) - Capital(Y0) =E= 0 ; (LHS = 0)
+     
+Expenditure(Y1)..  - 90*fbuy(grain,Y1) - 70*fbuy(beet,Y1) - LaborCost(Y1) - OtherCost(Y1) + Expense(Y1) - Capital(Y1) =E= 0 ; (LHS = 0)
+     
+Expenditure(Y2)..  - 90*fbuy(grain,Y2) - 70*fbuy(beet,Y2) - LaborCost(Y2) - OtherCost(Y2) + Expense(Y2) - Capital(Y2) =E= 0 ; (LHS = 0)
+     
+Expenditure(Y3)..  - 90*fbuy(grain,Y3) - 70*fbuy(beet,Y3) - LaborCost(Y3) - OtherCost(Y3) + Expense(Y3) - Capital(Y3) =E= 0 ; (LHS = 0)
+     
+Expenditure(Y4)..  - 90*fbuy(grain,Y4) - 70*fbuy(beet,Y4) - LaborCost(Y4) - OtherCost(Y4) + Expense(Y4) - Capital(Y4) =E= 0 ; (LHS = 0)
+     
+Expenditure(Y5)..  - 90*fbuy(grain,Y5) - 70*fbuy(beet,Y5) - LaborCost(Y5) - OtherCost(Y5) + Expense(Y5) - Capital(Y5) =E= 0 ; (LHS = 0)
+     
+
+---- ProfitPerYr  =E=  yearly profit calculation
+
+ProfitPerYr(Y1)..  39.71*ExtraCows(Y1) - Revenue(Y1) + Expense(Y1) + Profit(Y1) =E= 0 ; (LHS = 22303.1, INFES = 22303.1 ****)
+     
+ProfitPerYr(Y2)..  39.71*ExtraCows(Y1) + 39.71*ExtraCows(Y2) - Revenue(Y2) + Expense(Y2) + Profit(Y2) =E= 0 ; (LHS = 22682.2, INFES = 22682.2 ****)
+     
+ProfitPerYr(Y3)..  39.71*ExtraCows(Y1) + 39.71*ExtraCows(Y2) + 39.71*ExtraCows(Y3) - Revenue(Y3) + Expense(Y3) + Profit(Y3) =E= 0 ; (LHS = 27007.3, INFES = 27007.3 ****)
+     
+ProfitPerYr(Y4)..  39.71*ExtraCows(Y1) + 39.71*ExtraCows(Y2) + 39.71*ExtraCows(Y3) + 39.71*ExtraCows(Y4) - Revenue(Y4) + Expense(Y4) + Profit(Y4) =E= 0 ; (LHS = 28414.4, INFES = 28414.4 ****)
+     
+ProfitPerYr(Y5)..  39.71*ExtraCows(Y1) + 39.71*ExtraCows(Y2) + 39.71*ExtraCows(Y3) + 39.71*ExtraCows(Y4) + 39.71*ExtraCows(Y5) - Revenue(Y5) + Expense(Y5) + Profit(Y5) =E= 0 ; (LHS = 27268.5, INFES = 27268.5 ****)
+     
+
+---- ObjFunc  =E=  profit over 5 years
+
+ObjFunc..  198.55*ExtraCows(Y1) + 238.26*ExtraCows(Y2) + 277.97*ExtraCows(Y3) + 317.68*ExtraCows(Y4) + 357.39*ExtraCows(Y5) - Profit(Y1) - Profit(Y2) - Profit(Y3) - Profit(Y4) - Profit(Y5) + NetProfit =E= 0 ; (LHS = -107820.5, INFES = 107820.5 ****)
+     
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/22/18 11:20:53 Page 3
+Farm Planning (REFINERY, SEQ =xx)
+Column Listing      SOLVE farm Using LP From line 209
+
+
+---- NewBorns  number of NewBorns each year, Age 0
+
+NewBorns(Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Births(Y1)
+       -0.5     SellingBulls(Y1)
+       -0.5     HeiferBal1(Y1)
+
+NewBorns(Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Births(Y2)
+       -0.5     SellingBulls(Y2)
+       -0.5     HeiferBal1(Y2)
+
+NewBorns(Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Births(Y3)
+       -0.5     SellingBulls(Y3)
+       -0.5     HeiferBal1(Y3)
+
+NewBorns(Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Births(Y4)
+       -0.5     SellingBulls(Y4)
+       -0.5     HeiferBal1(Y4)
+
+NewBorns(Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Births(Y5)
+       -0.5     SellingBulls(Y5)
+       -0.5     HeiferBal1(Y5)
+
+
+---- CowCount  number of cows of age a per year
+
+CowCount(0,Y0)
+                (.LO, .L, .UP, .M = 10, 10, 10, 0)
+       -0.95    HeiferBal2(Y1)
+       -1       populae1(heifer,Y0)
+       -1       populae1(milkcow,Y0)
+
+CowCount(0,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal1(Y1)
+       -0.95    HeiferBal2(Y2)
+       -1       populae1(heifer,Y1)
+       -1       populae1(milkcow,Y1)
+
+CowCount(0,Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal1(Y2)
+       -0.95    HeiferBal2(Y3)
+       -1       populae1(heifer,Y2)
+       -1       populae1(milkcow,Y2)
+
+CowCount(0,Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal1(Y3)
+       -0.95    HeiferBal2(Y4)
+       -1       populae1(heifer,Y3)
+       -1       populae1(milkcow,Y3)
+
+CowCount(0,Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal1(Y4)
+       -0.95    HeiferBal2(Y5)
+       -1       populae1(heifer,Y4)
+       -1       populae1(milkcow,Y4)
+
+CowCount(0,Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal1(Y5)
+       -1       populae1(heifer,Y5)
+       -1       populae1(milkcow,Y5)
+
+CowCount(1,Y0)
+                (.LO, .L, .UP, .M = 10, 10, 10, 0)
+       -0.95    HeiferBal3(Y1)
+       -1       populae1(heifer,Y0)
+       -1       populae1(milkcow,Y0)
+
+CowCount(1,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal2(Y1)
+       -0.95    HeiferBal3(Y2)
+       -1       populae1(heifer,Y1)
+       -1       populae1(milkcow,Y1)
+
+CowCount(1,Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal2(Y2)
+       -0.95    HeiferBal3(Y3)
+       -1       populae1(heifer,Y2)
+       -1       populae1(milkcow,Y2)
+
+CowCount(1,Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal2(Y3)
+       -0.95    HeiferBal3(Y4)
+       -1       populae1(heifer,Y3)
+       -1       populae1(milkcow,Y3)
+
+CowCount(1,Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal2(Y4)
+       -0.95    HeiferBal3(Y5)
+       -1       populae1(heifer,Y4)
+       -1       populae1(milkcow,Y4)
+
+CowCount(1,Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal2(Y5)
+       -1       populae1(heifer,Y5)
+       -1       populae1(milkcow,Y5)
+
+CowCount(2,Y0)
+                (.LO, .L, .UP, .M = 10, 10, 10, 0)
+       -0.98    MilkCowBal(3,Y1)
+       -1       populae2(heifer,Y0)
+       -1       populae2(milkcow,Y0)
+
+CowCount(2,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal3(Y1)
+       -0.98    MilkCowBal(3,Y2)
+       -1       populae2(heifer,Y1)
+       -1       populae2(milkcow,Y1)
+
+CowCount(2,Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal3(Y2)
+       -0.98    MilkCowBal(3,Y3)
+       -1       populae2(heifer,Y2)
+       -1       populae2(milkcow,Y2)
+
+CowCount(2,Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal3(Y3)
+       -0.98    MilkCowBal(3,Y4)
+       -1       populae2(heifer,Y3)
+       -1       populae2(milkcow,Y3)
+
+CowCount(2,Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal3(Y4)
+       -0.98    MilkCowBal(3,Y5)
+       -1       populae2(heifer,Y4)
+       -1       populae2(milkcow,Y4)
+
+CowCount(2,Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal3(Y5)
+       -1       populae2(heifer,Y5)
+       -1       populae2(milkcow,Y5)
+
+CowCount(3,Y0)
+                (.LO, .L, .UP, .M = 10, 10, 10, 0)
+       -0.98    MilkCowBal(4,Y1)
+       -1       populae2(heifer,Y0)
+       -1       populae2(milkcow,Y0)
+
+CowCount(3,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       MilkCowBal(3,Y1)
+       -0.98    MilkCowBal(4,Y2)
+       -1       populae2(heifer,Y1)
+       -1       populae2(milkcow,Y1)
+
+REMAINING 58 ENTRIES SKIPPED
+
+---- BullSold  number of bulls sold
+
+BullSold(Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+      -30       Income(Y0)
+
+BullSold(Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       SellingBulls(Y1)
+      -30       Income(Y1)
+
+BullSold(Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       SellingBulls(Y2)
+      -30       Income(Y2)
+
+BullSold(Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       SellingBulls(Y3)
+      -30       Income(Y3)
+
+BullSold(Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       SellingBulls(Y4)
+      -30       Income(Y4)
+
+BullSold(Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       SellingBulls(Y5)
+      -30       Income(Y5)
+
+
+---- HeifSold  number of heifers sold
+
+HeifSold(Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+      -40       Income(Y0)
+
+HeifSold(Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal1(Y1)
+      -40       Income(Y1)
+
+HeifSold(Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal1(Y2)
+      -40       Income(Y2)
+
+HeifSold(Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal1(Y3)
+      -40       Income(Y3)
+
+HeifSold(Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal1(Y4)
+      -40       Income(Y4)
+
+HeifSold(Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       HeiferBal1(Y5)
+      -40       Income(Y5)
+
+
+---- ExtraCows  over population, >130 each year
+
+ExtraCows(Y0)
+                (.LO, .L, .UP, .M = 0, 10, +INF, 0)
+       -1       OverPopulae(Y0)
+     -200       CapOutlay(Y0)
+
+ExtraCows(Y1)
+                (.LO, .L, .UP, .M = 0, 10, +INF, 0)
+       -1       OverPopulae(Y1)
+     -200       CapOutlay(Y1)
+       39.71    ProfitPerYr(Y1)
+       39.71    ProfitPerYr(Y2)
+       39.71    ProfitPerYr(Y3)
+       39.71    ProfitPerYr(Y4)
+       39.71    ProfitPerYr(Y5)
+      198.55    ObjFunc
+
+ExtraCows(Y2)
+                (.LO, .L, .UP, .M = 0, 10, +INF, 0)
+       -1       OverPopulae(Y2)
+     -200       CapOutlay(Y2)
+       39.71    ProfitPerYr(Y2)
+       39.71    ProfitPerYr(Y3)
+       39.71    ProfitPerYr(Y4)
+       39.71    ProfitPerYr(Y5)
+      238.26    ObjFunc
+
+ExtraCows(Y3)
+                (.LO, .L, .UP, .M = 0, 10, +INF, 0)
+       -1       OverPopulae(Y3)
+     -200       CapOutlay(Y3)
+       39.71    ProfitPerYr(Y3)
+       39.71    ProfitPerYr(Y4)
+       39.71    ProfitPerYr(Y5)
+      277.97    ObjFunc
+
+ExtraCows(Y4)
+                (.LO, .L, .UP, .M = 0, 10, +INF, 0)
+       -1       OverPopulae(Y4)
+     -200       CapOutlay(Y4)
+       39.71    ProfitPerYr(Y4)
+       39.71    ProfitPerYr(Y5)
+      317.68    ObjFunc
+
+ExtraCows(Y5)
+                (.LO, .L, .UP, .M = 0, 10, +INF, 0)
+       -1       OverPopulae(Y5)
+     -200       CapOutlay(Y5)
+       39.71    ProfitPerYr(Y5)
+      357.39    ObjFunc
+
+
+---- OldCow  number of old cows Age 12, sold 
+
+OldCow(Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       SellCow(Y0)
+     -120       Income(Y0)
+
+OldCow(Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       SellCow(Y1)
+     -120       Income(Y1)
+
+OldCow(Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       SellCow(Y2)
+     -120       Income(Y2)
+
+OldCow(Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       SellCow(Y3)
+     -120       Income(Y3)
+
+OldCow(Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       SellCow(Y4)
+     -120       Income(Y4)
+
+OldCow(Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       SellCow(Y5)
+     -120       Income(Y5)
+
+
+---- HerdSize  total size of the herd each year
+
+HerdSize(Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Totalherd(Y0)
+
+HerdSize(Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Totalherd(Y1)
+
+HerdSize(Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Totalherd(Y2)
+
+HerdSize(Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Totalherd(Y3)
+
+HerdSize(Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Totalherd(Y4)
+
+HerdSize(Y5)
+                (.LO, .L, .UP, .M = 60, 60, 210, 0)
+        1       Totalherd(Y5)
+        0       (OLD LEVEL ****)
+
+
+---- Ar4Gr  Area allotted for growing grain each year [acre/year]
+
+Ar4Gr(G1,Y0)
+                (.LO, .L, .UP, .M = 0, 0, 20, 0)
+        1       growing(Y0)
+       -1.1     grainproduce(Y0)
+      -15       MiscCosts(Y0)
+
+Ar4Gr(G1,Y1)
+                (.LO, .L, .UP, .M = 0, 0, 20, 0)
+        1       growing(Y1)
+       -1.1     grainproduce(Y1)
+      -15       MiscCosts(Y1)
+
+Ar4Gr(G1,Y2)
+                (.LO, .L, .UP, .M = 0, 0, 20, 0)
+        1       growing(Y2)
+       -1.1     grainproduce(Y2)
+      -15       MiscCosts(Y2)
+
+Ar4Gr(G1,Y3)
+                (.LO, .L, .UP, .M = 0, 0, 20, 0)
+        1       growing(Y3)
+       -1.1     grainproduce(Y3)
+      -15       MiscCosts(Y3)
+
+Ar4Gr(G1,Y4)
+                (.LO, .L, .UP, .M = 0, 0, 20, 0)
+        1       growing(Y4)
+       -1.1     grainproduce(Y4)
+      -15       MiscCosts(Y4)
+
+Ar4Gr(G1,Y5)
+                (.LO, .L, .UP, .M = 0, 0, 20, 0)
+        1       growing(Y5)
+       -1.1     grainproduce(Y5)
+      -15       MiscCosts(Y5)
+
+Ar4Gr(G2,Y0)
+                (.LO, .L, .UP, .M = 0, 0, 30, 0)
+        1       growing(Y0)
+       -0.9     grainproduce(Y0)
+      -15       MiscCosts(Y0)
+
+Ar4Gr(G2,Y1)
+                (.LO, .L, .UP, .M = 0, 0, 30, 0)
+        1       growing(Y1)
+       -0.9     grainproduce(Y1)
+      -15       MiscCosts(Y1)
+
+Ar4Gr(G2,Y2)
+                (.LO, .L, .UP, .M = 0, 0, 30, 0)
+        1       growing(Y2)
+       -0.9     grainproduce(Y2)
+      -15       MiscCosts(Y2)
+
+Ar4Gr(G2,Y3)
+                (.LO, .L, .UP, .M = 0, 0, 30, 0)
+        1       growing(Y3)
+       -0.9     grainproduce(Y3)
+      -15       MiscCosts(Y3)
+
+Ar4Gr(G2,Y4)
+                (.LO, .L, .UP, .M = 0, 0, 30, 0)
+        1       growing(Y4)
+       -0.9     grainproduce(Y4)
+      -15       MiscCosts(Y4)
+
+Ar4Gr(G2,Y5)
+                (.LO, .L, .UP, .M = 0, 0, 30, 0)
+        1       growing(Y5)
+       -0.9     grainproduce(Y5)
+      -15       MiscCosts(Y5)
+
+Ar4Gr(G3,Y0)
+                (.LO, .L, .UP, .M = 0, 0, 20, 0)
+        1       growing(Y0)
+       -0.8     grainproduce(Y0)
+      -15       MiscCosts(Y0)
+
+Ar4Gr(G3,Y1)
+                (.LO, .L, .UP, .M = 0, 0, 20, 0)
+        1       growing(Y1)
+       -0.8     grainproduce(Y1)
+      -15       MiscCosts(Y1)
+
+Ar4Gr(G3,Y2)
+                (.LO, .L, .UP, .M = 0, 0, 20, 0)
+        1       growing(Y2)
+       -0.8     grainproduce(Y2)
+      -15       MiscCosts(Y2)
+
+Ar4Gr(G3,Y3)
+                (.LO, .L, .UP, .M = 0, 0, 20, 0)
+        1       growing(Y3)
+       -0.8     grainproduce(Y3)
+      -15       MiscCosts(Y3)
+
+Ar4Gr(G3,Y4)
+                (.LO, .L, .UP, .M = 0, 0, 20, 0)
+        1       growing(Y4)
+       -0.8     grainproduce(Y4)
+      -15       MiscCosts(Y4)
+
+Ar4Gr(G3,Y5)
+                (.LO, .L, .UP, .M = 0, 0, 20, 0)
+        1       growing(Y5)
+       -0.8     grainproduce(Y5)
+      -15       MiscCosts(Y5)
+
+Ar4Gr(G4,Y0)
+                (.LO, .L, .UP, .M = 0, 0, 10, 0)
+        1       growing(Y0)
+       -0.65    grainproduce(Y0)
+      -15       MiscCosts(Y0)
+
+Ar4Gr(G4,Y1)
+                (.LO, .L, .UP, .M = 0, 0, 10, 0)
+        1       growing(Y1)
+       -0.65    grainproduce(Y1)
+      -15       MiscCosts(Y1)
+
+REMAINING 4 ENTRIES SKIPPED
+
+---- Ar4Sb  Area allotted for growing sugarbeet each year[acre/year]
+
+Ar4Sb(Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       growing(Y0)
+       -1.5     beetproduce(Y0)
+      -10       MiscCosts(Y0)
+
+Ar4Sb(Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       growing(Y1)
+       -1.5     beetproduce(Y1)
+      -10       MiscCosts(Y1)
+
+Ar4Sb(Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       growing(Y2)
+       -1.5     beetproduce(Y2)
+      -10       MiscCosts(Y2)
+
+Ar4Sb(Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       growing(Y3)
+       -1.5     beetproduce(Y3)
+      -10       MiscCosts(Y3)
+
+Ar4Sb(Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       growing(Y4)
+       -1.5     beetproduce(Y4)
+      -10       MiscCosts(Y4)
+
+Ar4Sb(Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       growing(Y5)
+       -1.5     beetproduce(Y5)
+      -10       MiscCosts(Y5)
+
+
+---- fgrow  Amount of feed grown each year [ton/year]
+
+fgrow(grain,Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       grainproduce(Y0)
+        1       FeedBal(grain,Y0)
+        4       Labor1(Y0)
+
+fgrow(grain,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       grainproduce(Y1)
+        1       FeedBal(grain,Y1)
+        4       Labor1(Y1)
+
+fgrow(grain,Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       grainproduce(Y2)
+        1       FeedBal(grain,Y2)
+        4       Labor1(Y2)
+
+fgrow(grain,Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       grainproduce(Y3)
+        1       FeedBal(grain,Y3)
+        4       Labor1(Y3)
+
+fgrow(grain,Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       grainproduce(Y4)
+        1       FeedBal(grain,Y4)
+        4       Labor1(Y4)
+
+fgrow(grain,Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       grainproduce(Y5)
+        1       FeedBal(grain,Y5)
+        4       Labor1(Y5)
+
+fgrow(beet,Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       beetproduce(Y0)
+        1       FeedBal(beet,Y0)
+       14       Labor1(Y0)
+
+fgrow(beet,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       beetproduce(Y1)
+        1       FeedBal(beet,Y1)
+       14       Labor1(Y1)
+
+fgrow(beet,Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       beetproduce(Y2)
+        1       FeedBal(beet,Y2)
+       14       Labor1(Y2)
+
+fgrow(beet,Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       beetproduce(Y3)
+        1       FeedBal(beet,Y3)
+       14       Labor1(Y3)
+
+fgrow(beet,Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       beetproduce(Y4)
+        1       FeedBal(beet,Y4)
+       14       Labor1(Y4)
+
+fgrow(beet,Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       beetproduce(Y5)
+        1       FeedBal(beet,Y5)
+       14       Labor1(Y5)
+
+
+---- fneed  Amount of feed needed each year [ton/year]
+
+fneed(grain,Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedNeed(grain,Y0)
+       -1       FeedBal(grain,Y0)
+
+fneed(grain,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedNeed(grain,Y1)
+       -1       FeedBal(grain,Y1)
+
+fneed(grain,Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedNeed(grain,Y2)
+       -1       FeedBal(grain,Y2)
+
+fneed(grain,Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedNeed(grain,Y3)
+       -1       FeedBal(grain,Y3)
+
+fneed(grain,Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedNeed(grain,Y4)
+       -1       FeedBal(grain,Y4)
+
+fneed(grain,Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedNeed(grain,Y5)
+       -1       FeedBal(grain,Y5)
+
+fneed(beet,Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedNeed(beet,Y0)
+       -1       FeedBal(beet,Y0)
+
+fneed(beet,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedNeed(beet,Y1)
+       -1       FeedBal(beet,Y1)
+
+fneed(beet,Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedNeed(beet,Y2)
+       -1       FeedBal(beet,Y2)
+
+fneed(beet,Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedNeed(beet,Y3)
+       -1       FeedBal(beet,Y3)
+
+fneed(beet,Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedNeed(beet,Y4)
+       -1       FeedBal(beet,Y4)
+
+fneed(beet,Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedNeed(beet,Y5)
+       -1       FeedBal(beet,Y5)
+
+
+---- fbuy  Amount of feed bought each year [ton/year]
+
+fbuy(grain,Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedBal(grain,Y0)
+      -90       Expenditure(Y0)
+
+fbuy(grain,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedBal(grain,Y1)
+      -90       Expenditure(Y1)
+
+fbuy(grain,Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedBal(grain,Y2)
+      -90       Expenditure(Y2)
+
+fbuy(grain,Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedBal(grain,Y3)
+      -90       Expenditure(Y3)
+
+fbuy(grain,Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedBal(grain,Y4)
+      -90       Expenditure(Y4)
+
+fbuy(grain,Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedBal(grain,Y5)
+      -90       Expenditure(Y5)
+
+fbuy(beet,Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedBal(beet,Y0)
+      -70       Expenditure(Y0)
+
+fbuy(beet,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedBal(beet,Y1)
+      -70       Expenditure(Y1)
+
+fbuy(beet,Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedBal(beet,Y2)
+      -70       Expenditure(Y2)
+
+fbuy(beet,Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedBal(beet,Y3)
+      -70       Expenditure(Y3)
+
+fbuy(beet,Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedBal(beet,Y4)
+      -70       Expenditure(Y4)
+
+fbuy(beet,Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       FeedBal(beet,Y5)
+      -70       Expenditure(Y5)
+
+
+---- fsold  Amount of feed sold each year [ton/year]
+
+fsold(grain,Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       FeedBal(grain,Y0)
+      -75       Income(Y0)
+
+fsold(grain,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       FeedBal(grain,Y1)
+      -75       Income(Y1)
+
+fsold(grain,Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       FeedBal(grain,Y2)
+      -75       Income(Y2)
+
+fsold(grain,Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       FeedBal(grain,Y3)
+      -75       Income(Y3)
+
+fsold(grain,Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       FeedBal(grain,Y4)
+      -75       Income(Y4)
+
+fsold(grain,Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       FeedBal(grain,Y5)
+      -75       Income(Y5)
+
+fsold(beet,Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       FeedBal(beet,Y0)
+      -58       Income(Y0)
+
+fsold(beet,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       FeedBal(beet,Y1)
+      -58       Income(Y1)
+
+fsold(beet,Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       FeedBal(beet,Y2)
+      -58       Income(Y2)
+
+fsold(beet,Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       FeedBal(beet,Y3)
+      -58       Income(Y3)
+
+fsold(beet,Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       FeedBal(beet,Y4)
+      -58       Income(Y4)
+
+fsold(beet,Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       FeedBal(beet,Y5)
+      -58       Income(Y5)
+
+
+---- ExtraLabor  Extra Labor beyond  5500 hr/year, [hours/year]
+
+ExtraLabor(Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       Labor1(Y0)
+       -1.2     Labor2(Y0)
+
+ExtraLabor(Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       Labor1(Y1)
+       -1.2     Labor2(Y1)
+
+ExtraLabor(Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       Labor1(Y2)
+       -1.2     Labor2(Y2)
+
+ExtraLabor(Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       Labor1(Y3)
+       -1.2     Labor2(Y3)
+
+ExtraLabor(Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       Labor1(Y4)
+       -1.2     Labor2(Y4)
+
+ExtraLabor(Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       Labor1(Y5)
+       -1.2     Labor2(Y5)
+
+
+---- LaborCost  Total cost for labor [£/year]
+
+LaborCost(Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Labor2(Y0)
+       -1       Expenditure(Y0)
+
+LaborCost(Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Labor2(Y1)
+       -1       Expenditure(Y1)
+
+LaborCost(Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Labor2(Y2)
+       -1       Expenditure(Y2)
+
+LaborCost(Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Labor2(Y3)
+       -1       Expenditure(Y3)
+
+LaborCost(Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Labor2(Y4)
+       -1       Expenditure(Y4)
+
+LaborCost(Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Labor2(Y5)
+       -1       Expenditure(Y5)
+
+
+---- OtherCost  Total other expenses [£/year]
+
+OtherCost(Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       MiscCosts(Y0)
+       -1       Expenditure(Y0)
+
+OtherCost(Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       MiscCosts(Y1)
+       -1       Expenditure(Y1)
+
+OtherCost(Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       MiscCosts(Y2)
+       -1       Expenditure(Y2)
+
+OtherCost(Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       MiscCosts(Y3)
+       -1       Expenditure(Y3)
+
+OtherCost(Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       MiscCosts(Y4)
+       -1       Expenditure(Y4)
+
+OtherCost(Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       MiscCosts(Y5)
+       -1       Expenditure(Y5)
+
+
+---- Revenue  Total Revenue generated [£/year]
+
+Revenue(Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Income(Y0)
+
+Revenue(Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Income(Y1)
+       -1       ProfitPerYr(Y1)
+
+Revenue(Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Income(Y2)
+       -1       ProfitPerYr(Y2)
+
+Revenue(Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Income(Y3)
+       -1       ProfitPerYr(Y3)
+
+Revenue(Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Income(Y4)
+       -1       ProfitPerYr(Y4)
+
+Revenue(Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Income(Y5)
+       -1       ProfitPerYr(Y5)
+
+
+---- Expense  Total Expense each year [£/year]
+
+Expense(Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Expenditure(Y0)
+
+Expense(Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Expenditure(Y1)
+        1       ProfitPerYr(Y1)
+
+Expense(Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Expenditure(Y2)
+        1       ProfitPerYr(Y2)
+
+Expense(Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Expenditure(Y3)
+        1       ProfitPerYr(Y3)
+
+Expense(Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Expenditure(Y4)
+        1       ProfitPerYr(Y4)
+
+Expense(Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Expenditure(Y5)
+        1       ProfitPerYr(Y5)
+
+
+---- Capital  Capital Outlay /loan taken each year for extra cows[£/£200]
+
+Capital(Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       CapOutlay(Y0)
+       -1       Expenditure(Y0)
+
+Capital(Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       CapOutlay(Y1)
+       -1       Expenditure(Y1)
+
+Capital(Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       CapOutlay(Y2)
+       -1       Expenditure(Y2)
+
+Capital(Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       CapOutlay(Y3)
+       -1       Expenditure(Y3)
+
+Capital(Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       CapOutlay(Y4)
+       -1       Expenditure(Y4)
+
+Capital(Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       CapOutlay(Y5)
+       -1       Expenditure(Y5)
+
+
+---- Profit  Profit each year
+
+Profit(Y1)
+                (.LO, .L, .UP, .M = 0, 21906, +INF, 0)
+        1       ProfitPerYr(Y1)
+       -1       ObjFunc
+
+Profit(Y2)
+                (.LO, .L, .UP, .M = 0, 21888, +INF, 0)
+        1       ProfitPerYr(Y2)
+       -1       ObjFunc
+
+Profit(Y3)
+                (.LO, .L, .UP, .M = 0, 25816, +INF, 0)
+        1       ProfitPerYr(Y3)
+       -1       ObjFunc
+
+Profit(Y4)
+                (.LO, .L, .UP, .M = 0, 26826, +INF, 0)
+        1       ProfitPerYr(Y4)
+       -1       ObjFunc
+
+Profit(Y5)
+                (.LO, .L, .UP, .M = 0, 25283, +INF, 0)
+        1       ProfitPerYr(Y5)
+       -1       ObjFunc
+
+
+---- NetProfit  Net profit over 5 years, with future loan repayments
+
+NetProfit
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       ObjFunc
+
+
+---- Pop  population of cow each year
+
+Pop(heifer,Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       Totalherd(Y0)
+        1       populae1(heifer,Y0)
+        1       populae1(milkcow,Y0)
+        0.6667  grazing(Y0)
+       10       Labor1(Y0)
+      -50       MiscCosts(Y0)
+        1       OverPopulae(Y0)
+
+Pop(heifer,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       Totalherd(Y1)
+        1       populae1(heifer,Y1)
+        1       populae1(milkcow,Y1)
+        0.6667  grazing(Y1)
+       10       Labor1(Y1)
+      -50       MiscCosts(Y1)
+        1       OverPopulae(Y1)
+
+Pop(heifer,Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       Totalherd(Y2)
+        1       populae1(heifer,Y2)
+        1       populae1(milkcow,Y2)
+        0.6667  grazing(Y2)
+       10       Labor1(Y2)
+      -50       MiscCosts(Y2)
+        1       OverPopulae(Y2)
+
+Pop(heifer,Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       Totalherd(Y3)
+        1       populae1(heifer,Y3)
+        1       populae1(milkcow,Y3)
+        0.6667  grazing(Y3)
+       10       Labor1(Y3)
+      -50       MiscCosts(Y3)
+        1       OverPopulae(Y3)
+
+Pop(heifer,Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       Totalherd(Y4)
+        1       populae1(heifer,Y4)
+        1       populae1(milkcow,Y4)
+        0.6667  grazing(Y4)
+       10       Labor1(Y4)
+      -50       MiscCosts(Y4)
+        1       OverPopulae(Y4)
+
+Pop(heifer,Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       Totalherd(Y5)
+        1       populae1(heifer,Y5)
+        1       populae1(milkcow,Y5)
+        0.6667  grazing(Y5)
+       10       Labor1(Y5)
+      -50       MiscCosts(Y5)
+        1       OverPopulae(Y5)
+
+Pop(milkcow,Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       Totalherd(Y0)
+        1       populae2(heifer,Y0)
+        1       populae2(milkcow,Y0)
+        1       grazing(Y0)
+       -0.6     FeedNeed(grain,Y0)
+       -0.7     FeedNeed(beet,Y0)
+       42       Labor1(Y0)
+     -100       MiscCosts(Y0)
+        1       OverPopulae(Y0)
+     -370       Income(Y0)
+
+Pop(milkcow,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1.1     Births(Y1)
+       -1       Totalherd(Y1)
+        1       populae2(heifer,Y1)
+        1       populae2(milkcow,Y1)
+        1       grazing(Y1)
+       -0.6     FeedNeed(grain,Y1)
+       -0.7     FeedNeed(beet,Y1)
+       42       Labor1(Y1)
+     -100       MiscCosts(Y1)
+        1       OverPopulae(Y1)
+     -370       Income(Y1)
+
+Pop(milkcow,Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1.1     Births(Y2)
+       -1       Totalherd(Y2)
+        1       populae2(heifer,Y2)
+        1       populae2(milkcow,Y2)
+        1       grazing(Y2)
+       -0.6     FeedNeed(grain,Y2)
+       -0.7     FeedNeed(beet,Y2)
+       42       Labor1(Y2)
+     -100       MiscCosts(Y2)
+        1       OverPopulae(Y2)
+     -370       Income(Y2)
+
+Pop(milkcow,Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1.1     Births(Y3)
+       -1       Totalherd(Y3)
+        1       populae2(heifer,Y3)
+        1       populae2(milkcow,Y3)
+        1       grazing(Y3)
+       -0.6     FeedNeed(grain,Y3)
+       -0.7     FeedNeed(beet,Y3)
+       42       Labor1(Y3)
+     -100       MiscCosts(Y3)
+        1       OverPopulae(Y3)
+     -370       Income(Y3)
+
+Pop(milkcow,Y4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1.1     Births(Y4)
+       -1       Totalherd(Y4)
+        1       populae2(heifer,Y4)
+        1       populae2(milkcow,Y4)
+        1       grazing(Y4)
+       -0.6     FeedNeed(grain,Y4)
+       -0.7     FeedNeed(beet,Y4)
+       42       Labor1(Y4)
+     -100       MiscCosts(Y4)
+        1       OverPopulae(Y4)
+     -370       Income(Y4)
+
+Pop(milkcow,Y5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1.1     Births(Y5)
+       -1       Totalherd(Y5)
+        1       populae2(heifer,Y5)
+        1       populae2(milkcow,Y5)
+        1       grazing(Y5)
+       -0.6     FeedNeed(grain,Y5)
+       -0.7     FeedNeed(beet,Y5)
+       42       Labor1(Y5)
+     -100       MiscCosts(Y5)
+        1       OverPopulae(Y5)
+     -370       Income(Y5)
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/22/18 11:20:53 Page 4
+Farm Planning (REFINERY, SEQ =xx)
+Model Statistics    SOLVE farm Using LP From line 209
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS          25     SINGLE EQUATIONS          207
+BLOCKS OF VARIABLES          22     SINGLE VARIABLES          245  1 projected
+NON ZERO ELEMENTS           748
+
+
+GENERATION TIME      =        0.109 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.109 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/22/18 11:20:53 Page 5
+Farm Planning (REFINERY, SEQ =xx)
+Solution Report     SOLVE farm Using LP From line 209
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   farm                OBJECTIVE  NetProfit
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  209
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE           149459.2407
+
+ RESOURCE USAGE, LIMIT          0.000      1000.000
+ ITERATION COUNT, LIMIT        40    2000000000
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+Cplex 12.8.0.0
+
+Space for names approximately 0.01 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.00sec (det. 0.40 ticks)
+Optimal solution found.
+Objective :      149459.240666
+
+
+---- EQU Births  calculating NewBorns each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y1          .              .              .            35.0000      
+Y2          .              .              .            35.0000      
+Y3          .              .              .            35.0000      
+Y4          .              .              .            35.0000      
+Y5          .              .              .            35.0000      
+
+---- EQU SellingBulls  calculating BullSold(yr)
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y1          .              .              .            30.0000      
+Y2          .              .              .            30.0000      
+Y3          .              .              .            30.0000      
+Y4          .              .              .            30.0000      
+Y5          .              .              .            30.0000      
+
+---- EQU HeiferBal1  calculating heifers kept in the herd after birth
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y1          .              .              .            40.0000      
+Y2          .              .              .            40.0000      
+Y3          .              .              .            40.0000      
+Y4          .              .              .            40.0000      
+Y5          .              .              .            40.0000      
+
+---- EQU HeiferBal2  Heifers Age 0  to Age 1
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y1          .              .              .           268.9810      
+Y2          .              .              .           264.4779      
+Y3          .              .              .           247.4621      
+Y4          .              .              .           107.3684      
+Y5          .              .              .           -62.0000      
+
+---- EQU HeiferBal3  Heifers Age 1  to Age 2
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y1          .              .              .           510.6663      
+Y2          .              .              .           505.5105      
+Y3          .              .              .           483.7546      
+Y4          .              .              .           325.7496      
+Y5          .              .              .           164.5200      
+
+---- EQU MilkCowBal  Milking cows continuity, Age 3  to Age 12
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+3 .Y1          .              .              .           510.6663      
+3 .Y2          .              .              .           505.5105      
+3 .Y3          .              .              .           483.7546      
+3 .Y4          .              .              .           325.7496      
+3 .Y5          .              .              .           164.5200      
+4 .Y1          .              .              .           510.6663      
+4 .Y2          .              .              .           505.5105      
+4 .Y3          .              .              .           483.7546      
+4 .Y4          .              .              .           325.7496      
+4 .Y5          .              .              .           164.5200      
+5 .Y1          .              .              .           510.6663      
+5 .Y2          .              .              .           505.5105      
+5 .Y3          .              .              .           483.7546      
+5 .Y4          .              .              .           325.7496      
+5 .Y5          .              .              .           164.5200      
+6 .Y1          .              .              .           510.6663      
+6 .Y2          .              .              .           505.5105      
+6 .Y3          .              .              .           483.7546      
+6 .Y4          .              .              .           325.7496      
+6 .Y5          .              .              .           164.5200      
+7 .Y1          .              .              .           510.6663      
+7 .Y2          .              .              .           505.5105      
+7 .Y3          .              .              .           483.7546      
+7 .Y4          .              .              .           325.7496      
+7 .Y5          .              .              .           164.5200      
+8 .Y1          .              .              .           469.6025      
+8 .Y2          .              .              .           505.5105      
+8 .Y3          .              .              .           483.7546      
+8 .Y4          .              .              .           325.7496      
+8 .Y5          .              .              .           164.5200      
+9 .Y1          .              .              .           317.0164      
+9 .Y2          .              .              .           463.6086      
+9 .Y3          .              .              .           483.7546      
+9 .Y4          .              .              .           325.7496      
+9 .Y5          .              .              .           164.5200      
+10.Y1          .              .              .           161.3164      
+10.Y2          .              .              .           307.9086      
+10.Y3          .              .              .           440.9976      
+10.Y4          .              .              .           325.7496      
+10.Y5          .              .              .           164.5200      
+11.Y1          .              .              .           132.8660      
+11.Y2          .              .              .           149.0310      
+11.Y3          .              .              .           282.1200      
+11.Y4          .              .              .           282.1200      
+11.Y5          .              .              .           164.5200      
+12.Y1          .              .              .           120.0000      
+12.Y2          .              .              .           120.0000      
+12.Y3          .              .              .           120.0000      
+12.Y4          .              .              .           120.0000      
+12.Y5          .              .              .           120.0000      
+
+---- EQU Totalherd  Herd size calculation
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .              .             EPS         
+Y1          .              .              .             EPS         
+Y2          .              .              .             EPS         
+Y3          .              .              .             EPS         
+Y4          .              .              .             EPS         
+Y5          .              .              .             EPS         
+
+---- EQU populae1  calculating total heifers in herd each year
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+heifer .Y0          .              .              .             EPS         
+heifer .Y1          .              .              .          -211.2540      
+heifer .Y2          .              .              .              .          
+heifer .Y3          .              .              .           -62.0000      
+heifer .Y4          .              .              .           -48.9256      
+heifer .Y5          .              .              .           -62.0000      
+milkcow.Y0          .              .              .              .          
+milkcow.Y1          .              .              .              .          
+milkcow.Y2          .              .              .          -195.0890      
+milkcow.Y3          .              .              .              .          
+milkcow.Y4          .              .              .              .          
+milkcow.Y5          .              .              .              .          
+
+---- EQU populae2  calculating total milking cows in herd each year
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+heifer .Y0          .              .              .             EPS         
+heifer .Y1          .              .              .            15.2660      
+heifer .Y2          .              .              .            31.4310      
+heifer .Y3          .              .              .           164.5200      
+heifer .Y4          .              .              .              .          
+heifer .Y5          .              .              .           164.5200      
+milkcow.Y0          .              .              .              .          
+milkcow.Y1          .              .              .              .          
+milkcow.Y2          .              .              .              .          
+milkcow.Y3          .              .              .              .          
+milkcow.Y4          .              .              .           164.5200      
+milkcow.Y5          .              .              .              .          
+
+---- EQU SellCow  Selling cows of Age 12
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .              .              .          
+Y1          .              .              .           120.0000      
+Y2          .              .              .           120.0000      
+Y3          .              .              .           120.0000      
+Y4          .              .              .           120.0000      
+Y5          .              .              .           120.0000      
+
+---- EQU grazing  land area constraint for animal roaming
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0        -INF          113.3333       200.0000          .          
+Y1        -INF          119.2333       200.0000          .          
+Y2        -INF          118.3890       200.0000          .          
+Y3        -INF          112.7716       200.0000          .          
+Y4        -INF          105.0051       200.0000          .          
+Y5        -INF           93.8658       200.0000          .          
+
+---- EQU growing  land area constraint for feed growing
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0        -INF             .           200.0000          .          
+Y1        -INF          200.0000       200.0000        51.8000      
+Y2        -INF          200.0000       200.0000        51.8000      
+Y3        -INF          200.0000       200.0000        51.8000      
+Y4        -INF          200.0000       200.0000        51.8000      
+Y5        -INF          200.0000       200.0000        51.8000      
+
+---- EQU grainproduce  amount of grain produced
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .              .             EPS         
+Y1          .              .              .            83.5000      
+Y2          .              .              .            83.5000      
+Y3          .              .              .            83.5000      
+Y4          .              .              .            83.5000      
+Y5          .              .              .            83.5000      
+
+---- EQU beetproduce  amount of sugar beet produced
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .              .             EPS         
+Y1          .              .              .            41.2000      
+Y2          .              .              .            41.2000      
+Y3          .              .              .            41.2000      
+Y4          .              .              .            41.2000      
+Y5          .              .              .            41.2000      
+
+---- EQU FeedNeed  amount of Feed required by cows
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+grain.Y0          .              .              .             EPS         
+grain.Y1          .              .              .           -88.3000      
+grain.Y2          .              .              .           -88.3000      
+grain.Y3          .              .              .           -88.3000      
+grain.Y4          .              .              .           -88.3000      
+grain.Y5          .              .              .           -88.3000      
+beet .Y0          .              .              .             EPS         
+beet .Y1          .              .              .           -58.0000      
+beet .Y2          .              .              .           -58.0000      
+beet .Y3          .              .              .           -58.0000      
+beet .Y4          .              .              .           -58.0000      
+beet .Y5          .              .              .           -58.0000      
+
+---- EQU FeedBal  feed balance equation
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+grain.Y0          .              .              .             EPS         
+grain.Y1          .              .              .           -88.3000      
+grain.Y2          .              .              .           -88.3000      
+grain.Y3          .              .              .           -88.3000      
+grain.Y4          .              .              .           -88.3000      
+grain.Y5          .              .              .           -88.3000      
+beet .Y0          .              .              .             EPS         
+beet .Y1          .              .              .           -58.0000      
+beet .Y2          .              .              .           -58.0000      
+beet .Y3          .              .              .           -58.0000      
+beet .Y4          .              .              .           -58.0000      
+beet .Y5          .              .              .           -58.0000      
+
+---- EQU Labor1  net labour hours calculation
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0        -INF         4400.0000      5500.0000          .          
+Y1        -INF         5500.0000      5500.0000         1.2000      
+Y2        -INF         5500.0000      5500.0000         1.2000      
+Y3        -INF         5500.0000      5500.0000         1.2000      
+Y4        -INF         5500.0000      5500.0000         1.2000      
+Y5        -INF         5500.0000      5500.0000         1.2000      
+
+---- EQU Labor2  calculating yearly labor cost
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0      4000.0000      4000.0000      4000.0000         EPS         
+Y1      4000.0000      4000.0000      4000.0000        -1.0000      
+Y2      4000.0000      4000.0000      4000.0000        -1.0000      
+Y3      4000.0000      4000.0000      4000.0000        -1.0000      
+Y4      4000.0000      4000.0000      4000.0000        -1.0000      
+Y5      4000.0000      4000.0000      4000.0000        -1.0000      
+
+---- EQU MiscCosts  calculating Misc/other costs
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .              .             EPS         
+Y1          .              .              .            -1.0000      
+Y2          .              .              .            -1.0000      
+Y3          .              .              .            -1.0000      
+Y4          .              .              .            -1.0000      
+Y5          .              .              .            -1.0000      
+
+---- EQU OverPopulae  calculate number fo extra cows
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0        -INF          120.0000       130.0000          .          
+Y1        -INF          130.0000       130.0000       149.2540      
+Y2        -INF          130.0000       130.0000       133.0890      
+Y3        -INF          116.9431       130.0000          .          
+Y4        -INF          105.0051       130.0000          .          
+Y5        -INF           93.8658       130.0000          .          
+
+---- EQU CapOutlay  calculating capital outlay for extra cattle
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .              .             EPS         
+Y1          .              .              .            -1.0000      
+Y2          .              .              .            -1.0000      
+Y3          .              .              .            -1.0000      
+Y4          .              .              .            -1.0000      
+Y5          .              .              .            -1.0000      
+
+---- EQU Income  Net income each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .              .             EPS         
+Y1          .              .              .             1.0000      
+Y2          .              .              .             1.0000      
+Y3          .              .              .             1.0000      
+Y4          .              .              .             1.0000      
+Y5          .              .              .             1.0000      
+
+---- EQU Expenditure  Net expenditure each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .              .             EPS         
+Y1          .              .              .            -1.0000      
+Y2          .              .              .            -1.0000      
+Y3          .              .              .            -1.0000      
+Y4          .              .              .            -1.0000      
+Y5          .              .              .            -1.0000      
+
+---- EQU ProfitPerYr  yearly profit calculation
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y1          .              .              .             1.0000      
+Y2          .              .              .             1.0000      
+Y3          .              .              .             1.0000      
+Y4          .              .              .             1.0000      
+Y5          .              .              .             1.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU ObjFunc             .              .              .             1.0000      
+
+  ObjFunc  profit over 5 years
+
+---- VAR NewBorns  number of NewBorns each year, Age 0
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y1          .           107.4700        +INF             .          
+Y2          .           104.6837        +INF             .          
+Y3          .           114.8716        +INF             .          
+Y4          .           115.5056        +INF             .          
+Y5          .           103.2524        +INF             .          
+
+---- VAR CowCount  number of cows of age a per year
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+0 .Y0        10.0000        10.0000        10.0000       255.5320      
+0 .Y1          .            22.8000        +INF             .          
+0 .Y2          .            13.1730        +INF             .          
+0 .Y3          .              .            +INF             .          
+0 .Y4          .              .            +INF         -147.8256      
+0 .Y5          .              .            +INF         -102.0000      
+1 .Y0        10.0000        10.0000        10.0000       485.1330      
+1 .Y1          .             9.5000        +INF             .          
+1 .Y2          .            21.6600        +INF             .          
+1 .Y3          .            12.5143        +INF             .          
+1 .Y4          .              .            +INF             .          
+1 .Y5          .              .            +INF             .          
+2 .Y0        10.0000        10.0000        10.0000       500.4530      
+2 .Y1          .             9.5000        +INF             .          
+2 .Y2          .             9.0250        +INF             .          
+2 .Y3          .            20.5770        +INF             .          
+2 .Y4          .            11.8886        +INF             .          
+2 .Y5          .              .            +INF             .          
+3 .Y0        10.0000        10.0000        10.0000       500.4530      
+3 .Y1          .             9.8000        +INF             .          
+3 .Y2          .             9.3100        +INF             .          
+3 .Y3          .             8.8445        +INF             .          
+3 .Y4          .            20.1655        +INF             .          
+3 .Y5          .            11.6509        +INF             .          
+4 .Y0        10.0000        10.0000        10.0000       500.4530      
+4 .Y1          .             9.8000        +INF             .          
+4 .Y2          .             9.6040        +INF             .          
+4 .Y3          .             9.1238        +INF             .          
+4 .Y4          .             8.6676        +INF             .          
+4 .Y5          .            19.7622        +INF             .          
+5 .Y0        10.0000        10.0000        10.0000       500.4530      
+5 .Y1          .             9.8000        +INF             .          
+5 .Y2          .             9.6040        +INF             .          
+5 .Y3          .             9.4119        +INF             .          
+5 .Y4          .             8.9413        +INF             .          
+5 .Y5          .             8.4943        +INF             .          
+6 .Y0        10.0000        10.0000        10.0000       500.4530      
+6 .Y1          .             9.8000        +INF             .          
+6 .Y2          .             9.6040        +INF             .          
+6 .Y3          .             9.4119        +INF             .          
+6 .Y4          .             9.2237        +INF             .          
+6 .Y5          .             8.7625        +INF             .          
+7 .Y0        10.0000        10.0000        10.0000       460.2104      
+7 .Y1          .             9.8000        +INF             .          
+7 .Y2          .             9.6040        +INF             .          
+7 .Y3          .             9.4119        +INF             .          
+7 .Y4          .             9.2237        +INF             .          
+7 .Y5          .             9.0392        +INF             .          
+8 .Y0        10.0000        10.0000        10.0000       310.6761      
+8 .Y1          .             9.8000        +INF             .          
+8 .Y2          .             9.6040        +INF             .          
+8 .Y3          .             9.4119        +INF             .          
+8 .Y4          .             9.2237        +INF             .          
+8 .Y5          .             9.0392        +INF             .          
+9 .Y0        10.0000        10.0000        10.0000       158.0901      
+9 .Y1          .             9.8000        +INF             .          
+9 .Y2          .             9.6040        +INF             .          
+9 .Y3          .             9.4119        +INF             .          
+9 .Y4          .             9.2237        +INF             .          
+9 .Y5          .             9.0392        +INF             .          
+10.Y0        10.0000        10.0000        10.0000       130.2087      
+10.Y1          .             9.8000        +INF             .          
+10.Y2          .             9.6040        +INF             .          
+10.Y3          .             9.4119        +INF             .          
+10.Y4          .             9.2237        +INF             .          
+10.Y5          .             9.0392        +INF             .          
+11.Y0        10.0000        10.0000        10.0000       117.6000      
+11.Y1          .             9.8000        +INF             .          
+11.Y2          .             9.6040        +INF             .          
+11.Y3          .             9.4119        +INF             .          
+11.Y4          .             9.2237        +INF             .          
+11.Y5          .             9.0392        +INF             .          
+12.Y0          .              .              .             EPS         
+12.Y1          .             9.8000        +INF             .          
+12.Y2          .             9.6040        +INF             .          
+12.Y3          .             9.4119        +INF             .          
+12.Y4          .             9.2237        +INF             .          
+12.Y5          .             9.0392        +INF             .          
+
+---- VAR BullSold  number of bulls sold
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .            +INF            EPS         
+Y1          .            53.7350        +INF             .          
+Y2          .            52.3419        +INF             .          
+Y3          .            57.4358        +INF             .          
+Y4          .            57.7528        +INF             .          
+Y5          .            51.6262        +INF             .          
+
+---- VAR HeifSold  number of heifers sold
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .            +INF            EPS         
+Y1          .            30.9350        +INF             .          
+Y2          .            39.1689        +INF             .          
+Y3          .            57.4358        +INF             .          
+Y4          .            57.7528        +INF             .          
+Y5          .            51.6262        +INF             .          
+
+---- VAR ExtraCows  over population, >130 each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .            +INF             .          
+Y1          .              .            +INF         -447.8460      
+Y2          .              .            +INF         -464.0110      
+Y3          .              .            +INF         -597.1000      
+Y4          .              .            +INF         -597.1000      
+Y5          .              .            +INF         -597.1000      
+
+---- VAR OldCow  number of old cows Age 12, sold 
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .            +INF            EPS         
+Y1          .             9.8000        +INF             .          
+Y2          .             9.6040        +INF             .          
+Y3          .             9.4119        +INF             .          
+Y4          .             9.2237        +INF             .          
+Y5          .             9.0392        +INF             .          
+
+---- VAR HerdSize  total size of the herd each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .           120.0000        +INF             .          
+Y1          .           130.0000        +INF             .          
+Y2          .           130.0000        +INF             .          
+Y3          .           116.9431        +INF             .          
+Y4          .           105.0051        +INF             .          
+Y5        60.0000        93.8658       210.0000          .          
+
+---- VAR Ar4Gr  Area allotted for growing grain each year [acre/year]
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+G1.Y0          .              .            20.0000         EPS         
+G1.Y1          .            20.0000        20.0000        25.0500      
+G1.Y2          .            20.0000        20.0000        25.0500      
+G1.Y3          .            20.0000        20.0000        25.0500      
+G1.Y4          .            20.0000        20.0000        25.0500      
+G1.Y5          .            20.0000        20.0000        25.0500      
+G2.Y0          .              .            30.0000         EPS         
+G2.Y1          .            30.0000        30.0000         8.3500      
+G2.Y2          .            30.0000        30.0000         8.3500      
+G2.Y3          .            30.0000        30.0000         8.3500      
+G2.Y4          .            30.0000        30.0000         8.3500      
+G2.Y5          .            30.0000        30.0000         8.3500      
+G3.Y0          .              .            20.0000         EPS         
+G3.Y1          .            12.0250        20.0000          .          
+G3.Y2          .            10.1253        20.0000          .          
+G3.Y3          .            17.0716        20.0000          .          
+G3.Y4          .            17.5038        20.0000          .          
+G3.Y5          .             9.1494        20.0000          .          
+G4.Y0          .              .            10.0000         EPS         
+G4.Y1          .              .            10.0000       -12.5250      
+G4.Y2          .              .            10.0000       -12.5250      
+G4.Y3          .              .            10.0000       -12.5250      
+G4.Y4          .              .            10.0000       -12.5250      
+G4.Y5          .              .            10.0000       -12.5250      
+
+---- VAR Ar4Sb  Area allotted for growing sugarbeet each year[acre/year]
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .            +INF            EPS         
+Y1          .           137.9750        +INF             .          
+Y2          .           139.8747        +INF             .          
+Y3          .           132.9284        +INF             .          
+Y4          .           132.4962        +INF             .          
+Y5          .           140.8506        +INF             .          
+
+---- VAR fgrow  Amount of feed grown each year [ton/year]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+grain.Y0          .              .            +INF             .          
+grain.Y1          .            58.6200        +INF             .          
+grain.Y2          .            57.1002        +INF             .          
+grain.Y3          .            62.6572        +INF             .          
+grain.Y4          .            63.0031        +INF             .          
+grain.Y5          .            56.3195        +INF             .          
+beet .Y0          .              .            +INF             .          
+beet .Y1          .           206.9625        +INF             .          
+beet .Y2          .           209.8121        +INF             .          
+beet .Y3          .           199.3927        +INF             .          
+beet .Y4          .           198.7442        +INF             .          
+beet .Y5          .           211.2760        +INF             .          
+
+---- VAR fneed  Amount of feed needed each year [ton/year]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+grain.Y0          .            60.0000        +INF             .          
+grain.Y1          .            58.6200        +INF             .          
+grain.Y2          .            57.1002        +INF             .          
+grain.Y3          .            62.6572        +INF             .          
+grain.Y4          .            63.0031        +INF             .          
+grain.Y5          .            56.3195        +INF             .          
+beet .Y0          .            70.0000        +INF             .          
+beet .Y1          .            68.3900        +INF             .          
+beet .Y2          .            66.6169        +INF             .          
+beet .Y3          .            73.1001        +INF             .          
+beet .Y4          .            73.5036        +INF             .          
+beet .Y5          .            65.7061        +INF             .          
+
+---- VAR fbuy  Amount of feed bought each year [ton/year]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+grain.Y0          .            60.0000        +INF             .          
+grain.Y1          .              .            +INF           -1.7000      
+grain.Y2          .              .            +INF           -1.7000      
+grain.Y3          .              .            +INF           -1.7000      
+grain.Y4          .              .            +INF           -1.7000      
+grain.Y5          .              .            +INF           -1.7000      
+beet .Y0          .            70.0000        +INF             .          
+beet .Y1          .              .            +INF          -12.0000      
+beet .Y2          .              .            +INF          -12.0000      
+beet .Y3          .              .            +INF          -12.0000      
+beet .Y4          .              .            +INF          -12.0000      
+beet .Y5          .              .            +INF          -12.0000      
+
+---- VAR fsold  Amount of feed sold each year [ton/year]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+grain.Y0          .              .            +INF            EPS         
+grain.Y1          .              .            +INF          -13.3000      
+grain.Y2          .              .            +INF          -13.3000      
+grain.Y3          .              .            +INF          -13.3000      
+grain.Y4          .              .            +INF          -13.3000      
+grain.Y5          .              .            +INF          -13.3000      
+beet .Y0          .              .            +INF            EPS         
+beet .Y1          .           138.5725        +INF             .          
+beet .Y2          .           143.1952        +INF             .          
+beet .Y3          .           126.2925        +INF             .          
+beet .Y4          .           125.2407        +INF             .          
+beet .Y5          .           145.5699        +INF             .          
+
+---- VAR ExtraLabor  Extra Labor beyond  5500 hr/year, [hours/year]
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .            +INF            EPS         
+Y1          .          2058.3550        +INF             .          
+Y2          .          2011.1146        +INF             .          
+Y3          .          2053.2769        +INF             .          
+Y4          .          1944.6466        +INF             .          
+Y5          .          1625.5053        +INF             .          
+
+---- VAR LaborCost  Total cost for labor [£/year]
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .          4000.0000        +INF             .          
+Y1          .          6470.0260        +INF             .          
+Y2          .          6413.3375        +INF             .          
+Y3          .          6463.9323        +INF             .          
+Y4          .          6333.5759        +INF             .          
+Y5          .          5950.6064        +INF             .          
+
+---- VAR OtherCost  Total other expenses [£/year]
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .         11000.0000        +INF             .          
+Y1          .         13695.1250        +INF             .          
+Y2          .         13558.9763        +INF             .          
+Y3          .         13403.9493        +INF             .          
+Y4          .         12838.0308        +INF             .          
+Y5          .         11682.3274        +INF             .          
+
+---- VAR Revenue  Total Revenue generated [£/year]
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .         37000.0000        +INF             .          
+Y1          .         48211.6550        +INF             .          
+Y2          .         47806.6026        +INF             .          
+Y3          .         51113.5386        +INF             .          
+Y4          .         51265.3902        +INF             .          
+Y5          .         47871.9411        +INF             .          
+
+---- VAR Expense  Total Expense each year [£/year]
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .         25300.0000        +INF             .          
+Y1          .         20165.1510        +INF             .          
+Y2          .         19972.3137        +INF             .          
+Y3          .         19867.8816        +INF             .          
+Y4          .         19171.6067        +INF             .          
+Y5          .         17632.9338        +INF             .          
+
+---- VAR Capital  Capital Outlay /loan taken each year for extra cows[£/£200]
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .            +INF            EPS         
+Y1          .              .            +INF             .          
+Y2          .              .            +INF             .          
+Y3          .              .            +INF             .          
+Y4          .              .            +INF             .          
+Y5          .              .            +INF             .          
+
+---- VAR Profit  Profit each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y1          .         28046.5040        +INF             .          
+Y2          .         27834.2888        +INF             .          
+Y3          .         31245.6570        +INF             .          
+Y4          .         32093.7835        +INF             .          
+Y5          .         30239.0073        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR NetProfit         -INF       149459.2407        +INF             .          
+
+  NetProfit  Net profit over 5 years, with future loan repayments
+
+---- VAR Pop  population of cow each year
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+heifer .Y0          .            20.0000        +INF             .          
+heifer .Y1          .            32.3000        +INF             .          
+heifer .Y2          .            34.8330        +INF             .          
+heifer .Y3          .            12.5143        +INF             .          
+heifer .Y4          .              .            +INF          -13.0744      
+heifer .Y5          .              .            +INF             .          
+milkcow.Y0          .           100.0000        +INF             .          
+milkcow.Y1          .            97.7000        +INF             .          
+milkcow.Y2          .            95.1670        +INF             .          
+milkcow.Y3          .           104.4287        +INF             .          
+milkcow.Y4          .           105.0051        +INF             .          
+milkcow.Y5          .            93.8658        +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/22/18 11:20:53 Page 6
+Farm Planning (REFINERY, SEQ =xx)
+E x e c u t i o n
+
+
+----    212 VARIABLE NewBorns.L  number of NewBorns each year, Age 0
+
+Y1 107.470,    Y2 104.684,    Y3 114.872,    Y4 115.506,    Y5 103.252
+
+
+----    212 VARIABLE Pop.L  population of cow each year
+
+                 Y0          Y1          Y2          Y3          Y4          Y5
+
+heifer       20.000      32.300      34.833      12.514
+milkcow     100.000      97.700      95.167     104.429     105.005      93.866
+
+
+----    212 VARIABLE OldCow.L  number of old cows Age 12, sold 
+
+Y1 9.800,    Y2 9.604,    Y3 9.412,    Y4 9.224,    Y5 9.039
+
+
+----    212 VARIABLE BullSold.L  number of bulls sold
+
+Y1 53.735,    Y2 52.342,    Y3 57.436,    Y4 57.753,    Y5 51.626
+
+
+----    212 VARIABLE HeifSold.L  number of heifers sold
+
+Y1 30.935,    Y2 39.169,    Y3 57.436,    Y4 57.753,    Y5 51.626
+
+
+----    212 VARIABLE ExtraCows.L  over population, >130 each year
+
+                      ( ALL       0.000 )
+
+
+----    212 VARIABLE HerdSize.L  total size of the herd each year
+
+Y0 120.000,    Y1 130.000,    Y2 130.000,    Y3 116.943,    Y4 105.005,    Y5  93.866
+
+
+
+EXECUTION TIME       =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\farmplan\farm3.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\farmplan\farm3.lst

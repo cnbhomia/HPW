@@ -1,43 +1,43 @@
 B 2 C o m p i l a t i o n
-B 120 Equation Listing    SOLVE food1 Using MIP From line 109
-D 121 stockcalc
-D 185 matbalance
-D 200 hardnessup
-D 215 hardnesslow
-D 230 indirefiningLimVeg
-D 257 indirefiningLimNVeg
-D 296 refiningLimVeg
-D 311 refiningLimNVeg
-D 326 profitcalc
-D 343 threeoil
-D 358 combo1
-D 373 combo2
-D 388 minuse
-B 453 Column Listing      SOLVE food1 Using MIP From line 109
-E 454 RMpur
-E 474 RMused
-E 508 RMstock
-E 530 product
-E 555 profit
-E 562 D
-B 589 Model Statistics    SOLVE food1 Using MIP From line 109
-B 605 Solution Report     SOLVE food1 Using MIP From line 109
-F 657 stockcalc
-F 692 matbalance
-F 703 hardnessup
-F 714 hardnesslow
-F 725 indirefiningLimVeg
-F 742 indirefiningLimNVeg
-F 765 refiningLimVeg
-F 776 refiningLimNVeg
-F 785 profitcalc
-F 793 threeoil
-F 804 combo1
-F 815 combo2
-F 826 minuse
-G 856 RMpur
-G 891 RMused
-G 926 RMstock
-G 961 product
-G 972 profit
-G 978 D
+B 122 Equation Listing    SOLVE food1 Using MIP From line 111
+D 123 stockcalc
+D 135 matbalance
+D 146 hardnessup
+D 157 hardnesslow
+D 168 indirefiningLimVeg
+D 179 indirefiningLimNVeg
+D 190 refiningLimVeg
+D 201 refiningLimNVeg
+D 212 profitcalc
+D 229 threeoil
+D 240 combo1
+D 251 combo2
+D 262 minuse
+B 275 Column Listing      SOLVE food1 Using MIP From line 111
+E 276 RMpur
+E 296 RMused
+E 330 RMstock
+E 352 product
+E 377 profit
+E 384 D
+B 411 Model Statistics    SOLVE food1 Using MIP From line 111
+B 427 Solution Report     SOLVE food1 Using MIP From line 111
+F 479 stockcalc
+F 514 matbalance
+F 525 hardnessup
+F 536 hardnesslow
+F 547 indirefiningLimVeg
+F 564 indirefiningLimNVeg
+F 587 refiningLimVeg
+F 598 refiningLimNVeg
+F 607 profitcalc
+F 615 threeoil
+F 626 combo1
+F 637 combo2
+F 648 minuse
+G 678 RMpur
+G 713 RMused
+G 748 RMstock
+G 783 product
+G 794 profit
+G 800 D

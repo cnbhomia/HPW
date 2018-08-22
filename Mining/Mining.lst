@@ -1,0 +1,866 @@
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/15/18 15:11:50 Page 1
+Refinery Production Strategy (REFINERY, SEQ =xx)
+C o m p i l a t i o n
+
+
+   2  *                                                                                |||
+      The MIP problem determines the operation and production strategy of a mining
+      company with four mines over a period of five years. The determination includes
+      decision such as which mines to operate and how much to extract under the
+      equality and upper production limit constraints. 
+       
+       
+      Model Building in Mathematical Programming, Fifth Edition,
+      H. Paul Williams, Model 12.7 : Mining
+      Wiley Publication, 2013
+  14   
+  15   
+  16  Sets
+  17      mines       'set of mines'      /M1*M4/
+  18      years       'decision years'    /Y1*Y5/
+  19      ;
+  20   
+  21  Parameters
+  22      royalty(mines)      'royalties for each mine when open [£ million /year]'
+  23                              /M1 5, M2 4, M3 4, M4 5/
+  24      prodlim(mines)      'limit on production in each mine [million tons]'
+  25                              /M1 2, M2 2.5, M3 1.3, M4 3/
+  26      orequal(mines)      'ore quality from each mine'
+  27                              /M1 1, M2 0.7, M3 1.5, M4 0.5/
+  28      sellqual(years)     'ore quality desired by market each year'
+  29                              /Y1 0.9, Y2 0.8, Y3 1.2, Y4 0.6, Y5 1/
+  30      ;
+  31   
+  32  Scalar
+  33      SellPr  'Selling price [£/ton]'             /10/
+  34      MaxWrk  'Maximum mines working in a year'   /3/
+  35      drate   'discount rate'                     /0.1/
+  36      ;
+  37  Parameter dSellPr(years)   'discounted selling price for each year' ;
+  38  dSellPr(years) = SellPr* power[(1-drate),ord(years)-1]
+  39   
+  40   
+  41  *dSellPr('Y1') = SellPr;
+  42  *dSellPr(years)$(ord(years)>1) = SellPr*(1-drate);
+  43   
+  44  Variables
+  45      qmined(mines,years)  'quantity mined each year in a mine [million ton]'
+  46      totore(years)        'total ore sold each year [million tons]'
+  47      ifopen(mines,years)  'if the mine is open in a given year'
+  48      ifoper(mines,years)  'if the mine was operated in a given year'
+  49      Droyal(mines,years)  'cost from paying royalty each year for open mine'
+  50      profit               'total profit over five years'
+  51  *    dSellPr(years)           'discounted selling price in year y'
+  52      ;
+  53   
+  54  Binary Variables ifopen,ifoper;
+  55  Positive Variables qmined(mines,years);
+  56   
+  57  Alias(mines,m);
+  58  Alias(years,y);
+  59  *ifopen.l(m,y) = 1;
+  60  *ifoper.l(m,y) = 1;
+  61   
+GDXIN   C:\Users\cnbho\Documents\GitHub\HPW\Mining\datafiles.gdx
+--- LOAD  ifopen = 13:ifopen
+--- LOAD  ifoper = 14:ifoper
+--- LOAD  qmined = 11:qmined
+--- LOAD  totore = 12:totore
+  65  ifoper.l('M2','Y3')= 0;
+  66  ifoper.l('M2','Y3')= 0;
+  67  qmined.l('M1','Y4') = 0.12;
+  68  totore.l('Y4') =5.62;
+  69   
+  70  Equations
+  71      MaxMining(m,y)   'Maximum mining for each mine in any year'
+  72      MaxOperate(y)  'Maximum number of mines working year year'
+  73      TotalOre(y)    'total ore mined each year'
+  74      Blending(y)    'Blending of mined ore for final product quality'
+  75      OperCond(m,y)  'Logical constraint, a mine can operate only if it is open'
+  76      OpenCond(m,y)  'Logical constraint, once a mine is close, it cannot be opened again'
+  77      Royalties(m,y)   'Total royalty paid each year'
+  78  *    discountrate(y)'calculate discounted rate for each year'
+  79      ObjFunc        'calculation of profit'
+  80      ;
+  81   
+  82   
+  83  MaxMining(m,y)..    qmined(m,y) =L= prodlim(m)*ifoper(m,y);
+  84   
+  85  MaxOperate(y)..     sum(m,ifoper(m,y)) =L= MaxWrk;
+  86   
+  87  TotalOre(y)..       sum(m, qmined(m,y) ) =E= totore(y);
+  88   
+  89  Blending(y)..       sum[ m,qmined(m,y)*orequal(m)] =E= totore(y) * sellqual(y);
+  90   
+  91  OperCond(m,y)..     ifopen(m,y) - ifoper(m,y) =G= 0;
+  92   
+  93  OpenCond(m,y)..     ifopen(m,y+1) =L= ifopen(m,y) ;
+  94   
+  95  Royalties(m,y)..    Droyal(m,y) =E= ifopen(m,y)* royalty(m)* power[(1-drate),ord(y)-1] ;
+  96   
+  97  *discountrate(y)..   dSellPr(y) =E= SellPr* power[(1-drate),ord(y)-1] ;
+  98   
+  99  ObjFunc..           profit =E= sum(y, totore(y)*{SellPr* power[(1-drate),ord(y)-1]}) - sum((m,y),ifopen(m,y)* royalty(m)* power[(1-drate),ord(y)-1])  ;
+ 100   
+ 101   
+ 102  model mining /all/;
+ 103  option limrow=100;
+ 104  *option mip =BARON;
+ 105  solve mining using mip maximizing profit;
+ 106   
+ 107  *$execute_unload 'datafiles.gdx' , ifopen ;
+ 108  *$gdxout data
+ 109  *$unload ifopen ifoper
+ 110  *$gdxout
+ 111   
+ 112  display ifopen.l , ifoper.l, qmined.l, totore.l, dSellPr;
+ 113   
+ 114   
+ 115   
+ 116   
+ 117   
+ 118   
+ 119   
+ 120   
+ 121   
+ 122   
+ 123   
+ 124   
+ 125   
+ 126   
+ 127   
+ 128   
+ 129   
+ 130   
+ 131   
+ 132   
+ 133   
+ 134   
+ 135   
+ 136   
+ 137   
+ 138   
+ 139   
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/15/18 15:11:50 Page 2
+Refinery Production Strategy (REFINERY, SEQ =xx)
+Include File Summary
+
+
+   SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
+
+     1        1 INPUT          0       0  C:\Users\cnbho\Documents\GitHub\HPW\Mining\Mining.gms
+     2       62 GDXIN          1      62  C:\Users\cnbho\Documents\GitHub\HPW\Mining\datafiles.gdx
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/15/18 15:11:50 Page 3
+Refinery Production Strategy (REFINERY, SEQ =xx)
+Equation Listing    SOLVE mining Using MIP From line 105
+
+
+---- MaxMining  =L=  Maximum mining for each mine in any year
+
+MaxMining(M1,Y1)..  qmined(M1,Y1) - 2*ifoper(M1,Y1) =L= 0 ; (LHS = 0)
+     
+MaxMining(M1,Y2)..  qmined(M1,Y2) - 2*ifoper(M1,Y2) =L= 0 ; (LHS = 0)
+     
+MaxMining(M1,Y3)..  qmined(M1,Y3) - 2*ifoper(M1,Y3) =L= 0 ; (LHS = 0)
+     
+MaxMining(M1,Y4)..  qmined(M1,Y4) - 2*ifoper(M1,Y4) =L= 0 ; (LHS = 0.12, INFES = 0.12 ****)
+     
+MaxMining(M1,Y5)..  qmined(M1,Y5) - 2*ifoper(M1,Y5) =L= 0 ; (LHS = 0)
+     
+MaxMining(M2,Y1)..  qmined(M2,Y1) - 2.5*ifoper(M2,Y1) =L= 0 ; (LHS = 0)
+     
+MaxMining(M2,Y2)..  qmined(M2,Y2) - 2.5*ifoper(M2,Y2) =L= 0 ; (LHS = 0)
+     
+MaxMining(M2,Y3)..  qmined(M2,Y3) - 2.5*ifoper(M2,Y3) =L= 0 ; (LHS = 0)
+     
+MaxMining(M2,Y4)..  qmined(M2,Y4) - 2.5*ifoper(M2,Y4) =L= 0 ; (LHS = 0)
+     
+MaxMining(M2,Y5)..  qmined(M2,Y5) - 2.5*ifoper(M2,Y5) =L= 0 ; (LHS = 0)
+     
+MaxMining(M3,Y1)..  qmined(M3,Y1) - 1.3*ifoper(M3,Y1) =L= 0 ; (LHS = 0)
+     
+MaxMining(M3,Y2)..  qmined(M3,Y2) - 1.3*ifoper(M3,Y2) =L= 0 ; (LHS = 0)
+     
+MaxMining(M3,Y3)..  qmined(M3,Y3) - 1.3*ifoper(M3,Y3) =L= 0 ; (LHS = 0)
+     
+MaxMining(M3,Y4)..  qmined(M3,Y4) - 1.3*ifoper(M3,Y4) =L= 0 ; (LHS = 0)
+     
+MaxMining(M3,Y5)..  qmined(M3,Y5) - 1.3*ifoper(M3,Y5) =L= 0 ; (LHS = 0)
+     
+MaxMining(M4,Y1)..  qmined(M4,Y1) - 3*ifoper(M4,Y1) =L= 0 ; (LHS = 0)
+     
+MaxMining(M4,Y2)..  qmined(M4,Y2) - 3*ifoper(M4,Y2) =L= 0 ; (LHS = 0)
+     
+MaxMining(M4,Y3)..  qmined(M4,Y3) - 3*ifoper(M4,Y3) =L= 0 ; (LHS = 0)
+     
+MaxMining(M4,Y4)..  qmined(M4,Y4) - 3*ifoper(M4,Y4) =L= 0 ; (LHS = 0)
+     
+MaxMining(M4,Y5)..  qmined(M4,Y5) - 3*ifoper(M4,Y5) =L= 0 ; (LHS = 0)
+     
+
+---- MaxOperate  =L=  Maximum number of mines working year year
+
+MaxOperate(Y1)..  ifoper(M1,Y1) + ifoper(M2,Y1) + ifoper(M3,Y1) + ifoper(M4,Y1) =L= 3 ; (LHS = 0)
+     
+MaxOperate(Y2)..  ifoper(M1,Y2) + ifoper(M2,Y2) + ifoper(M3,Y2) + ifoper(M4,Y2) =L= 3 ; (LHS = 0)
+     
+MaxOperate(Y3)..  ifoper(M1,Y3) + ifoper(M2,Y3) + ifoper(M3,Y3) + ifoper(M4,Y3) =L= 3 ; (LHS = 0)
+     
+MaxOperate(Y4)..  ifoper(M1,Y4) + ifoper(M2,Y4) + ifoper(M3,Y4) + ifoper(M4,Y4) =L= 3 ; (LHS = 0)
+     
+MaxOperate(Y5)..  ifoper(M1,Y5) + ifoper(M2,Y5) + ifoper(M3,Y5) + ifoper(M4,Y5) =L= 3 ; (LHS = 0)
+     
+
+---- TotalOre  =E=  total ore mined each year
+
+TotalOre(Y1)..  qmined(M1,Y1) + qmined(M2,Y1) + qmined(M3,Y1) + qmined(M4,Y1) - totore(Y1) =E= 0 ; (LHS = 0)
+     
+TotalOre(Y2)..  qmined(M1,Y2) + qmined(M2,Y2) + qmined(M3,Y2) + qmined(M4,Y2) - totore(Y2) =E= 0 ; (LHS = 0)
+     
+TotalOre(Y3)..  qmined(M1,Y3) + qmined(M2,Y3) + qmined(M3,Y3) + qmined(M4,Y3) - totore(Y3) =E= 0 ; (LHS = 0)
+     
+TotalOre(Y4)..  qmined(M1,Y4) + qmined(M2,Y4) + qmined(M3,Y4) + qmined(M4,Y4) - totore(Y4) =E= 0 ; (LHS = -5.5, INFES = 5.5 ****)
+     
+TotalOre(Y5)..  qmined(M1,Y5) + qmined(M2,Y5) + qmined(M3,Y5) + qmined(M4,Y5) - totore(Y5) =E= 0 ; (LHS = 0)
+     
+
+---- Blending  =E=  Blending of mined ore for final product quality
+
+Blending(Y1)..  qmined(M1,Y1) + 0.7*qmined(M2,Y1) + 1.5*qmined(M3,Y1) + 0.5*qmined(M4,Y1) - 0.9*totore(Y1) =E= 0 ; (LHS = 0)
+     
+Blending(Y2)..  qmined(M1,Y2) + 0.7*qmined(M2,Y2) + 1.5*qmined(M3,Y2) + 0.5*qmined(M4,Y2) - 0.8*totore(Y2) =E= 0 ; (LHS = 0)
+     
+Blending(Y3)..  qmined(M1,Y3) + 0.7*qmined(M2,Y3) + 1.5*qmined(M3,Y3) + 0.5*qmined(M4,Y3) - 1.2*totore(Y3) =E= 0 ; (LHS = 0)
+     
+Blending(Y4)..  qmined(M1,Y4) + 0.7*qmined(M2,Y4) + 1.5*qmined(M3,Y4) + 0.5*qmined(M4,Y4) - 0.6*totore(Y4) =E= 0 ; (LHS = -3.252, INFES = 3.252 ****)
+     
+Blending(Y5)..  qmined(M1,Y5) + 0.7*qmined(M2,Y5) + 1.5*qmined(M3,Y5) + 0.5*qmined(M4,Y5) - totore(Y5) =E= 0 ; (LHS = 0)
+     
+
+---- OperCond  =G=  Logical constraint, a mine can operate only if it is open
+
+OperCond(M1,Y1)..  ifopen(M1,Y1) - ifoper(M1,Y1) =G= 0 ; (LHS = 0)
+     
+OperCond(M1,Y2)..  ifopen(M1,Y2) - ifoper(M1,Y2) =G= 0 ; (LHS = 0)
+     
+OperCond(M1,Y3)..  ifopen(M1,Y3) - ifoper(M1,Y3) =G= 0 ; (LHS = 0)
+     
+OperCond(M1,Y4)..  ifopen(M1,Y4) - ifoper(M1,Y4) =G= 0 ; (LHS = 0)
+     
+OperCond(M1,Y5)..  ifopen(M1,Y5) - ifoper(M1,Y5) =G= 0 ; (LHS = 0)
+     
+OperCond(M2,Y1)..  ifopen(M2,Y1) - ifoper(M2,Y1) =G= 0 ; (LHS = 0)
+     
+OperCond(M2,Y2)..  ifopen(M2,Y2) - ifoper(M2,Y2) =G= 0 ; (LHS = 0)
+     
+OperCond(M2,Y3)..  ifopen(M2,Y3) - ifoper(M2,Y3) =G= 0 ; (LHS = 0)
+     
+OperCond(M2,Y4)..  ifopen(M2,Y4) - ifoper(M2,Y4) =G= 0 ; (LHS = 0)
+     
+OperCond(M2,Y5)..  ifopen(M2,Y5) - ifoper(M2,Y5) =G= 0 ; (LHS = 0)
+     
+OperCond(M3,Y1)..  ifopen(M3,Y1) - ifoper(M3,Y1) =G= 0 ; (LHS = 0)
+     
+OperCond(M3,Y2)..  ifopen(M3,Y2) - ifoper(M3,Y2) =G= 0 ; (LHS = 0)
+     
+OperCond(M3,Y3)..  ifopen(M3,Y3) - ifoper(M3,Y3) =G= 0 ; (LHS = 0)
+     
+OperCond(M3,Y4)..  ifopen(M3,Y4) - ifoper(M3,Y4) =G= 0 ; (LHS = 0)
+     
+OperCond(M3,Y5)..  ifopen(M3,Y5) - ifoper(M3,Y5) =G= 0 ; (LHS = 0)
+     
+OperCond(M4,Y1)..  ifopen(M4,Y1) - ifoper(M4,Y1) =G= 0 ; (LHS = 0)
+     
+OperCond(M4,Y2)..  ifopen(M4,Y2) - ifoper(M4,Y2) =G= 0 ; (LHS = 0)
+     
+OperCond(M4,Y3)..  ifopen(M4,Y3) - ifoper(M4,Y3) =G= 0 ; (LHS = 0)
+     
+OperCond(M4,Y4)..  ifopen(M4,Y4) - ifoper(M4,Y4) =G= 0 ; (LHS = 0)
+     
+OperCond(M4,Y5)..  ifopen(M4,Y5) - ifoper(M4,Y5) =G= 0 ; (LHS = 0)
+     
+
+---- OpenCond  =L=  Logical constraint, once a mine is close, it cannot be opened again
+
+OpenCond(M1,Y1)..  - ifopen(M1,Y1) + ifopen(M1,Y2) =L= 0 ; (LHS = 0)
+     
+OpenCond(M1,Y2)..  - ifopen(M1,Y2) + ifopen(M1,Y3) =L= 0 ; (LHS = 0)
+     
+OpenCond(M1,Y3)..  - ifopen(M1,Y3) + ifopen(M1,Y4) =L= 0 ; (LHS = 0)
+     
+OpenCond(M1,Y4)..  - ifopen(M1,Y4) + ifopen(M1,Y5) =L= 0 ; (LHS = 0)
+     
+OpenCond(M1,Y5)..  - ifopen(M1,Y5) =L= 0 ; (LHS = 0)
+     
+OpenCond(M2,Y1)..  - ifopen(M2,Y1) + ifopen(M2,Y2) =L= 0 ; (LHS = 0)
+     
+OpenCond(M2,Y2)..  - ifopen(M2,Y2) + ifopen(M2,Y3) =L= 0 ; (LHS = 0)
+     
+OpenCond(M2,Y3)..  - ifopen(M2,Y3) + ifopen(M2,Y4) =L= 0 ; (LHS = 0)
+     
+OpenCond(M2,Y4)..  - ifopen(M2,Y4) + ifopen(M2,Y5) =L= 0 ; (LHS = 0)
+     
+OpenCond(M2,Y5)..  - ifopen(M2,Y5) =L= 0 ; (LHS = 0)
+     
+OpenCond(M3,Y1)..  - ifopen(M3,Y1) + ifopen(M3,Y2) =L= 0 ; (LHS = 0)
+     
+OpenCond(M3,Y2)..  - ifopen(M3,Y2) + ifopen(M3,Y3) =L= 0 ; (LHS = 0)
+     
+OpenCond(M3,Y3)..  - ifopen(M3,Y3) + ifopen(M3,Y4) =L= 0 ; (LHS = 0)
+     
+OpenCond(M3,Y4)..  - ifopen(M3,Y4) + ifopen(M3,Y5) =L= 0 ; (LHS = 0)
+     
+OpenCond(M3,Y5)..  - ifopen(M3,Y5) =L= 0 ; (LHS = 0)
+     
+OpenCond(M4,Y1)..  - ifopen(M4,Y1) + ifopen(M4,Y2) =L= 0 ; (LHS = 0)
+     
+OpenCond(M4,Y2)..  - ifopen(M4,Y2) + ifopen(M4,Y3) =L= 0 ; (LHS = 0)
+     
+OpenCond(M4,Y3)..  - ifopen(M4,Y3) + ifopen(M4,Y4) =L= 0 ; (LHS = 0)
+     
+OpenCond(M4,Y4)..  - ifopen(M4,Y4) + ifopen(M4,Y5) =L= 0 ; (LHS = 0)
+     
+OpenCond(M4,Y5)..  - ifopen(M4,Y5) =L= 0 ; (LHS = 0)
+     
+
+---- Royalties  =E=  Total royalty paid each year
+
+Royalties(M1,Y1)..  - 5*ifopen(M1,Y1) + Droyal(M1,Y1) =E= 0 ; (LHS = 0)
+     
+Royalties(M1,Y2)..  - 4.5*ifopen(M1,Y2) + Droyal(M1,Y2) =E= 0 ; (LHS = 0)
+     
+Royalties(M1,Y3)..  - 4.05*ifopen(M1,Y3) + Droyal(M1,Y3) =E= 0 ; (LHS = 0)
+     
+Royalties(M1,Y4)..  - 3.645*ifopen(M1,Y4) + Droyal(M1,Y4) =E= 0 ; (LHS = 0)
+     
+Royalties(M1,Y5)..  - 3.2805*ifopen(M1,Y5) + Droyal(M1,Y5) =E= 0 ; (LHS = 0)
+     
+Royalties(M2,Y1)..  - 4*ifopen(M2,Y1) + Droyal(M2,Y1) =E= 0 ; (LHS = 0)
+     
+Royalties(M2,Y2)..  - 3.6*ifopen(M2,Y2) + Droyal(M2,Y2) =E= 0 ; (LHS = 0)
+     
+Royalties(M2,Y3)..  - 3.24*ifopen(M2,Y3) + Droyal(M2,Y3) =E= 0 ; (LHS = 0)
+     
+Royalties(M2,Y4)..  - 2.916*ifopen(M2,Y4) + Droyal(M2,Y4) =E= 0 ; (LHS = 0)
+     
+Royalties(M2,Y5)..  - 2.6244*ifopen(M2,Y5) + Droyal(M2,Y5) =E= 0 ; (LHS = 0)
+     
+Royalties(M3,Y1)..  - 4*ifopen(M3,Y1) + Droyal(M3,Y1) =E= 0 ; (LHS = 0)
+     
+Royalties(M3,Y2)..  - 3.6*ifopen(M3,Y2) + Droyal(M3,Y2) =E= 0 ; (LHS = 0)
+     
+Royalties(M3,Y3)..  - 3.24*ifopen(M3,Y3) + Droyal(M3,Y3) =E= 0 ; (LHS = 0)
+     
+Royalties(M3,Y4)..  - 2.916*ifopen(M3,Y4) + Droyal(M3,Y4) =E= 0 ; (LHS = 0)
+     
+Royalties(M3,Y5)..  - 2.6244*ifopen(M3,Y5) + Droyal(M3,Y5) =E= 0 ; (LHS = 0)
+     
+Royalties(M4,Y1)..  - 5*ifopen(M4,Y1) + Droyal(M4,Y1) =E= 0 ; (LHS = 0)
+     
+Royalties(M4,Y2)..  - 4.5*ifopen(M4,Y2) + Droyal(M4,Y2) =E= 0 ; (LHS = 0)
+     
+Royalties(M4,Y3)..  - 4.05*ifopen(M4,Y3) + Droyal(M4,Y3) =E= 0 ; (LHS = 0)
+     
+Royalties(M4,Y4)..  - 3.645*ifopen(M4,Y4) + Droyal(M4,Y4) =E= 0 ; (LHS = 0)
+     
+Royalties(M4,Y5)..  - 3.2805*ifopen(M4,Y5) + Droyal(M4,Y5) =E= 0 ; (LHS = 0)
+     
+
+---- ObjFunc  =E=  calculation of profit
+
+ObjFunc..  - 10*totore(Y1) - 9*totore(Y2) - 8.1*totore(Y3) - 7.29*totore(Y4) - 6.561*totore(Y5) + 5*ifopen(M1,Y1) + 4.5*ifopen(M1,Y2) + 4.05*ifopen(M1,Y3) + 3.645*ifopen(M1,Y4) + 3.2805*ifopen(M1,Y5) + 4*ifopen(M2,Y1) + 3.6*ifopen(M2,Y2)
+     
+      + 3.24*ifopen(M2,Y3) + 2.916*ifopen(M2,Y4) + 2.6244*ifopen(M2,Y5) + 4*ifopen(M3,Y1) + 3.6*ifopen(M3,Y2) + 3.24*ifopen(M3,Y3) + 2.916*ifopen(M3,Y4) + 2.6244*ifopen(M3,Y5) + 5*ifopen(M4,Y1) + 4.5*ifopen(M4,Y2) + 4.05*ifopen(M4,Y3)
+     
+      + 3.645*ifopen(M4,Y4) + 3.2805*ifopen(M4,Y5) + profit =E= 0 ; (LHS = -40.9698, INFES = 40.9698 ****)
+     
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/15/18 15:11:50 Page 4
+Refinery Production Strategy (REFINERY, SEQ =xx)
+Column Listing      SOLVE mining Using MIP From line 105
+
+
+---- qmined  quantity mined each year in a mine [million ton]
+
+qmined(M1,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       MaxMining(M1,Y1)
+        1       TotalOre(Y1)
+        1       Blending(Y1)
+
+qmined(M1,Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       MaxMining(M1,Y2)
+        1       TotalOre(Y2)
+        1       Blending(Y2)
+
+qmined(M1,Y3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       MaxMining(M1,Y3)
+        1       TotalOre(Y3)
+        1       Blending(Y3)
+
+REMAINING 17 ENTRIES SKIPPED
+
+---- totore  total ore sold each year [million tons]
+
+totore(Y1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       TotalOre(Y1)
+       -0.9     Blending(Y1)
+      -10       ObjFunc
+
+totore(Y2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       TotalOre(Y2)
+       -0.8     Blending(Y2)
+       -9       ObjFunc
+
+totore(Y3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       TotalOre(Y3)
+       -1.2     Blending(Y3)
+       -8.1     ObjFunc
+
+REMAINING 2 ENTRIES SKIPPED
+
+---- ifopen  if the mine is open in a given year
+
+ifopen(M1,Y1)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       OperCond(M1,Y1)
+       -1       OpenCond(M1,Y1)
+       -5       Royalties(M1,Y1)
+        5       ObjFunc
+
+ifopen(M1,Y2)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       OperCond(M1,Y2)
+        1       OpenCond(M1,Y1)
+       -1       OpenCond(M1,Y2)
+       -4.5     Royalties(M1,Y2)
+        4.5     ObjFunc
+
+ifopen(M1,Y3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       OperCond(M1,Y3)
+        1       OpenCond(M1,Y2)
+       -1       OpenCond(M1,Y3)
+       -4.05    Royalties(M1,Y3)
+        4.05    ObjFunc
+
+REMAINING 17 ENTRIES SKIPPED
+
+---- ifoper  if the mine was operated in a given year
+
+ifoper(M1,Y1)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+       -2       MaxMining(M1,Y1)
+        1       MaxOperate(Y1)
+       -1       OperCond(M1,Y1)
+
+ifoper(M1,Y2)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+       -2       MaxMining(M1,Y2)
+        1       MaxOperate(Y2)
+       -1       OperCond(M1,Y2)
+
+ifoper(M1,Y3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+       -2       MaxMining(M1,Y3)
+        1       MaxOperate(Y3)
+       -1       OperCond(M1,Y3)
+
+REMAINING 17 ENTRIES SKIPPED
+
+---- Droyal  cost from paying royalty each year for open mine
+
+Droyal(M1,Y1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       Royalties(M1,Y1)
+
+Droyal(M1,Y2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       Royalties(M1,Y2)
+
+Droyal(M1,Y3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       Royalties(M1,Y3)
+
+REMAINING 17 ENTRIES SKIPPED
+
+---- profit  total profit over five years
+
+profit
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       ObjFunc
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/15/18 15:11:50 Page 5
+Refinery Production Strategy (REFINERY, SEQ =xx)
+Model Statistics    SOLVE mining Using MIP From line 105
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           8     SINGLE EQUATIONS           96
+BLOCKS OF VARIABLES           6     SINGLE VARIABLES           86
+NON ZERO ELEMENTS           252     DISCRETE VARIABLES         40
+
+
+GENERATION TIME      =        0.031 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.031 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/15/18 15:11:50 Page 6
+Refinery Production Strategy (REFINERY, SEQ =xx)
+Solution Report     SOLVE mining Using MIP From line 105
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   mining              OBJECTIVE  profit
+     TYPE    MIP                 DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  105
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE              144.2668
+
+ RESOURCE USAGE, LIMIT          0.016      1000.000
+ ITERATION COUNT, LIMIT        40    2000000000
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+MIP status(101): integer optimal solution
+Cplex Time: 0.02sec (det. 1.61 ticks)
+Fixing integer variables, and solving final LP...
+Fixed MIP status(1): optimal
+Cplex Time: 0.00sec (det. 0.08 ticks)
+Proven optimal solution.
+
+MIP Solution:          144.266750    (39 iterations, 0 nodes)
+Final Solve:           144.266750    (1 iterations)
+
+Best possible:         144.266750
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+---- EQU MaxMining  Maximum mining for each mine in any year
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+M1.Y1        -INF             .              .            12.5000      
+M1.Y2        -INF             .              .            15.0000      
+M1.Y3        -INF           -0.0500          .              .          
+M1.Y4        -INF           -1.8750          .              .          
+M1.Y5        -INF             .              .             6.5610      
+M2.Y1        -INF             .              .             5.0000      
+M2.Y2        -INF             .              .             6.0000      
+M2.Y3        -INF           -2.5000          .              .          
+M2.Y4        -INF             .              .             5.4675      
+M2.Y5        -INF           -0.3333          .              .          
+M3.Y1        -INF             .              .            25.0000      
+M3.Y2        -INF             .              .            30.0000      
+M3.Y3        -INF             .              .            20.2500      
+M3.Y4        -INF             .              .              .          
+M3.Y5        -INF             .              .            17.4960      
+M4.Y1        -INF           -0.5500          .              .          
+M4.Y2        -INF           -0.8000          .              .          
+M4.Y3        -INF             .              .              .          
+M4.Y4        -INF             .              .             9.1125      
+M4.Y5        -INF             .              .              .          
+
+---- EQU MaxOperate  Maximum number of mines working year year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y1        -INF            3.0000         3.0000          .          
+Y2        -INF            3.0000         3.0000          .          
+Y3        -INF            3.0000         3.0000          .          
+Y4        -INF            3.0000         3.0000          .          
+Y5        -INF            3.0000         3.0000          .          
+
+---- EQU TotalOre  total ore mined each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y1          .              .              .            12.5000      
+Y2          .              .              .            15.0000      
+Y3          .              .              .            40.5000      
+Y4          .              .              .           -18.2250      
+Y5          .              .              .            15.3090      
+
+---- EQU Blending  Blending of mined ore for final product quality
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y1          .              .              .           -25.0000      
+Y2          .              .              .           -30.0000      
+Y3          .              .              .           -40.5000      
+Y4          .              .              .            18.2250      
+Y5          .              .              .           -21.8700      
+
+---- EQU OperCond  Logical constraint, a mine can operate only if it is open
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+M1.Y1          .              .            +INF             .          
+M1.Y2          .             1.0000        +INF             .          
+M1.Y3          .              .            +INF             .          
+M1.Y4          .              .            +INF             .          
+M1.Y5          .              .            +INF             .          
+M2.Y1          .             1.0000        +INF             .          
+M2.Y2          .              .            +INF             .          
+M2.Y3          .              .            +INF             .          
+M2.Y4          .              .            +INF             .          
+M2.Y5          .              .            +INF             .          
+M3.Y1          .              .            +INF             .          
+M3.Y2          .              .            +INF             .          
+M3.Y3          .              .            +INF             .          
+M3.Y4          .             1.0000        +INF             .          
+M3.Y5          .              .            +INF             .          
+M4.Y1          .              .            +INF             .          
+M4.Y2          .              .            +INF             .          
+M4.Y3          .             1.0000        +INF             .          
+M4.Y4          .              .            +INF             .          
+M4.Y5          .              .            +INF             .          
+
+---- EQU OpenCond  Logical constraint, once a mine is close, it cannot be opened again
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+M1.Y1        -INF             .              .              .          
+M1.Y2        -INF             .              .              .          
+M1.Y3        -INF             .              .              .          
+M1.Y4        -INF             .              .              .          
+M1.Y5        -INF           -1.0000          .              .          
+M2.Y1        -INF             .              .              .          
+M2.Y2        -INF             .              .              .          
+M2.Y3        -INF             .              .              .          
+M2.Y4        -INF             .              .              .          
+M2.Y5        -INF           -1.0000          .              .          
+M3.Y1        -INF             .              .              .          
+M3.Y2        -INF             .              .              .          
+M3.Y3        -INF             .              .              .          
+M3.Y4        -INF             .              .              .          
+M3.Y5        -INF           -1.0000          .              .          
+M4.Y1        -INF             .              .              .          
+M4.Y2        -INF             .              .              .          
+M4.Y3        -INF             .              .              .          
+M4.Y4        -INF           -1.0000          .              .          
+M4.Y5        -INF             .              .              .          
+
+---- EQU Royalties  Total royalty paid each year
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+M1.Y1          .              .              .             EPS         
+M1.Y2          .              .              .             EPS         
+M1.Y3          .              .              .             EPS         
+M1.Y4          .              .              .             EPS         
+M1.Y5          .              .              .             EPS         
+M2.Y1          .              .              .             EPS         
+M2.Y2          .              .              .             EPS         
+M2.Y3          .              .              .             EPS         
+M2.Y4          .              .              .             EPS         
+M2.Y5          .              .              .             EPS         
+M3.Y1          .              .              .             EPS         
+M3.Y2          .              .              .             EPS         
+M3.Y3          .              .              .             EPS         
+M3.Y4          .              .              .             EPS         
+M3.Y5          .              .              .             EPS         
+M4.Y1          .              .              .             EPS         
+M4.Y2          .              .              .             EPS         
+M4.Y3          .              .              .             EPS         
+M4.Y4          .              .              .             EPS         
+M4.Y5          .              .              .             EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU ObjFunc             .              .              .             1.0000      
+
+  ObjFunc  calculation of profit
+
+---- VAR qmined  quantity mined each year in a mine [million ton]
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+M1.Y1          .             2.0000        +INF             .          
+M1.Y2          .              .            +INF             .          
+M1.Y3          .             1.9500        +INF             .          
+M1.Y4          .             0.1250        +INF             .          
+M1.Y5          .             2.0000        +INF             .          
+M2.Y1          .              .            +INF             .          
+M2.Y2          .             2.5000        +INF             .          
+M2.Y3          .              .            +INF          -12.1500      
+M2.Y4          .             2.5000        +INF             .          
+M2.Y5          .             2.1667        +INF             .          
+M3.Y1          .             1.3000        +INF             .          
+M3.Y2          .             1.3000        +INF             .          
+M3.Y3          .             1.3000        +INF             .          
+M3.Y4          .              .            +INF           -9.1125      
+M3.Y5          .             1.3000        +INF             .          
+M4.Y1          .             2.4500        +INF             .          
+M4.Y2          .             2.2000        +INF             .          
+M4.Y3          .              .            +INF          -20.2500      
+M4.Y4          .             3.0000        +INF             .          
+M4.Y5          .              .            +INF           -4.3740      
+
+---- VAR totore  total ore sold each year [million tons]
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y1        -INF            5.7500        +INF             .          
+Y2        -INF            6.0000        +INF             .          
+Y3        -INF            3.2500        +INF             .          
+Y4        -INF            5.6250        +INF             .          
+Y5        -INF            5.4667        +INF             .          
+
+---- VAR ifopen  if the mine is open in a given year
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+M1.Y1          .             1.0000         1.0000        -5.0000      
+M1.Y2          .             1.0000         1.0000        -4.5000      
+M1.Y3          .             1.0000         1.0000        -4.0500      
+M1.Y4          .             1.0000         1.0000        -3.6450      
+M1.Y5          .             1.0000         1.0000        -3.2805      
+M2.Y1          .             1.0000         1.0000        -4.0000      
+M2.Y2          .             1.0000         1.0000        -3.6000      
+M2.Y3          .             1.0000         1.0000        -3.2400      
+M2.Y4          .             1.0000         1.0000        -2.9160      
+M2.Y5          .             1.0000         1.0000        -2.6244      
+M3.Y1          .             1.0000         1.0000        -4.0000      
+M3.Y2          .             1.0000         1.0000        -3.6000      
+M3.Y3          .             1.0000         1.0000        -3.2400      
+M3.Y4          .             1.0000         1.0000        -2.9160      
+M3.Y5          .             1.0000         1.0000        -2.6244      
+M4.Y1          .             1.0000         1.0000        -5.0000      
+M4.Y2          .             1.0000         1.0000        -4.5000      
+M4.Y3          .             1.0000         1.0000        -4.0500      
+M4.Y4          .             1.0000         1.0000        -3.6450      
+M4.Y5          .              .             1.0000        -3.2805      
+
+---- VAR ifoper  if the mine was operated in a given year
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+M1.Y1          .             1.0000         1.0000        25.0000      
+M1.Y2          .              .             1.0000        30.0000      
+M1.Y3          .             1.0000         1.0000         EPS         
+M1.Y4          .             1.0000         1.0000         EPS         
+M1.Y5          .             1.0000         1.0000        13.1220      
+M2.Y1          .              .             1.0000        12.5000      
+M2.Y2          .             1.0000         1.0000        15.0000      
+M2.Y3          .             1.0000         1.0000         EPS         
+M2.Y4          .             1.0000         1.0000        13.6688      
+M2.Y5          .             1.0000         1.0000         EPS         
+M3.Y1          .             1.0000         1.0000        32.5000      
+M3.Y2          .             1.0000         1.0000        39.0000      
+M3.Y3          .             1.0000         1.0000        26.3250      
+M3.Y4          .              .             1.0000         EPS         
+M3.Y5          .             1.0000         1.0000        22.7448      
+M4.Y1          .             1.0000         1.0000         EPS         
+M4.Y2          .             1.0000         1.0000         EPS         
+M4.Y3          .              .             1.0000         EPS         
+M4.Y4          .             1.0000         1.0000        27.3375      
+M4.Y5          .              .             1.0000         EPS         
+
+---- VAR Droyal  cost from paying royalty each year for open mine
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+M1.Y1        -INF            5.0000        +INF             .          
+M1.Y2        -INF            4.5000        +INF             .          
+M1.Y3        -INF            4.0500        +INF             .          
+M1.Y4        -INF            3.6450        +INF             .          
+M1.Y5        -INF            3.2805        +INF             .          
+M2.Y1        -INF            4.0000        +INF             .          
+M2.Y2        -INF            3.6000        +INF             .          
+M2.Y3        -INF            3.2400        +INF             .          
+M2.Y4        -INF            2.9160        +INF             .          
+M2.Y5        -INF            2.6244        +INF             .          
+M3.Y1        -INF            4.0000        +INF             .          
+M3.Y2        -INF            3.6000        +INF             .          
+M3.Y3        -INF            3.2400        +INF             .          
+M3.Y4        -INF            2.9160        +INF             .          
+M3.Y5        -INF            2.6244        +INF             .          
+M4.Y1        -INF            5.0000        +INF             .          
+M4.Y2        -INF            4.5000        +INF             .          
+M4.Y3        -INF            4.0500        +INF             .          
+M4.Y4        -INF            3.6450        +INF             .          
+M4.Y5        -INF             .            +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR profit            -INF          144.2667        +INF             .          
+
+  profit  total profit over five years
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/15/18 15:11:50 Page 7
+Refinery Production Strategy (REFINERY, SEQ =xx)
+E x e c u t i o n
+
+
+----    112 VARIABLE ifopen.L  if the mine is open in a given year
+
+            Y1          Y2          Y3          Y4          Y5
+
+M1       1.000       1.000       1.000       1.000       1.000
+M2       1.000       1.000       1.000       1.000       1.000
+M3       1.000       1.000       1.000       1.000       1.000
+M4       1.000       1.000       1.000       1.000
+
+
+----    112 VARIABLE ifoper.L  if the mine was operated in a given year
+
+            Y1          Y2          Y3          Y4          Y5
+
+M1       1.000                   1.000       1.000       1.000
+M2                   1.000       1.000       1.000       1.000
+M3       1.000       1.000       1.000                   1.000
+M4       1.000       1.000                   1.000
+
+
+----    112 VARIABLE qmined.L  quantity mined each year in a mine [million ton]
+
+            Y1          Y2          Y3          Y4          Y5
+
+M1       2.000                   1.950       0.125       2.000
+M2                   2.500                   2.500       2.167
+M3       1.300       1.300       1.300                   1.300
+M4       2.450       2.200                   3.000
+
+
+----    112 VARIABLE totore.L  total ore sold each year [million tons]
+
+Y1 5.750,    Y2 6.000,    Y3 3.250,    Y4 5.625,    Y5 5.467
+
+
+----    112 PARAMETER dSellPr  discounted selling price for each year
+
+Y1 10.000,    Y2  9.000,    Y3  8.100,    Y4  7.290,    Y5  6.561
+
+
+
+EXECUTION TIME       =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\Mining\Mining.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\Mining\Mining.lst

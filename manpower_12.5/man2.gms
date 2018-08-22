@@ -85,6 +85,9 @@ Wret.fx('y0',sk) =0   ;
 Wred.fx('y0',sk) =0   ;
 Wdown.fx('y0',skp,sk) =0 ;
 
+
+Wred.lo(y,sk) = 0;
+
 *TotCTC.up = 6E6;
 $ontext
 $offtext
@@ -116,6 +119,7 @@ objfunc.. objval =e= sum((y,sk), Wred(y,sk)) ;
 model manpowerplan /all/ ;
 option limrow = 100,limcol=100;
 option intVarup =2;
+option optcr=0;
 solve manpowerplan using RMIP minimizing objval ;
 
 solve manpowerplan using MIP minimizing objval;

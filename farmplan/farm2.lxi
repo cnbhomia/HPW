@@ -1,0 +1,63 @@
+B 2 C o m p i l a t i o n
+B 146 Equation Listing    SOLVE refinery Using LP From line 135
+D 147 distillation
+D 163 massbalance1
+D 178 mbalreform
+D 183 mbalcrack
+D 192 massbalance2
+D 203 gasblending
+D 208 gasblendratio
+D 213 jetblending
+D 218 fuelblending
+D 223 decisions
+D 228 distillimit
+D 233 reformlimit
+D 238 cracklimit
+B 245 Column Listing      SOLVE refinery Using LP From line 135
+E 246 mCrude
+E 270 mDistil
+E 289 mReform
+E 310 mCrack
+E 333 mGasblendD
+E 351 mJetblendD
+E 369 mFuelblendD
+E 387 mInter
+E 406 mGasblendI
+E 419 mJetblendI
+E 427 mFuelblendI
+E 435 mGasSell
+E 450 mJetfuel
+E 458 mFueloil
+E 466 mLOILsell
+E 474 profit
+B 483 Model Statistics    SOLVE refinery Using LP From line 135
+B 499 Solution Report     SOLVE refinery Using LP From line 135
+F 530 distillation
+F 541 massbalance1
+F 552 mbalreform
+F 558 mbalcrack
+F 566 massbalance2
+F 573 gasblending
+F 574 gasblendratio
+F 575 jetblending
+F 576 fuelblending
+F 577 decisions
+F 578 distillimit
+F 579 reformlimit
+F 580 cracklimit
+G 589 mCrude
+G 596 mDistil
+G 607 mReform
+G 615 mCrack
+G 623 mGasblendD
+G 631 mJetblendD
+G 639 mFuelblendD
+G 647 mInter
+G 656 mGasblendI
+G 663 mJetblendI
+G 669 mFuelblendI
+G 675 mGasSell
+G 682 mJetfuel
+G 686 mFueloil
+G 687 mLOILsell
+G 688 profit

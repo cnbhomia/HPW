@@ -1,4 +1,8 @@
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 1
+<<<<<<< HEAD
+GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 1
+=======
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 1
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -88,49 +92,58 @@ C o m p i l a t i o n
   85  Wred.fx('y0',sk) =0   ;
   86  Wdown.fx('y0',skp,sk) =0 ;
   87   
-  88  *TotCTC.up = 6E6;
-  91   
-  92   
-  93  total(y,sk)$(ord(y)>1).. Wtot(y,sk) =e= Wtot(y-1,sk) + Wrec(y,sk) - Wred(y,sk)- Watt(y,sk) + [Wret(y,sk-1) - Wret(y,sk)]
-  94                                          + { sum(skp$(ord(skp) > ord(sk)),Wdown(y,skp,sk)) -sum(skp$(ord(skp)<ord(sk)),Wdown(y,sk,skp))}   ;
+  88   
+  89  Wred.lo(y,sk) = 0;
+  90   
+  91  *TotCTC.up = 6E6;
+  94   
   95   
-  96  attrition(y,sk).. Watt(y,sk) =e= Rnewatt(sk)*Wrec(y,sk) + Roldatt(sk)*Wtot(y-1,sk) + 0.5*[sum(skp$(ord(skp) > ord(sk)),Wdown(y,skp,sk))]    ;
-  97   
-  98  overman(y,sk).. Wextra(y,sk) +  0.5*Wsho(y,sk) =e= Wtot(y,sk) - manpow(y,sk) ;
-  99   
- 100  retrainlim(y,sk).. Wret(y,'s2') =l= 0.25* Wtot(y,'s3') ;
- 101   
- 102  retraincosts(y).. Cret(y) =e= sum(sk, Cretain(sk)*Wret(y,sk)) ;
- 103   
- 104  redundancycosts(y).. Cred(y) =e= sum(sk, Credund(sk)*Wred(y,sk));
- 105   
- 106  overmancosts(y).. Cextra(y) =e= sum(sk, Cover(sk)*Wextra(y,sk));
- 107   
- 108  shorttimecosts(y).. Csho(y) =e= sum(sk, Cshortt(sk)* Wsho(y,sk)) ;
- 109   
- 110  totalcosts.. TotCTC =e= sum(y, Cret(y) + Cred(y) + Cextra(y) + Csho(y) ) ;
- 111   
- 112  objfunc.. objval =e= sum((y,sk), Wred(y,sk)) ;
- 113   
+  96  total(y,sk)$(ord(y)>1).. Wtot(y,sk) =e= Wtot(y-1,sk) + Wrec(y,sk) - Wred(y,sk)- Watt(y,sk) + [Wret(y,sk-1) - Wret(y,sk)]
+  97                                          + { sum(skp$(ord(skp) > ord(sk)),Wdown(y,skp,sk)) -sum(skp$(ord(skp)<ord(sk)),Wdown(y,sk,skp))}   ;
+  98   
+  99  attrition(y,sk).. Watt(y,sk) =e= Rnewatt(sk)*Wrec(y,sk) + Roldatt(sk)*Wtot(y-1,sk) + 0.5*[sum(skp$(ord(skp) > ord(sk)),Wdown(y,skp,sk))]    ;
+ 100   
+ 101  overman(y,sk).. Wextra(y,sk) +  0.5*Wsho(y,sk) =e= Wtot(y,sk) - manpow(y,sk) ;
+ 102   
+ 103  retrainlim(y,sk).. Wret(y,'s2') =l= 0.25* Wtot(y,'s3') ;
+ 104   
+ 105  retraincosts(y).. Cret(y) =e= sum(sk, Cretain(sk)*Wret(y,sk)) ;
+ 106   
+ 107  redundancycosts(y).. Cred(y) =e= sum(sk, Credund(sk)*Wred(y,sk));
+ 108   
+ 109  overmancosts(y).. Cextra(y) =e= sum(sk, Cover(sk)*Wextra(y,sk));
+ 110   
+ 111  shorttimecosts(y).. Csho(y) =e= sum(sk, Cshortt(sk)* Wsho(y,sk)) ;
+ 112   
+ 113  totalcosts.. TotCTC =e= sum(y, Cret(y) + Cred(y) + Cextra(y) + Csho(y) ) ;
  114   
- 115   
- 116  model manpowerplan /all/ ;
- 117  option limrow = 100,limcol=100;
- 118  option intVarup =2;
- 119  solve manpowerplan using RMIP minimizing objval ;
- 120   
- 121  solve manpowerplan using MIP minimizing objval;
- 122   
- 123   
- 124  solve manpowerplan using RMIP minimizing TotCTC ;
- 125   
+ 115  objfunc.. objval =e= sum((y,sk), Wred(y,sk)) ;
+ 116   
+ 117   
+ 118   
+ 119  model manpowerplan /all/ ;
+ 120  option limrow = 100,limcol=100;
+ 121  option intVarup =2;
+ 122  option optcr=0;
+ 123  solve manpowerplan using RMIP minimizing objval ;
+ 124   
+ 125  solve manpowerplan using MIP minimizing objval;
  126   
+ 127   
+ 128  solve manpowerplan using RMIP minimizing TotCTC ;
+ 129   
+ 130   
 
 
-COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 2
+<<<<<<< HEAD
+COMPILATION TIME     =        0.001 SECONDS      3 MB  25.1.2 r67455 DEX-DEG
+GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 2
+=======
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 2
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE manpowerplan Using RMIP From line 119
+Equation Listing    SOLVE manpowerplan Using RMIP From line 123
 
 
 ---- total  =E=  total workers each year per skill level
@@ -288,9 +301,13 @@ totalcosts..  - Cret(y0) - Cret(y1) - Cret(y2) - Cret(y3) - Cred(y0) - Cred(y1) 
 
 objfunc..  - Wred(y0,s1) - Wred(y0,s2) - Wred(y0,s3) - Wred(y1,s1) - Wred(y1,s2) - Wred(y1,s3) - Wred(y2,s1) - Wred(y2,s2) - Wred(y2,s3) - Wred(y3,s1) - Wred(y3,s2) - Wred(y3,s3) + objval =E= 0 ; (LHS = 0)
      
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 3
+<<<<<<< HEAD
+GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 3
+=======
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 3
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE manpowerplan Using RMIP From line 119
+Column Listing      SOLVE manpowerplan Using RMIP From line 123
 
 
 ---- Wrec  number of recruits at end of each year
@@ -954,9 +971,13 @@ objval
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       objfunc
 
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 4
+<<<<<<< HEAD
+GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 4
+=======
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 4
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE manpowerplan Using RMIP From line 119
+Model Statistics    SOLVE manpowerplan Using RMIP From line 123
 
 
 MODEL STATISTICS
@@ -966,35 +987,50 @@ BLOCKS OF VARIABLES          14     SINGLE VARIABLES          113  8 projected
 NON ZERO ELEMENTS           273     DISCRETE VARIABLES         78
 
 
-GENERATION TIME      =        0.016 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
+<<<<<<< HEAD
+GENERATION TIME      =        0.008 SECONDS      4 MB  25.1.2 r67455 DEX-DEG
 
 
-EXECUTION TIME       =        0.016 SECONDS      4 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 5
+EXECUTION TIME       =        0.008 SECONDS      4 MB  25.1.2 r67455 DEX-DEG
+GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 5
+=======
+GENERATION TIME      =        0.015 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.015 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 5
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE manpowerplan Using RMIP From line 119
+Solution Report     SOLVE manpowerplan Using RMIP From line 123
 
 
                S O L V E      S U M M A R Y
 
      MODEL   manpowerplan        OBJECTIVE  objval
      TYPE    RMIP                DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  119
+     SOLVER  CPLEX               FROM LINE  123
 
 **** SOLVER STATUS     1 Normal Completion         
 **** MODEL STATUS      1 Optimal                   
 **** OBJECTIVE VALUE              870.0000
 
- RESOURCE USAGE, LIMIT          0.000      1000.000
+<<<<<<< HEAD
+ RESOURCE USAGE, LIMIT          0.007      1000.000
  ITERATION COUNT, LIMIT         8    2000000000
 
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 DEG x86 64bit/Mac OS X   
+=======
+ RESOURCE USAGE, LIMIT          0.016      1000.000
+ ITERATION COUNT, LIMIT         8    2000000000
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 Cplex 12.8.0.0
 
 Space for names approximately 0.00 Mb
 Use option 'names no' to turn use of names off
 LP status(1): optimal
-Cplex Time: 0.00sec (det. 0.10 ticks)
+Cplex Time: 0.02sec (det. 0.10 ticks)
 Optimal solution found.
 Objective :         870.000000
 
@@ -1295,9 +1331,13 @@ y3        -INF       150000.0000        +INF             .
 ****
 ****  14 Integer levels greater than 100
 ****
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 6
+<<<<<<< HEAD
+GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 6
+=======
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 6
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE manpowerplan Using MIP From line 121
+Equation Listing    SOLVE manpowerplan Using MIP From line 125
 
 
 ---- total  =E=  total workers each year per skill level
@@ -1455,9 +1495,13 @@ totalcosts..  - Cret(y0) - Cret(y1) - Cret(y2) - Cret(y3) - Cred(y0) - Cred(y1) 
 
 objfunc..  - Wred(y0,s1) - Wred(y0,s2) - Wred(y0,s3) - Wred(y1,s1) - Wred(y1,s2) - Wred(y1,s3) - Wred(y2,s1) - Wred(y2,s2) - Wred(y2,s3) - Wred(y3,s1) - Wred(y3,s2) - Wred(y3,s3) + objval =E= 0 ; (LHS = 0)
      
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 7
+<<<<<<< HEAD
+GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 7
+=======
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 7
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE manpowerplan Using MIP From line 121
+Column Listing      SOLVE manpowerplan Using MIP From line 125
 
 
 ---- Wrec  number of recruits at end of each year
@@ -2113,9 +2157,13 @@ objval
                 (.LO, .L, .UP, .M = -INF, 870, +INF, 0)
         1       objfunc
 
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 8
+<<<<<<< HEAD
+GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 8
+=======
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 8
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE manpowerplan Using MIP From line 121
+Model Statistics    SOLVE manpowerplan Using MIP From line 125
 
 
 MODEL STATISTICS
@@ -2125,47 +2173,67 @@ BLOCKS OF VARIABLES          14     SINGLE VARIABLES          113
 NON ZERO ELEMENTS           273     DISCRETE VARIABLES         78
 
 
-GENERATION TIME      =        0.016 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
+<<<<<<< HEAD
+GENERATION TIME      =        0.007 SECONDS      3 MB  25.1.2 r67455 DEX-DEG
 
 
-EXECUTION TIME       =        0.016 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 9
+EXECUTION TIME       =        0.009 SECONDS      3 MB  25.1.2 r67455 DEX-DEG
+GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 9
+=======
+GENERATION TIME      =        0.016 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.032 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 9
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE manpowerplan Using MIP From line 121
+Solution Report     SOLVE manpowerplan Using MIP From line 125
 
 
                S O L V E      S U M M A R Y
 
      MODEL   manpowerplan        OBJECTIVE  objval
      TYPE    MIP                 DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  121
+     SOLVER  CPLEX               FROM LINE  125
 
 **** SOLVER STATUS     1 Normal Completion         
-**** MODEL STATUS      8 Integer Solution          
-**** OBJECTIVE VALUE              872.0000
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE              870.0000
 
- RESOURCE USAGE, LIMIT          0.047      1000.000
+<<<<<<< HEAD
+ RESOURCE USAGE, LIMIT          0.015      1000.000
+ ITERATION COUNT, LIMIT        12    2000000000
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 DEG x86 64bit/Mac OS X   
+=======
+ RESOURCE USAGE, LIMIT          0.016      1000.000
  ITERATION COUNT, LIMIT        11    2000000000
 
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 --- GAMS/Cplex licensed for continuous and discrete problems.
 Cplex 12.8.0.0
 
 Space for names approximately 0.00 Mb
 Use option 'names no' to turn use of names off
+<<<<<<< HEAD
+MIP status(101): integer optimal solution
+Cplex Time: 0.01sec (det. 1.41 ticks)
+=======
 MIP status(102): integer optimal, tolerance
-Cplex Time: 0.03sec (det. 0.95 ticks)
+Cplex Time: 0.02sec (det. 0.95 ticks)
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 Fixing integer variables, and solving final LP...
 Fixed MIP status(1): optimal
 Cplex Time: 0.00sec (det. 0.06 ticks)
-Solution satisfies tolerances.
+Proven optimal solution.
 
-MIP Solution:          872.000000    (11 iterations, 0 nodes)
-Final Solve:           872.000000    (0 iterations)
+MIP Solution:          870.000000    (12 iterations, 0 nodes)
+Final Solve:           870.000000    (0 iterations)
 
 Best possible:         870.000000
-Absolute gap:            2.000000
-Relative gap:            0.002294
+Absolute gap:            0.000000
+Relative gap:            0.000000
 
 
 ---- EQU total  total workers each year per skill level
@@ -2226,9 +2294,9 @@ y0.s3        -INF         -250.0000          .              .
 y1.s1        -INF         -150.0000          .              .          
 y1.s2        -INF         -150.0000          .              .          
 y1.s3        -INF         -150.0000          .              .          
-y2.s1        -INF         -273.0000          .              .          
-y2.s2        -INF         -273.0000          .              .          
-y2.s3        -INF         -273.0000          .              .          
+y2.s1        -INF         -150.0000          .              .          
+y2.s2        -INF         -150.0000          .              .          
+y2.s3        -INF         -150.0000          .              .          
 y3.s1        -INF         -118.2500          .              .          
 y3.s2        -INF         -118.2500          .              .          
 y3.s3        -INF         -118.2500          .              .          
@@ -2288,7 +2356,7 @@ y1.s1          .              .           500.0000         EPS
 y1.s2          .              .           800.0000         EPS         
 y1.s3          .              .           500.0000         EPS         
 y2.s1          .              .           500.0000         EPS         
-y2.s2          .           725.0000       800.0000         EPS         
+y2.s2          .           800.0000       800.0000         EPS         
 y2.s3          .           500.0000       500.0000         EPS         
 y3.s1          .              .           500.0000         EPS         
 y3.s2          .           800.0000       800.0000         EPS         
@@ -2304,7 +2372,7 @@ y1.s1          .           200.0000       200.0000         EPS
 y1.s2          .           100.0000        +INF            EPS         
 y1.s3          .              .              .             EPS         
 y2.s1          .           200.0000       200.0000         EPS         
-y2.s2          .           102.0000        +INF            EPS         
+y2.s2          .           225.0000        +INF            EPS         
 y2.s3          .              .              .             EPS         
 y3.s1          .           200.0000       200.0000         EPS         
 y3.s2          .           383.0000        +INF            EPS         
@@ -2321,8 +2389,8 @@ y1.s1          .           450.0000        +INF            1.0000
 y1.s2          .              .            +INF            1.0000      
 y1.s3          .              .            +INF            1.0000      
 y2.s1          .           185.0000        +INF            1.0000      
-y2.s2          .             1.0000        +INF            1.0000      
-y2.s3          .             1.0000        +INF            1.0000      
+y2.s2          .              .            +INF            1.0000      
+y2.s3          .              .            +INF            1.0000      
 y3.s1          .           235.0000        +INF            1.0000      
 y3.s2          .              .            +INF            1.0000      
 y3.s3          .              .            +INF            1.0000      
@@ -2372,7 +2440,7 @@ y1.s1          .           200.0000        +INF            EPS
 y1.s2          .           100.0000        +INF            EPS         
 y1.s3          .            50.0000        +INF            EPS         
 y2.s1          .           115.0000        +INF            EPS         
-y2.s2          .           223.0000        +INF            EPS         
+y2.s2          .           300.0000        +INF            EPS         
 y2.s3          .           100.0000        +INF            EPS         
 y3.s1          .            65.0000        +INF            EPS         
 y3.s2          .           268.0000        +INF            EPS         
@@ -2390,7 +2458,7 @@ y1.s3.s1          .              .            +INF            EPS
 y1.s3.s2          .            50.0000        +INF            EPS         
 y2.s2.s1          .              .            +INF            EPS         
 y2.s3.s1          .              .            +INF            EPS         
-y2.s3.s2          .             1.0000        +INF            EPS         
+y2.s3.s2          .           125.0000        +INF            EPS         
 y3.s2.s1          .              .            +INF            EPS         
 y3.s3.s1          .              .            +INF            EPS         
 y3.s3.s2          .             1.0000        +INF            EPS         
@@ -2418,7 +2486,7 @@ y3.s3      2000.0000      2005.0000      2150.0000         EPS
 
 y0        -INF             .            +INF             .          
 y1        -INF       130000.0000        +INF             .          
-y2        -INF       131000.0000        +INF             .          
+y2        -INF       192500.0000        +INF             .          
 y3        -INF       271500.0000        +INF             .          
 
 ---- VAR Cred  Redundancy cost each year
@@ -2427,7 +2495,7 @@ y3        -INF       271500.0000        +INF             .
 
 y0        -INF             .            +INF             .          
 y1        -INF        90000.0000        +INF             .          
-y2        -INF        38000.0000        +INF             .          
+y2        -INF        37000.0000        +INF             .          
 y3        -INF        47000.0000        +INF             .          
 
 ---- VAR Cextra  extraworker costs each year
@@ -2450,8 +2518,8 @@ y3        -INF       154000.0000        +INF             .
 
                            LOWER          LEVEL          UPPER         MARGINAL
 
----- VAR TotCTC            -INF      1401500.0000        +INF             .          
----- VAR objval            -INF          872.0000        +INF             .          
+---- VAR TotCTC            -INF      1462000.0000        +INF             .          
+---- VAR objval            -INF          870.0000        +INF             .          
 
   TotCTC  total cost to company
   objval  total number of layoffs / redundancy workers
@@ -2460,14 +2528,18 @@ y3        -INF       154000.0000        +INF             .
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-                             6  PROJECTED
+                             7  PROJECTED
 
 ****
-****  15 Integer levels greater than 100
+****  16 Integer levels greater than 100
 ****
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 10
+<<<<<<< HEAD
+GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 10
+=======
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 10
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE manpowerplan Using RMIP From line 124
+Equation Listing    SOLVE manpowerplan Using RMIP From line 128
 
 
 ---- total  =E=  total workers each year per skill level
@@ -2559,11 +2631,11 @@ retrainlim(y1,s2)..  Wret(y1,s2) - 0.25*Wtot(y1,s3) =L= 0 ; (LHS = -150)
      
 retrainlim(y1,s3)..  Wret(y1,s2) - 0.25*Wtot(y1,s3) =L= 0 ; (LHS = -150)
      
-retrainlim(y2,s1)..  Wret(y2,s2) - 0.25*Wtot(y2,s3) =L= 0 ; (LHS = -273)
+retrainlim(y2,s1)..  Wret(y2,s2) - 0.25*Wtot(y2,s3) =L= 0 ; (LHS = -150)
      
-retrainlim(y2,s2)..  Wret(y2,s2) - 0.25*Wtot(y2,s3) =L= 0 ; (LHS = -273)
+retrainlim(y2,s2)..  Wret(y2,s2) - 0.25*Wtot(y2,s3) =L= 0 ; (LHS = -150)
      
-retrainlim(y2,s3)..  Wret(y2,s2) - 0.25*Wtot(y2,s3) =L= 0 ; (LHS = -273)
+retrainlim(y2,s3)..  Wret(y2,s2) - 0.25*Wtot(y2,s3) =L= 0 ; (LHS = -150)
      
 retrainlim(y3,s1)..  Wret(y3,s2) - 0.25*Wtot(y3,s3) =L= 0 ; (LHS = -118.25)
      
@@ -2625,9 +2697,13 @@ totalcosts..  - Cret(y0) - Cret(y1) - Cret(y2) - Cret(y3) - Cred(y0) - Cred(y1) 
 
 objfunc..  - Wred(y0,s1) - Wred(y0,s2) - Wred(y0,s3) - Wred(y1,s1) - Wred(y1,s2) - Wred(y1,s3) - Wred(y2,s1) - Wred(y2,s2) - Wred(y2,s3) - Wred(y3,s1) - Wred(y3,s2) - Wred(y3,s3) + objval =E= 0 ; (LHS = 0)
      
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 11
+<<<<<<< HEAD
+GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 11
+=======
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 11
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE manpowerplan Using RMIP From line 124
+Column Listing      SOLVE manpowerplan Using RMIP From line 128
 
 
 ---- Wrec  number of recruits at end of each year
@@ -2665,7 +2741,7 @@ Wrec(y2,s1)
        -0.25    attrition(y2,s1)
 
 Wrec(y2,s2)
-                (.LO, .L, .UP, .M = 0, 725, 800, EPS)
+                (.LO, .L, .UP, .M = 0, 800, 800, EPS)
        -1       total(y2,s2)
        -0.2     attrition(y2,s2)
 
@@ -2729,7 +2805,7 @@ Wret(y2,s1)
      -400       retraincosts(y2)
 
 Wret(y2,s2)
-                (.LO, .L, .UP, .M = 0, 102, +INF, EPS)
+                (.LO, .L, .UP, .M = 0, 225, +INF, EPS)
         1       total(y2,s2)
        -1       total(y2,s3)
         1       retrainlim(y2,s1)
@@ -2803,13 +2879,13 @@ Wred(y2,s1)
        -1       objfunc
 
 Wred(y2,s2)
-                (.LO, .L, .UP, .M = 0, 1, +INF, 1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 1)
         1       total(y2,s2)
      -500       redundancycosts(y2)
        -1       objfunc
 
 Wred(y2,s3)
-                (.LO, .L, .UP, .M = 0, 1, +INF, 1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 1)
         1       total(y2,s3)
      -500       redundancycosts(y2)
        -1       objfunc
@@ -2891,7 +2967,7 @@ Wsho(y3,s2)
      -400       shorttimecosts(y3)
 
 Wsho(y3,s3)
-                (.LO, .L, .UP, .M = 0, 9.99999999999892, +INF, EPS)
+                (.LO, .L, .UP, .M = 0, 9.99999999999937, +INF, EPS)
         0.5     overman(y3,s3)
      -400       shorttimecosts(y3)
 
@@ -2994,7 +3070,7 @@ Watt(y2,s1)
         1       attrition(y2,s1)
 
 Watt(y2,s2)
-                (.LO, .L, .UP, .M = 0, 223, +INF, EPS)
+                (.LO, .L, .UP, .M = 0, 300, +INF, EPS)
         1       total(y2,s2)
         1       attrition(y2,s2)
 
@@ -3064,7 +3140,7 @@ Wdown(y2,s3,s1)
        -0.5     attrition(y2,s1)
 
 Wdown(y2,s3,s2)
-                (.LO, .L, .UP, .M = 0, 1.00000000000073, +INF, EPS)
+                (.LO, .L, .UP, .M = 0, 125.000000000001, +INF, EPS)
        -1       total(y2,s2)
         1       total(y2,s3)
        -0.5     attrition(y2,s2)
@@ -3191,7 +3267,7 @@ Cret(y1)
        -1       totalcosts
 
 Cret(y2)
-                (.LO, .L, .UP, .M = -INF, 131000, +INF, 0)
+                (.LO, .L, .UP, .M = -INF, 192500, +INF, 0)
         1       retraincosts(y2)
        -1       totalcosts
 
@@ -3214,7 +3290,7 @@ Cred(y1)
        -1       totalcosts
 
 Cred(y2)
-                (.LO, .L, .UP, .M = -INF, 38000, +INF, 0)
+                (.LO, .L, .UP, .M = -INF, 37000, +INF, 0)
         1       redundancycosts(y2)
        -1       totalcosts
 
@@ -3273,19 +3349,23 @@ Csho(y3)
 ---- TotCTC  total cost to company
 
 TotCTC
-                (.LO, .L, .UP, .M = -INF, 1401500, +INF, 0)
+                (.LO, .L, .UP, .M = -INF, 1462000, +INF, 0)
         1       totalcosts
 
 
 ---- objval  total number of layoffs / redundancy workers
 
 objval
-                (.LO, .L, .UP, .M = -INF, 872, +INF, 0)
+                (.LO, .L, .UP, .M = -INF, 870, +INF, 0)
         1       objfunc
 
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 12
+<<<<<<< HEAD
+GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 12
+=======
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 12
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE manpowerplan Using RMIP From line 124
+Model Statistics    SOLVE manpowerplan Using RMIP From line 128
 
 
 MODEL STATISTICS
@@ -3295,29 +3375,44 @@ BLOCKS OF VARIABLES          14     SINGLE VARIABLES          113
 NON ZERO ELEMENTS           273     DISCRETE VARIABLES         78
 
 
-GENERATION TIME      =        0.016 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
+<<<<<<< HEAD
+GENERATION TIME      =        0.006 SECONDS      3 MB  25.1.2 r67455 DEX-DEG
 
 
-EXECUTION TIME       =        0.016 SECONDS      3 MB  25.1.1 r66732 WEX-WEI
-GAMS 25.1.1  r66732 Released May 19, 2018 WEX-WEI x86 64bit/MS Windows - 07/24/18 12:09:02 Page 13
+EXECUTION TIME       =        0.008 SECONDS      3 MB  25.1.2 r67455 DEX-DEG
+GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 13
+=======
+GENERATION TIME      =        0.016 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.016 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 13
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE manpowerplan Using RMIP From line 124
+Solution Report     SOLVE manpowerplan Using RMIP From line 128
 
 
                S O L V E      S U M M A R Y
 
      MODEL   manpowerplan        OBJECTIVE  TotCTC
      TYPE    RMIP                DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  124
+     SOLVER  CPLEX               FROM LINE  128
 
 **** SOLVER STATUS     1 Normal Completion         
 **** MODEL STATUS      1 Optimal                   
 **** OBJECTIVE VALUE           488000.0000
 
- RESOURCE USAGE, LIMIT          0.016      1000.000
+<<<<<<< HEAD
+ RESOURCE USAGE, LIMIT          0.006      1000.000
  ITERATION COUNT, LIMIT         6    2000000000
 
-IBM ILOG CPLEX   25.1.1 r66732 Released May 19, 2018 WEI x86 64bit/MS Windows 
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 DEG x86 64bit/Mac OS X   
+=======
+ RESOURCE USAGE, LIMIT          0.000      1000.000
+ ITERATION COUNT, LIMIT         6    2000000000
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 Cplex 12.8.0.0
 
 Space for names approximately 0.00 Mb
@@ -3626,7 +3721,11 @@ y3        -INF             .            +INF             .
 ****
 
 
-EXECUTION TIME       =        0.016 SECONDS      2 MB  25.1.1 r66732 WEX-WEI
+<<<<<<< HEAD
+EXECUTION TIME       =        0.001 SECONDS      2 MB  25.1.2 r67455 DEX-DEG
+=======
+EXECUTION TIME       =        0.000 SECONDS      2 MB  25.1.2 r67455 WEX-WEI
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 
 
 USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
@@ -3635,5 +3734,5 @@ USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
 
 **** FILE SUMMARY
 
-Input      C:\Users\cnbho\Documents\GitHub\HPW\manpower_12.5\man2.gms
-Output     C:\Users\cnbho\Documents\GitHub\HPW\manpower_12.5\man2.lst
+Input      /Users/cbhomia/Documents/GitHub/HPW/manpower_12.5/man2.gms
+Output     /Users/cbhomia/Documents/GitHub/HPW/manpower_12.5/man2.lst
