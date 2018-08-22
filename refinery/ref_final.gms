@@ -7,7 +7,7 @@ Some produts like petrol and jet fuel have an associated property which must be 
 The model consists of mass balances across the units, and the process streams. 
 
 Model Building in Mathematical Programming, Fifth Edition,
-H. Paul Williams, Model 12.5 : Refinery
+H. Paul Williams, Model 12.6 : Refinery
 Wiley Publication, 2013
 $offtext
 

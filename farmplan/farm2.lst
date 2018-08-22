@@ -1,0 +1,187 @@
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/19/18 15:48:02 Page 1
+Farm Planning (REFINERY, SEQ =xx)
+C o m p i l a t i o n
+
+
+   2   
+       
+       
+      Model Building in Mathematical Programming, Fifth Edition,
+      H. Paul Williams, Model 12.8 : Farm Planning
+      Wiley Publication, 2013
+  10   
+  11  Sets
+  12      Cows    'different categories of cows' /heifer , milkcow/
+  13      Feed    'feedstock for milkcow'        /grain , beet/
+  14      Group   'Group of land for grain'      /G1*G4/
+  15      Years   'Total years '              /Y0*Y5/
+  16      Dyears  'Decision years'            /Y1*Y5/
+  17      Age     'Age of the cows'
+  18   
+  19      ;
+  20   
+  21  Scalars
+  22      BirthRate               /1.1/
+  23      MaxArea     'Max size of land'             /200/
+  24      Ysbeet      'Yield for growing sugar beet [ton/acre]'    /1.5/
+  25      ;
+  26   
+  27  Parameters
+  28      grazAr(cows)   'grazing/support area by cows'
+  29                      /heifer 0.66 , milkcow 1/
+  30      Ygrain(group)   'Yield of grain per group'
+  31                      /G1 1.1, G2 0.9, G3 0.8, G4 0.65/
+  32      ArGrMx(group)   'Max area utilization for growing grain in each group'
+  33                      /G1 20, G2 30,G3 20,G4 10/
+  34      Diet(cows,feed) 'Feed requirement by each milking cow'
+  35                      /milkcow.grain 0.6 , milkcow.beet 0.7/
+  36      LabCow(cows)   'Labor hours required for cows, [hr/year]'
+  37                      /milkcow 42, heifer 10/
+  38      LabFoo(feed)  'Labor hours for food growing , [hr/year]'
+  39                      /grain 4, beet 14/
+  40      CostPr(feed)    'Cost price of buying feed [£/ton]'
+  41                      /grain 90, beet 70/
+  42      SellPr(feed)    'Sell price of extra feed produced [£/ton]'
+  43                      /grain 75, beet 58/
+  44      MiscCow(cows)   'Miscelleneous/other cost for cows [£/year]'
+  45                      /heifer 50, milkcow 100/
+  46      MiscFoo(feed)   'Miscelleneous/other cost growing feed [£/acre/year]'
+  47                      /grain 15, beet 10/
+  48      ;
+  49   
+  50  Alias(years,y);
+  51  Alias(feed,f);
+  52  Alias(Group,g);
+  53  Alias(cows,c);
+  54   
+  55   
+  56  Variables
+  57      pop(c,y)
+  58      calves(y)      'Number of calves born each year'
+  59      heifkept(y)    'Number of heifers kept each year'
+  60      heifsold(y)    'Number of heifers sold each year'
+  61      bullsold(y)    'Number of Bullocks sold each year'
+  62      cowsold(y)     'old cows sold each year'
+  63      Ar4Gr(g,y)      'Area allotted for growing grain each year'
+  64      Ar4Sb(y)        'Area allotted for growing sugarbeet each year'
+  65      fgrow(f,y)      'Amount of feed grown each year'
+  66      fneed(f,y)      'Amount of feed needed each year'
+  67      fbuy(f,y)       'Amount of feed bought each year'
+  68      fsold(f,y)      'Amount of feed sold each year'
+  69      LaborReq(y)   'Total yearly labor required for cattle and farming'
+  70      LaborCost(y)
+  71      LaborPenalty(y)
+  72      OtherCost(y)
+  73      AccPenalty(y)
+  74      Revenue(y)
+  75      Expense(y)
+  76      Profit
+  77      ;
+  78   
+  79  *limit on area for growing grain
+  80  Ar4Gr.UP(g,y) = ArGrMx(g);
+  81   
+  82   
+  83  Equations
+  84      births(y)   'calculating new births each year'
+  85      heifpop(y)  'heifer population balance'
+  86      milkpop(y)  'milking cows population balance'
+  87      heifbal(y)
+  88      bullSel(y)
+  89   
+  90      grazing(y)  'land area limitation for animal roaming'
+  91   
+  92   
+  93      growing(y)  'land area limitation for feed growing'
+  94   
+  95      grainproduce(y)
+  96      beetproduce(y)
+  97      foodneed(c,y,f)  'amount of food required by cows'
+  98      foodbal(f,y)    'feed balance equation'
+  99   
+ 100      laborhour(y)
+ 101   
+ 102      Labor1(y)
+ 103      Labor2(y)
+ 104      Misc(y)
+ 105   
+ 106   
+ 107   
+ 108      Accomodatn(y)
+ 109      Income(y)
+ 110      Expenditure(y)
+ 111      ObjFunc
+ 112   
+ 113   
+ 114      ;
+ 115   
+ 116  *Population balance
+ 117  births(y)..     calves(y) =E= pop('milkcow',y-1)*BirthRate;
+ 118  heifpop(y)..    pop('heifer',y) =E= pop('heifer',y-1) + heifkept(y);
+ 119  milkpop(y)..    pop('milkcow',y) =E= pop('milkcow',y-1) + pop('heifer',y-2);
+ 120  heifbal(y)..    heifkept(y) + heifsold(y) =E= 0.5 * calves(y);
+ 121  bullSel(y)..    bullsold(y) =E= 0.5* calves(y) ;
+ 122   
+ 123  *growing and grazing area calculations
+ 124  grazing(y)..    sum(c,pop(c,y)*grazAr(c)) =L= MaxArea;
+ 125  growing(y)..    Ar4Sb(y) + sum(g,Ar4Gr(g,y)) =L= MaxArea;
+ 126   
+ 127  *food production
+ 128  grainproduce(y)..   fgrow('grain',y) =E= sum(g, Ar4Gr(g,y)*Ygrain(g));
+ 129  beetproduce(y)..    fgrow('beet',y) =E= Ar4sb(y) * Ysbeet ;
+ 130  foodneed(c,y,f)..   fneed(f,y) =E= pop(c,y)* diet(c,f);
+ 131  foodbal(f,y)..      fgrow(f,y) + fbuy(f,y) =E= fneed(f,y) + fsold(f,y);
+ 132  laborhour(y)..      LaborReq(y) =E= sum(c, pop(c,y)*LabCow(c)) + sum(f, fgrow(f,y)*LabFoo(f)) ;
+ 133   
+ 134  Labor1(y).. LaborPenalty(y) =E= 1.2 *(LaborReq(y) - 5500) ;
+ 135  Labor2(y).. LaborCost(y) =E= 4000 + LaborPenalty(y) ;
+ 136  Misc(y).. OtherCost(y) =E= sum(c, pop(c,y) * MiscCow(c)) + Ar4SB(y)*10 +  sum(g,Ar4Gr(g,y))*15 ;
+ 137   
+ 138   
+ 139  Accomodatn(y).. AccPenalty(y) =E= 200 * [sum(c,pop(c,y)) -130] ;
+ 140   
+ 141  Income(y).. Revenue(y) =E= 370 * pop('milkcow',y) + sum(f, fsold(f,y)*SellPr(f)) + 30 * bullsold(y) + 40*heifsold(y) +120 * oldcow(y) ;
+****                                                                                                                                   $140
+**** 140  Unknown symbol
+ 142   
+ 143  Expenditure(y).. Expense(y) =E= LaborCost(y) + AccPenalty(y) +  sum(f, fbuy(f,y)*CostPr(f)) + OtherCost(y);
+ 144   
+ 145  ObjFunc.. Profit =E= sum(y, Revenue(y) - Expense(y));
+ 146   
+ 147   
+ 148  model farm /all/;
+ 149   
+ 150  solve farm maximizing Profit using RMIP;
+****                                         $257
+**** 257  Solve statement not checked because of previous errors
+ 151   
+ 152   
+ 153   
+ 154   
+ 155   
+ 156   
+ 157   
+ 158   
+ 159   
+ 160   
+ 161   
+ 162   
+ 163   
+ 164   
+
+**** 2 ERROR(S)   0 WARNING(S)
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\farmplan\farm2.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\farmplan\farm2.lst
+
+**** USER ERROR(S) ENCOUNTERED

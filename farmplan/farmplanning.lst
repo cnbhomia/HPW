@@ -1,0 +1,1194 @@
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/17/18 09:29:35 Page 1
+Farm Planning (REFINERY, SEQ =xx)
+C o m p i l a t i o n
+
+
+   2   
+       
+       
+      Model Building in Mathematical Programming, Fifth Edition,
+      H. Paul Williams, Model 12.8 : Farm Planning
+      Wiley Publication, 2013
+  10   
+  11  Sets
+  12      Cows    'different categories of cows' /heifer , milkcow/
+  13      Feed    'feedstock for milkcow'        /grain , beet/
+  14      Group   'Group of land for grain'      /G1*G4/
+  15      Years   'Total years '              /Y0*Y5/
+  16      DYears  'Decision years'            /Y1*Y5/
+  17      ;
+  18   
+  19  Scalars
+  20      MaxHerd     'Max herd size'                /130/
+  21      MaxArea     'Max size of land'             /200/
+  22      BirthRate   'New calves each year per cow' /1.1/
+  23      Ybeet       'Yield for growing sugar beet [ton/acre]'    /1.5/
+  24      RevMilk      'annual milk selling revenue[£/cow]'           /370/
+  25      ;
+  26   
+  27  Parameters
+  28      grazing(cows)   'grazing/support area by cows'
+  29                      /heifer 0.66 , milkcow 1/
+  30      Ygrain(group)   'Yield of grain per group'
+  31                      /G1 1.1, G2 0.9, G3 0.8, G4 0.65/
+  32      Agrain(group)   'Max area utilization in each group'
+  33                      /G1 20, G2 30,G3 20,G4 10/
+  34      CostPr(Feed)    'Cost of purchasing feed [£/ton]'
+  35                      /grain 90, beet 70/
+  36      SellPr(Feed)    'Cost of purchasing feed [£/ton]'
+  37                      /grain 75, beet 58/
+  38      Eat(cows,feed)  'Feed requirement by each milking cow'
+  39                      /milkcow.grain 0.6 , milkcow.beet 0.7/
+  40   
+  41      ;
+  42  Alias(years,y);
+  43  Alias(Cows,c);
+  44   
+  45  Integer Variables
+  46      TotNum(c,years)         'Total number of heifer and milking cows each year'
+  47      TotHerd(years)          'Total animals in the heard'
+  48      ExtraCows(y)        'Extra cows more than the MaxHerd Limit'
+  49      Calves(y)           'Number of calves born eah year'
+  50      sellbull(y)         'Number of Bullocks sold each year'
+  51      babyheif(y)         'Number of heifers kept each year'
+  52      sellheif(y)         'Number of heifers sold each year'
+  53      oldcowsold(y)       'old milking cow sold each year. Minimum 1'
+  54      ;
+  55   
+  56  Positive Variables
+  57      eaten(feed,y)       'Amount of feedstock (grain and sugarbeet) consumed each year'
+  58      produced(feed,y)    'Amount of feedstock produced each year'
+  59      purchased(feed,y)   'Amount of feedstock purchased each year'
+  60      feedsold(feed,y)    'Amount of feedstock sold each year'
+  61      Abeet(y)            'Area for growing sugar beet ecah year'
+  62      TotCost(y)          'Total cost incurred each year'
+  63      TotSell(y)          'Total revenue made each year'
+  64      ;
+  65  Variable Profit         'Cumulative profit for 5 years'
+  66      ;
+  67   
+  68  *year zero initializations
+  69  TotNum.fx('heifer','Y0') = 20;
+  70  TotNum.fx('milkcow','Y0') =100;
+  71   
+  72   
+  73  oldcowsold.lo(y) =1 ;
+  74  Abeet.lo(y) = 120 ;
+  75  Equations
+  76      totalherd(y)        'Total herd population each year'
+  77  *    extraherd(y)        'Extra cows calculation for accomodation'
+  78      newborns(y)         'Number of new borns each year'
+  79      sellbulls(y)        'Number of new bulloks each year for selling'
+  80      newheifs(y)         'Number of new heifers each year for selling'
+  81      milkcount(c,y)      'Calculate number of milking cows'
+  82      heifcount(c,y)      'Calculate number of heifers cows'
+  83   
+  84      foodneed(feed,y)    'Amount of grain/sugarbeet needed each year'
+  85      feedbal(Feed,y)     'Quantity/mass Balance of feedstock'
+  86      area4grow(y)        'Area Balance for growing feedstock'
+  87      area4roam(y)        'Area balance for cow roaming'
+  88      grow1(Feed,y)       'quantity of sugar beet produced'
+  89      grow2(Feed,y)       'quantity of grain produced'
+  90      expenses(y)         'expenses incurred each year'
+  91      revenue(y)          'revenue generated each year'
+  92      ObjFunc             'Objective function, 5 year cumulative profit'
+  93      ;
+  94   
+  95   
+  96  totalherd(y)..      sum(c,TotNum(c,y)) =E= TotHerd(y) ;
+  97  *extraherd(y)$[TotHerd(y) > MaxHerd]..         Extracows(y) =E= TotHerd(y) - MaxHerd ;
+  98  newborns(y)..       Calves(y+1) =E= TotNum('milkcow',y)*BirthRate;
+  99  sellbulls(y)..      sellbull(y) =E= 0.5*Calves(y) ;
+ 100  newheifs(y)..       babyheif(y) + sellheif(y) =E= 0.5*Calves(y) ;
+ 101  milkcount(c,y)..    ToTNum('milkcow',y+1) =E= ToTNum('milkcow',y)+ ToTNum('heifer',y-1) -oldcowsold(y) ;
+ 102  heifcount(c,y)..    ToTNum('heifer',y+1) =E= ToTNum('heifer',y) + babyheif(y) - ToTNum('heifer',y-1);
+ 103   
+ 104  foodneed(feed,y)..  eaten(feed,y) =E= sum(c, Eat(c,feed)*TotNum(c,y)) ;
+ 105  feedbal(Feed,y)..   produced(Feed,y) + purchased(Feed,y) =E= eaten(Feed,y) +feedsold(Feed,y);
+ 106  area4grow(y)..      sum(group, Agrain(group)) + Abeet(y) =L= MaxArea ;
+ 107  area4roam(y)..      sum(c,TotNum(c,y)*grazing(c)) =L= MaxArea ;
+ 108  grow1(Feed,y)..     produced('beet',y) =E= Abeet(y) * Ybeet ;
+ 109  grow2(Feed,y)..     produced('grain',y) =E= sum(group,Agrain(group)*Ygrain(group));
+ 110   
+ 111  expenses(y)..       TotCost(y) =E= sum(feed, purchased(feed,y)* CostPr(Feed)) ;
+ 112  revenue(y)..        TotSell(y) =E= sum(feed, feedsold(feed,y)* SellPr(Feed)) +RevMilk * TotNum('milkcow',y)
+ 113                                          +120*oldcowsold(y) + sellbull(y)*30;
+ 114   
+ 115  ObjFunc..            Profit =E= sum(y , TotSell(y) - TotCost(y) );
+ 116   
+ 117  model farm /all/;
+ 118   
+ 119  solve farm Maximizing Profit using rMIP;
+ 120   
+ 121   
+ 122   
+ 123   
+ 124   
+ 125   
+ 126   
+ 127   
+ 128   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/17/18 09:29:35 Page 2
+Farm Planning (REFINERY, SEQ =xx)
+Equation Listing    SOLVE farm Using RMIP From line 119
+
+
+---- totalherd  =E=  Total herd population each year
+
+totalherd(Y0)..  TotNum(heifer,Y0) + TotNum(milkcow,Y0) - TotHerd(Y0) =E= 0 ; (LHS = 120, INFES = 120 ****)
+     
+totalherd(Y1)..  TotNum(heifer,Y1) + TotNum(milkcow,Y1) - TotHerd(Y1) =E= 0 ; (LHS = 0)
+     
+totalherd(Y2)..  TotNum(heifer,Y2) + TotNum(milkcow,Y2) - TotHerd(Y2) =E= 0 ; (LHS = 0)
+     
+totalherd(Y3)..  TotNum(heifer,Y3) + TotNum(milkcow,Y3) - TotHerd(Y3) =E= 0 ; (LHS = 0)
+     
+totalherd(Y4)..  TotNum(heifer,Y4) + TotNum(milkcow,Y4) - TotHerd(Y4) =E= 0 ; (LHS = 0)
+     
+totalherd(Y5)..  TotNum(heifer,Y5) + TotNum(milkcow,Y5) - TotHerd(Y5) =E= 0 ; (LHS = 0)
+     
+
+---- newborns  =E=  Number of new borns each year
+
+newborns(Y0)..  - 1.1*TotNum(milkcow,Y0) + Calves(Y1) =E= 0 ; (LHS = -110, INFES = 110 ****)
+     
+newborns(Y1)..  - 1.1*TotNum(milkcow,Y1) + Calves(Y2) =E= 0 ; (LHS = 0)
+     
+newborns(Y2)..  - 1.1*TotNum(milkcow,Y2) + Calves(Y3) =E= 0 ; (LHS = 0)
+     
+newborns(Y3)..  - 1.1*TotNum(milkcow,Y3) + Calves(Y4) =E= 0 ; (LHS = 0)
+     
+newborns(Y4)..  - 1.1*TotNum(milkcow,Y4) + Calves(Y5) =E= 0 ; (LHS = 0)
+     
+newborns(Y5)..  - 1.1*TotNum(milkcow,Y5) =E= 0 ; (LHS = 0)
+     
+
+---- sellbulls  =E=  Number of new bulloks each year for selling
+
+sellbulls(Y0)..  - 0.5*Calves(Y0) + sellbull(Y0) =E= 0 ; (LHS = 0)
+     
+sellbulls(Y1)..  - 0.5*Calves(Y1) + sellbull(Y1) =E= 0 ; (LHS = 0)
+     
+sellbulls(Y2)..  - 0.5*Calves(Y2) + sellbull(Y2) =E= 0 ; (LHS = 0)
+     
+sellbulls(Y3)..  - 0.5*Calves(Y3) + sellbull(Y3) =E= 0 ; (LHS = 0)
+     
+sellbulls(Y4)..  - 0.5*Calves(Y4) + sellbull(Y4) =E= 0 ; (LHS = 0)
+     
+sellbulls(Y5)..  - 0.5*Calves(Y5) + sellbull(Y5) =E= 0 ; (LHS = 0)
+     
+
+---- newheifs  =E=  Number of new heifers each year for selling
+
+newheifs(Y0)..  - 0.5*Calves(Y0) + babyheif(Y0) + sellheif(Y0) =E= 0 ; (LHS = 0)
+     
+newheifs(Y1)..  - 0.5*Calves(Y1) + babyheif(Y1) + sellheif(Y1) =E= 0 ; (LHS = 0)
+     
+newheifs(Y2)..  - 0.5*Calves(Y2) + babyheif(Y2) + sellheif(Y2) =E= 0 ; (LHS = 0)
+     
+newheifs(Y3)..  - 0.5*Calves(Y3) + babyheif(Y3) + sellheif(Y3) =E= 0 ; (LHS = 0)
+     
+newheifs(Y4)..  - 0.5*Calves(Y4) + babyheif(Y4) + sellheif(Y4) =E= 0 ; (LHS = 0)
+     
+newheifs(Y5)..  - 0.5*Calves(Y5) + babyheif(Y5) + sellheif(Y5) =E= 0 ; (LHS = 0)
+     
+
+---- milkcount  =E=  Calculate number of milking cows
+
+milkcount(heifer,Y0)..  - TotNum(milkcow,Y0) + TotNum(milkcow,Y1) + oldcowsold(Y0) =E= 0 ; (LHS = -99, INFES = 99 ****)
+     
+milkcount(heifer,Y1)..  - TotNum(heifer,Y0) - TotNum(milkcow,Y1) + TotNum(milkcow,Y2) + oldcowsold(Y1) =E= 0 ; (LHS = -19, INFES = 19 ****)
+     
+milkcount(heifer,Y2)..  - TotNum(heifer,Y1) - TotNum(milkcow,Y2) + TotNum(milkcow,Y3) + oldcowsold(Y2) =E= 0 ; (LHS = 1, INFES = 1 ****)
+     
+milkcount(heifer,Y3)..  - TotNum(heifer,Y2) - TotNum(milkcow,Y3) + TotNum(milkcow,Y4) + oldcowsold(Y3) =E= 0 ; (LHS = 1, INFES = 1 ****)
+     
+milkcount(heifer,Y4)..  - TotNum(heifer,Y3) - TotNum(milkcow,Y4) + TotNum(milkcow,Y5) + oldcowsold(Y4) =E= 0 ; (LHS = 1, INFES = 1 ****)
+     
+milkcount(heifer,Y5)..  - TotNum(heifer,Y4) - TotNum(milkcow,Y5) + oldcowsold(Y5) =E= 0 ; (LHS = 1, INFES = 1 ****)
+     
+milkcount(milkcow,Y0)..  - TotNum(milkcow,Y0) + TotNum(milkcow,Y1) + oldcowsold(Y0) =E= 0 ; (LHS = -99, INFES = 99 ****)
+     
+milkcount(milkcow,Y1)..  - TotNum(heifer,Y0) - TotNum(milkcow,Y1) + TotNum(milkcow,Y2) + oldcowsold(Y1) =E= 0 ; (LHS = -19, INFES = 19 ****)
+     
+milkcount(milkcow,Y2)..  - TotNum(heifer,Y1) - TotNum(milkcow,Y2) + TotNum(milkcow,Y3) + oldcowsold(Y2) =E= 0 ; (LHS = 1, INFES = 1 ****)
+     
+milkcount(milkcow,Y3)..  - TotNum(heifer,Y2) - TotNum(milkcow,Y3) + TotNum(milkcow,Y4) + oldcowsold(Y3) =E= 0 ; (LHS = 1, INFES = 1 ****)
+     
+milkcount(milkcow,Y4)..  - TotNum(heifer,Y3) - TotNum(milkcow,Y4) + TotNum(milkcow,Y5) + oldcowsold(Y4) =E= 0 ; (LHS = 1, INFES = 1 ****)
+     
+milkcount(milkcow,Y5)..  - TotNum(heifer,Y4) - TotNum(milkcow,Y5) + oldcowsold(Y5) =E= 0 ; (LHS = 1, INFES = 1 ****)
+     
+
+---- heifcount  =E=  Calculate number of heifers cows
+
+heifcount(heifer,Y0)..  - TotNum(heifer,Y0) + TotNum(heifer,Y1) - babyheif(Y0) =E= 0 ; (LHS = -20, INFES = 20 ****)
+     
+heifcount(heifer,Y1)..  TotNum(heifer,Y0) - TotNum(heifer,Y1) + TotNum(heifer,Y2) - babyheif(Y1) =E= 0 ; (LHS = 20, INFES = 20 ****)
+     
+heifcount(heifer,Y2)..  TotNum(heifer,Y1) - TotNum(heifer,Y2) + TotNum(heifer,Y3) - babyheif(Y2) =E= 0 ; (LHS = 0)
+     
+heifcount(heifer,Y3)..  TotNum(heifer,Y2) - TotNum(heifer,Y3) + TotNum(heifer,Y4) - babyheif(Y3) =E= 0 ; (LHS = 0)
+     
+heifcount(heifer,Y4)..  TotNum(heifer,Y3) - TotNum(heifer,Y4) + TotNum(heifer,Y5) - babyheif(Y4) =E= 0 ; (LHS = 0)
+     
+heifcount(heifer,Y5)..  TotNum(heifer,Y4) - TotNum(heifer,Y5) - babyheif(Y5) =E= 0 ; (LHS = 0)
+     
+heifcount(milkcow,Y0)..  - TotNum(heifer,Y0) + TotNum(heifer,Y1) - babyheif(Y0) =E= 0 ; (LHS = -20, INFES = 20 ****)
+     
+heifcount(milkcow,Y1)..  TotNum(heifer,Y0) - TotNum(heifer,Y1) + TotNum(heifer,Y2) - babyheif(Y1) =E= 0 ; (LHS = 20, INFES = 20 ****)
+     
+heifcount(milkcow,Y2)..  TotNum(heifer,Y1) - TotNum(heifer,Y2) + TotNum(heifer,Y3) - babyheif(Y2) =E= 0 ; (LHS = 0)
+     
+heifcount(milkcow,Y3)..  TotNum(heifer,Y2) - TotNum(heifer,Y3) + TotNum(heifer,Y4) - babyheif(Y3) =E= 0 ; (LHS = 0)
+     
+heifcount(milkcow,Y4)..  TotNum(heifer,Y3) - TotNum(heifer,Y4) + TotNum(heifer,Y5) - babyheif(Y4) =E= 0 ; (LHS = 0)
+     
+heifcount(milkcow,Y5)..  TotNum(heifer,Y4) - TotNum(heifer,Y5) - babyheif(Y5) =E= 0 ; (LHS = 0)
+     
+
+---- foodneed  =E=  Amount of grain/sugarbeet needed each year
+
+foodneed(grain,Y0)..  - 0.6*TotNum(milkcow,Y0) + eaten(grain,Y0) =E= 0 ; (LHS = -60, INFES = 60 ****)
+     
+foodneed(grain,Y1)..  - 0.6*TotNum(milkcow,Y1) + eaten(grain,Y1) =E= 0 ; (LHS = 0)
+     
+foodneed(grain,Y2)..  - 0.6*TotNum(milkcow,Y2) + eaten(grain,Y2) =E= 0 ; (LHS = 0)
+     
+foodneed(grain,Y3)..  - 0.6*TotNum(milkcow,Y3) + eaten(grain,Y3) =E= 0 ; (LHS = 0)
+     
+foodneed(grain,Y4)..  - 0.6*TotNum(milkcow,Y4) + eaten(grain,Y4) =E= 0 ; (LHS = 0)
+     
+foodneed(grain,Y5)..  - 0.6*TotNum(milkcow,Y5) + eaten(grain,Y5) =E= 0 ; (LHS = 0)
+     
+foodneed(beet,Y0)..  - 0.7*TotNum(milkcow,Y0) + eaten(beet,Y0) =E= 0 ; (LHS = -70, INFES = 70 ****)
+     
+foodneed(beet,Y1)..  - 0.7*TotNum(milkcow,Y1) + eaten(beet,Y1) =E= 0 ; (LHS = 0)
+     
+foodneed(beet,Y2)..  - 0.7*TotNum(milkcow,Y2) + eaten(beet,Y2) =E= 0 ; (LHS = 0)
+     
+foodneed(beet,Y3)..  - 0.7*TotNum(milkcow,Y3) + eaten(beet,Y3) =E= 0 ; (LHS = 0)
+     
+foodneed(beet,Y4)..  - 0.7*TotNum(milkcow,Y4) + eaten(beet,Y4) =E= 0 ; (LHS = 0)
+     
+foodneed(beet,Y5)..  - 0.7*TotNum(milkcow,Y5) + eaten(beet,Y5) =E= 0 ; (LHS = 0)
+     
+
+---- feedbal  =E=  Quantity/mass Balance of feedstock
+
+feedbal(grain,Y0)..  - eaten(grain,Y0) + produced(grain,Y0) + purchased(grain,Y0) - feedsold(grain,Y0) =E= 0 ; (LHS = 0)
+     
+feedbal(grain,Y1)..  - eaten(grain,Y1) + produced(grain,Y1) + purchased(grain,Y1) - feedsold(grain,Y1) =E= 0 ; (LHS = 0)
+     
+feedbal(grain,Y2)..  - eaten(grain,Y2) + produced(grain,Y2) + purchased(grain,Y2) - feedsold(grain,Y2) =E= 0 ; (LHS = 0)
+     
+feedbal(grain,Y3)..  - eaten(grain,Y3) + produced(grain,Y3) + purchased(grain,Y3) - feedsold(grain,Y3) =E= 0 ; (LHS = 0)
+     
+feedbal(grain,Y4)..  - eaten(grain,Y4) + produced(grain,Y4) + purchased(grain,Y4) - feedsold(grain,Y4) =E= 0 ; (LHS = 0)
+     
+feedbal(grain,Y5)..  - eaten(grain,Y5) + produced(grain,Y5) + purchased(grain,Y5) - feedsold(grain,Y5) =E= 0 ; (LHS = 0)
+     
+feedbal(beet,Y0)..  - eaten(beet,Y0) + produced(beet,Y0) + purchased(beet,Y0) - feedsold(beet,Y0) =E= 0 ; (LHS = 0)
+     
+feedbal(beet,Y1)..  - eaten(beet,Y1) + produced(beet,Y1) + purchased(beet,Y1) - feedsold(beet,Y1) =E= 0 ; (LHS = 0)
+     
+feedbal(beet,Y2)..  - eaten(beet,Y2) + produced(beet,Y2) + purchased(beet,Y2) - feedsold(beet,Y2) =E= 0 ; (LHS = 0)
+     
+feedbal(beet,Y3)..  - eaten(beet,Y3) + produced(beet,Y3) + purchased(beet,Y3) - feedsold(beet,Y3) =E= 0 ; (LHS = 0)
+     
+feedbal(beet,Y4)..  - eaten(beet,Y4) + produced(beet,Y4) + purchased(beet,Y4) - feedsold(beet,Y4) =E= 0 ; (LHS = 0)
+     
+feedbal(beet,Y5)..  - eaten(beet,Y5) + produced(beet,Y5) + purchased(beet,Y5) - feedsold(beet,Y5) =E= 0 ; (LHS = 0)
+     
+
+---- area4grow  =L=  Area Balance for growing feedstock
+
+area4grow(Y0)..  Abeet(Y0) =L= 120 ; (LHS = 120)
+     
+area4grow(Y1)..  Abeet(Y1) =L= 120 ; (LHS = 120)
+     
+area4grow(Y2)..  Abeet(Y2) =L= 120 ; (LHS = 120)
+     
+area4grow(Y3)..  Abeet(Y3) =L= 120 ; (LHS = 120)
+     
+area4grow(Y4)..  Abeet(Y4) =L= 120 ; (LHS = 120)
+     
+area4grow(Y5)..  Abeet(Y5) =L= 120 ; (LHS = 120)
+     
+
+---- area4roam  =L=  Area balance for cow roaming
+
+area4roam(Y0)..  0.66*TotNum(heifer,Y0) + TotNum(milkcow,Y0) =L= 200 ; (LHS = 113.2)
+     
+area4roam(Y1)..  0.66*TotNum(heifer,Y1) + TotNum(milkcow,Y1) =L= 200 ; (LHS = 0)
+     
+area4roam(Y2)..  0.66*TotNum(heifer,Y2) + TotNum(milkcow,Y2) =L= 200 ; (LHS = 0)
+     
+area4roam(Y3)..  0.66*TotNum(heifer,Y3) + TotNum(milkcow,Y3) =L= 200 ; (LHS = 0)
+     
+area4roam(Y4)..  0.66*TotNum(heifer,Y4) + TotNum(milkcow,Y4) =L= 200 ; (LHS = 0)
+     
+area4roam(Y5)..  0.66*TotNum(heifer,Y5) + TotNum(milkcow,Y5) =L= 200 ; (LHS = 0)
+     
+
+---- grow1  =E=  quantity of sugar beet produced
+
+grow1(grain,Y0)..  produced(beet,Y0) - 1.5*Abeet(Y0) =E= 0 ; (LHS = -180, INFES = 180 ****)
+     
+grow1(grain,Y1)..  produced(beet,Y1) - 1.5*Abeet(Y1) =E= 0 ; (LHS = -180, INFES = 180 ****)
+     
+grow1(grain,Y2)..  produced(beet,Y2) - 1.5*Abeet(Y2) =E= 0 ; (LHS = -180, INFES = 180 ****)
+     
+grow1(grain,Y3)..  produced(beet,Y3) - 1.5*Abeet(Y3) =E= 0 ; (LHS = -180, INFES = 180 ****)
+     
+grow1(grain,Y4)..  produced(beet,Y4) - 1.5*Abeet(Y4) =E= 0 ; (LHS = -180, INFES = 180 ****)
+     
+grow1(grain,Y5)..  produced(beet,Y5) - 1.5*Abeet(Y5) =E= 0 ; (LHS = -180, INFES = 180 ****)
+     
+grow1(beet,Y0)..  produced(beet,Y0) - 1.5*Abeet(Y0) =E= 0 ; (LHS = -180, INFES = 180 ****)
+     
+grow1(beet,Y1)..  produced(beet,Y1) - 1.5*Abeet(Y1) =E= 0 ; (LHS = -180, INFES = 180 ****)
+     
+grow1(beet,Y2)..  produced(beet,Y2) - 1.5*Abeet(Y2) =E= 0 ; (LHS = -180, INFES = 180 ****)
+     
+grow1(beet,Y3)..  produced(beet,Y3) - 1.5*Abeet(Y3) =E= 0 ; (LHS = -180, INFES = 180 ****)
+     
+grow1(beet,Y4)..  produced(beet,Y4) - 1.5*Abeet(Y4) =E= 0 ; (LHS = -180, INFES = 180 ****)
+     
+grow1(beet,Y5)..  produced(beet,Y5) - 1.5*Abeet(Y5) =E= 0 ; (LHS = -180, INFES = 180 ****)
+     
+
+---- grow2  =E=  quantity of grain produced
+
+grow2(grain,Y0)..  produced(grain,Y0) =E= 71.5 ; (LHS = 0, INFES = 71.5 ****)
+     
+grow2(grain,Y1)..  produced(grain,Y1) =E= 71.5 ; (LHS = 0, INFES = 71.5 ****)
+     
+grow2(grain,Y2)..  produced(grain,Y2) =E= 71.5 ; (LHS = 0, INFES = 71.5 ****)
+     
+grow2(grain,Y3)..  produced(grain,Y3) =E= 71.5 ; (LHS = 0, INFES = 71.5 ****)
+     
+grow2(grain,Y4)..  produced(grain,Y4) =E= 71.5 ; (LHS = 0, INFES = 71.5 ****)
+     
+grow2(grain,Y5)..  produced(grain,Y5) =E= 71.5 ; (LHS = 0, INFES = 71.5 ****)
+     
+grow2(beet,Y0)..  produced(grain,Y0) =E= 71.5 ; (LHS = 0, INFES = 71.5 ****)
+     
+grow2(beet,Y1)..  produced(grain,Y1) =E= 71.5 ; (LHS = 0, INFES = 71.5 ****)
+     
+grow2(beet,Y2)..  produced(grain,Y2) =E= 71.5 ; (LHS = 0, INFES = 71.5 ****)
+     
+grow2(beet,Y3)..  produced(grain,Y3) =E= 71.5 ; (LHS = 0, INFES = 71.5 ****)
+     
+grow2(beet,Y4)..  produced(grain,Y4) =E= 71.5 ; (LHS = 0, INFES = 71.5 ****)
+     
+grow2(beet,Y5)..  produced(grain,Y5) =E= 71.5 ; (LHS = 0, INFES = 71.5 ****)
+     
+
+---- expenses  =E=  expenses incurred each year
+
+expenses(Y0)..  - 90*purchased(grain,Y0) - 70*purchased(beet,Y0) + TotCost(Y0) =E= 0 ; (LHS = 0)
+     
+expenses(Y1)..  - 90*purchased(grain,Y1) - 70*purchased(beet,Y1) + TotCost(Y1) =E= 0 ; (LHS = 0)
+     
+expenses(Y2)..  - 90*purchased(grain,Y2) - 70*purchased(beet,Y2) + TotCost(Y2) =E= 0 ; (LHS = 0)
+     
+expenses(Y3)..  - 90*purchased(grain,Y3) - 70*purchased(beet,Y3) + TotCost(Y3) =E= 0 ; (LHS = 0)
+     
+expenses(Y4)..  - 90*purchased(grain,Y4) - 70*purchased(beet,Y4) + TotCost(Y4) =E= 0 ; (LHS = 0)
+     
+expenses(Y5)..  - 90*purchased(grain,Y5) - 70*purchased(beet,Y5) + TotCost(Y5) =E= 0 ; (LHS = 0)
+     
+
+---- revenue  =E=  revenue generated each year
+
+revenue(Y0)..  - 370*TotNum(milkcow,Y0) - 30*sellbull(Y0) - 120*oldcowsold(Y0) - 75*feedsold(grain,Y0) - 58*feedsold(beet,Y0) + TotSell(Y0) =E= 0 ; (LHS = -37120, INFES = 37120 ****)
+     
+revenue(Y1)..  - 370*TotNum(milkcow,Y1) - 30*sellbull(Y1) - 120*oldcowsold(Y1) - 75*feedsold(grain,Y1) - 58*feedsold(beet,Y1) + TotSell(Y1) =E= 0 ; (LHS = -120, INFES = 120 ****)
+     
+revenue(Y2)..  - 370*TotNum(milkcow,Y2) - 30*sellbull(Y2) - 120*oldcowsold(Y2) - 75*feedsold(grain,Y2) - 58*feedsold(beet,Y2) + TotSell(Y2) =E= 0 ; (LHS = -120, INFES = 120 ****)
+     
+revenue(Y3)..  - 370*TotNum(milkcow,Y3) - 30*sellbull(Y3) - 120*oldcowsold(Y3) - 75*feedsold(grain,Y3) - 58*feedsold(beet,Y3) + TotSell(Y3) =E= 0 ; (LHS = -120, INFES = 120 ****)
+     
+revenue(Y4)..  - 370*TotNum(milkcow,Y4) - 30*sellbull(Y4) - 120*oldcowsold(Y4) - 75*feedsold(grain,Y4) - 58*feedsold(beet,Y4) + TotSell(Y4) =E= 0 ; (LHS = -120, INFES = 120 ****)
+     
+revenue(Y5)..  - 370*TotNum(milkcow,Y5) - 30*sellbull(Y5) - 120*oldcowsold(Y5) - 75*feedsold(grain,Y5) - 58*feedsold(beet,Y5) + TotSell(Y5) =E= 0 ; (LHS = -120, INFES = 120 ****)
+     
+
+---- ObjFunc  =E=  Objective function, 5 year cumulative profit
+
+ObjFunc..  TotCost(Y0) + TotCost(Y1) + TotCost(Y2) + TotCost(Y3) + TotCost(Y4) + TotCost(Y5) - TotSell(Y0) - TotSell(Y1) - TotSell(Y2) - TotSell(Y3) - TotSell(Y4) - TotSell(Y5) + Profit =E= 0 ; (LHS = 0)
+     
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/17/18 09:29:35 Page 3
+Farm Planning (REFINERY, SEQ =xx)
+Column Listing      SOLVE farm Using RMIP From line 119
+
+
+---- TotNum  Total number of heifer and milking cows each year
+
+TotNum(heifer,Y0)
+                (.LO, .L, .UP, .M = 20, 20, 20, 0)
+        1       totalherd(Y0)
+       -1       milkcount(heifer,Y1)
+       -1       milkcount(milkcow,Y1)
+       -1       heifcount(heifer,Y0)
+        1       heifcount(heifer,Y1)
+       -1       heifcount(milkcow,Y0)
+        1       heifcount(milkcow,Y1)
+        0.66    area4roam(Y0)
+
+TotNum(heifer,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       totalherd(Y1)
+       -1       milkcount(heifer,Y2)
+       -1       milkcount(milkcow,Y2)
+        1       heifcount(heifer,Y0)
+       -1       heifcount(heifer,Y1)
+        1       heifcount(heifer,Y2)
+        1       heifcount(milkcow,Y0)
+       -1       heifcount(milkcow,Y1)
+        1       heifcount(milkcow,Y2)
+        0.66    area4roam(Y1)
+
+TotNum(heifer,Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       totalherd(Y2)
+       -1       milkcount(heifer,Y3)
+       -1       milkcount(milkcow,Y3)
+        1       heifcount(heifer,Y1)
+       -1       heifcount(heifer,Y2)
+        1       heifcount(heifer,Y3)
+        1       heifcount(milkcow,Y1)
+       -1       heifcount(milkcow,Y2)
+        1       heifcount(milkcow,Y3)
+        0.66    area4roam(Y2)
+
+REMAINING 9 ENTRIES SKIPPED
+
+---- TotHerd  Total animals in the heard
+
+TotHerd(Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       totalherd(Y0)
+
+TotHerd(Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       totalherd(Y1)
+
+TotHerd(Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       totalherd(Y2)
+
+REMAINING 3 ENTRIES SKIPPED
+
+---- Calves  Number of calves born eah year
+
+Calves(Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -0.5     sellbulls(Y0)
+       -0.5     newheifs(Y0)
+
+Calves(Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       newborns(Y0)
+       -0.5     sellbulls(Y1)
+       -0.5     newheifs(Y1)
+
+Calves(Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       newborns(Y1)
+       -0.5     sellbulls(Y2)
+       -0.5     newheifs(Y2)
+
+REMAINING 3 ENTRIES SKIPPED
+
+---- sellbull  Number of Bullocks sold each year
+
+sellbull(Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       sellbulls(Y0)
+      -30       revenue(Y0)
+
+sellbull(Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       sellbulls(Y1)
+      -30       revenue(Y1)
+
+sellbull(Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       sellbulls(Y2)
+      -30       revenue(Y2)
+
+REMAINING 3 ENTRIES SKIPPED
+
+---- babyheif  Number of heifers kept each year
+
+babyheif(Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       newheifs(Y0)
+       -1       heifcount(heifer,Y0)
+       -1       heifcount(milkcow,Y0)
+
+babyheif(Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       newheifs(Y1)
+       -1       heifcount(heifer,Y1)
+       -1       heifcount(milkcow,Y1)
+
+babyheif(Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       newheifs(Y2)
+       -1       heifcount(heifer,Y2)
+       -1       heifcount(milkcow,Y2)
+
+REMAINING 3 ENTRIES SKIPPED
+
+---- sellheif  Number of heifers sold each year
+
+sellheif(Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       newheifs(Y0)
+
+sellheif(Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       newheifs(Y1)
+
+sellheif(Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       newheifs(Y2)
+
+REMAINING 3 ENTRIES SKIPPED
+
+---- oldcowsold  old milking cow sold each year. Minimum 1
+
+oldcowsold(Y0)
+                (.LO, .L, .UP, .M = 1, 1, +INF, 0)
+        1       milkcount(heifer,Y0)
+        1       milkcount(milkcow,Y0)
+     -120       revenue(Y0)
+        0       (OLD LEVEL ****)
+
+oldcowsold(Y1)
+                (.LO, .L, .UP, .M = 1, 1, +INF, 0)
+        1       milkcount(heifer,Y1)
+        1       milkcount(milkcow,Y1)
+     -120       revenue(Y1)
+        0       (OLD LEVEL ****)
+
+oldcowsold(Y2)
+                (.LO, .L, .UP, .M = 1, 1, +INF, 0)
+        1       milkcount(heifer,Y2)
+        1       milkcount(milkcow,Y2)
+     -120       revenue(Y2)
+        0       (OLD LEVEL ****)
+
+REMAINING 3 ENTRIES SKIPPED
+
+---- eaten  Amount of feedstock (grain and sugarbeet) consumed each year
+
+eaten(grain,Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       foodneed(grain,Y0)
+       -1       feedbal(grain,Y0)
+
+eaten(grain,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       foodneed(grain,Y1)
+       -1       feedbal(grain,Y1)
+
+eaten(grain,Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       foodneed(grain,Y2)
+       -1       feedbal(grain,Y2)
+
+REMAINING 9 ENTRIES SKIPPED
+
+---- produced  Amount of feedstock produced each year
+
+produced(grain,Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       feedbal(grain,Y0)
+        1       grow2(grain,Y0)
+        1       grow2(beet,Y0)
+
+produced(grain,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       feedbal(grain,Y1)
+        1       grow2(grain,Y1)
+        1       grow2(beet,Y1)
+
+produced(grain,Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       feedbal(grain,Y2)
+        1       grow2(grain,Y2)
+        1       grow2(beet,Y2)
+
+REMAINING 9 ENTRIES SKIPPED
+
+---- purchased  Amount of feedstock purchased each year
+
+purchased(grain,Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       feedbal(grain,Y0)
+      -90       expenses(Y0)
+
+purchased(grain,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       feedbal(grain,Y1)
+      -90       expenses(Y1)
+
+purchased(grain,Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       feedbal(grain,Y2)
+      -90       expenses(Y2)
+
+REMAINING 9 ENTRIES SKIPPED
+
+---- feedsold  Amount of feedstock sold each year
+
+feedsold(grain,Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       feedbal(grain,Y0)
+      -75       revenue(Y0)
+
+feedsold(grain,Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       feedbal(grain,Y1)
+      -75       revenue(Y1)
+
+feedsold(grain,Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       feedbal(grain,Y2)
+      -75       revenue(Y2)
+
+REMAINING 9 ENTRIES SKIPPED
+
+---- Abeet  Area for growing sugar beet ecah year
+
+Abeet(Y0)
+                (.LO, .L, .UP, .M = 120, 120, +INF, 0)
+        1       area4grow(Y0)
+       -1.5     grow1(grain,Y0)
+       -1.5     grow1(beet,Y0)
+        0       (OLD LEVEL ****)
+
+Abeet(Y1)
+                (.LO, .L, .UP, .M = 120, 120, +INF, 0)
+        1       area4grow(Y1)
+       -1.5     grow1(grain,Y1)
+       -1.5     grow1(beet,Y1)
+        0       (OLD LEVEL ****)
+
+Abeet(Y2)
+                (.LO, .L, .UP, .M = 120, 120, +INF, 0)
+        1       area4grow(Y2)
+       -1.5     grow1(grain,Y2)
+       -1.5     grow1(beet,Y2)
+        0       (OLD LEVEL ****)
+
+REMAINING 3 ENTRIES SKIPPED
+
+---- TotCost  Total cost incurred each year
+
+TotCost(Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       expenses(Y0)
+        1       ObjFunc
+
+TotCost(Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       expenses(Y1)
+        1       ObjFunc
+
+TotCost(Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       expenses(Y2)
+        1       ObjFunc
+
+REMAINING 3 ENTRIES SKIPPED
+
+---- TotSell  Total revenue made each year
+
+TotSell(Y0)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       revenue(Y0)
+       -1       ObjFunc
+
+TotSell(Y1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       revenue(Y1)
+       -1       ObjFunc
+
+TotSell(Y2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       revenue(Y2)
+       -1       ObjFunc
+
+REMAINING 3 ENTRIES SKIPPED
+
+---- Profit  Cumulative profit for 5 years
+
+Profit
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       ObjFunc
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/17/18 09:29:35 Page 4
+Farm Planning (REFINERY, SEQ =xx)
+Model Statistics    SOLVE farm Using RMIP From line 119
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS          15     SINGLE EQUATIONS          121
+BLOCKS OF VARIABLES          15     SINGLE VARIABLES          115  12 projected
+NON ZERO ELEMENTS           340     DISCRETE VARIABLES         46
+
+
+GENERATION TIME      =        0.047 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.047 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/17/18 09:29:35 Page 5
+Farm Planning (REFINERY, SEQ =xx)
+Solution Report     SOLVE farm Using RMIP From line 119
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   farm                OBJECTIVE  Profit
+     TYPE    RMIP                DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  119
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      3 Unbounded                 
+**** OBJECTIVE VALUE           351110.1184
+
+ RESOURCE USAGE, LIMIT          0.031      1000.000
+ ITERATION COUNT, LIMIT        42    2000000000
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+Cplex 12.8.0.0
+
+Space for names approximately 0.01 Mb
+Use option 'names no' to turn use of names off
+LP status(4): unbounded or infeasible
+Cplex Time: 0.00sec (det. 0.04 ticks)
+Presolve found the problem infeasible or unbounded.
+Rerunning with presolve turned off and solving with LPMETHOD=0
+LP status(2): unbounded
+Cplex Time: 0.02sec (det. 0.27 ticks)
+Model has an unbounded ray.
+
+**** ERRORS/WARNINGS IN VARIABLE sellheif(Y0)
+     1 error(s): Unbounded variable
+
+---- EQU totalherd  Total herd population each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .              .             EPS         
+Y1          .              .              .             EPS         
+Y2          .              .              .             EPS         
+Y3          .              .              .             EPS         
+Y4          .              .              .             EPS         
+Y5          .              .              .             EPS         
+
+---- EQU newborns  Number of new borns each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .              .            15.0000      
+Y1          .              .              .            90.0000      
+Y2          .              .              .           126.3270      
+Y3          .              .              .            15.0000      
+Y4          .              .              .            15.0000      
+Y5          .              .              .          -604.8255      
+
+---- EQU sellbulls  Number of new bulloks each year for selling
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .              .            30.0000      
+Y1          .              .              .            30.0000      
+Y2          .              .              .            30.0000      
+Y3          .              .              .            30.0000      
+Y4          .              .              .            30.0000      
+Y5          .              .              .            30.0000      
+
+---- EQU newheifs  Number of new heifers each year for selling
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .              .           -30.0000      
+Y1          .              .              .             EPS         
+Y2          .              .              .           150.0000      
+Y3          .              .              .           222.6540      
+Y4          .              .              .             EPS         
+Y5          .              .              .             EPS         
+
+---- EQU milkcount  Calculate number of milking cows
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+heifer .Y0          .              .              .           855.0233      
+heifer .Y1          .              .              .           471.6233      
+heifer .Y2          .              .              .           120.0000      
+heifer .Y3          .              .              .           120.0000      
+heifer .Y4          .              .              .           120.0000      
+heifer .Y5          .              .              .           415.3080      
+milkcow.Y0          .              .              .              .          
+milkcow.Y1          .              .              .              .          
+milkcow.Y2          .              .              .              .          
+milkcow.Y3          .              .              .              .          
+milkcow.Y4          .              .              .              .          
+milkcow.Y5          .              .              .              .          
+
+---- EQU heifcount  Calculate number of heifers cows
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+heifer .Y0          .              .              .           -30.0000      
+heifer .Y1          .              .              .             EPS         
+heifer .Y2          .              .              .           150.0000      
+heifer .Y3          .              .              .           222.6540      
+heifer .Y4          .              .              .              .          
+heifer .Y5          .              .              .             EPS         
+milkcow.Y0          .              .              .              .          
+milkcow.Y1          .              .              .              .          
+milkcow.Y2          .              .              .              .          
+milkcow.Y3          .              .              .              .          
+milkcow.Y4          .              .              .             EPS         
+milkcow.Y5          .              .              .              .          
+
+---- EQU foodneed  Amount of grain/sugarbeet needed each year
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+grain.Y0          .              .              .           -75.0000      
+grain.Y1          .              .              .           -75.0000      
+grain.Y2          .              .              .           -75.0000      
+grain.Y3          .              .              .           -90.0000      
+grain.Y4          .              .              .           -90.0000      
+grain.Y5          .              .              .              .          
+beet .Y0          .              .              .           -58.0000      
+beet .Y1          .              .              .           -58.0000      
+beet .Y2          .              .              .           -58.0000      
+beet .Y3          .              .              .           -58.0000      
+beet .Y4          .              .              .           -58.0000      
+beet .Y5          .              .              .              .          
+
+---- EQU feedbal  Quantity/mass Balance of feedstock
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+grain.Y0          .              .              .           -75.0000      
+grain.Y1          .              .              .           -75.0000      
+grain.Y2          .              .              .           -75.0000      
+grain.Y3          .              .              .           -90.0000      
+grain.Y4          .              .              .           -90.0000      
+grain.Y5          .              .              .           -75.0000      
+beet .Y0          .              .              .           -58.0000      
+beet .Y1          .              .              .           -58.0000      
+beet .Y2          .              .              .           -58.0000      
+beet .Y3          .              .              .           -58.0000      
+beet .Y4          .              .              .           -58.0000      
+beet .Y5          .              .              .           -58.0000      
+
+---- EQU area4grow  Area Balance for growing feedstock
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0        -INF          120.0000       120.0000        87.0000      
+Y1        -INF          120.0000       120.0000        87.0000      
+Y2        -INF          120.0000       120.0000        87.0000      
+Y3        -INF          120.0000       120.0000        87.0000      
+Y4        -INF          120.0000       120.0000        87.0000      
+Y5        -INF          120.0000       120.0000        87.0000      
+
+---- EQU area4roam  Area balance for cow roaming
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0        -INF          113.2000       200.0000          .          
+Y1        -INF          177.1110       200.0000          .          
+Y2        -INF          200.0000       200.0000        71.7364      
+Y3        -INF          200.0000       200.0000       291.9000      
+Y4        -INF          200.0000       200.0000       291.9000      
+Y5        -INF             .           200.0000          .          
+
+---- EQU grow1  quantity of sugar beet produced
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+grain.Y0          .              .              .            58.0000      
+grain.Y1          .              .              .            58.0000      
+grain.Y2          .              .              .            58.0000      
+grain.Y3          .              .              .            58.0000      
+grain.Y4          .              .              .            58.0000      
+grain.Y5          .              .              .            58.0000      
+beet .Y0          .              .              .              .          
+beet .Y1          .              .              .              .          
+beet .Y2          .              .              .              .          
+beet .Y3          .              .              .              .          
+beet .Y4          .              .              .              .          
+beet .Y5          .              .              .              .          
+
+---- EQU grow2  quantity of grain produced
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+grain.Y0        71.5000        71.5000        71.5000          .          
+grain.Y1        71.5000        71.5000        71.5000        75.0000      
+grain.Y2        71.5000        71.5000        71.5000        75.0000      
+grain.Y3        71.5000        71.5000        71.5000        90.0000      
+grain.Y4        71.5000        71.5000        71.5000        90.0000      
+grain.Y5        71.5000        71.5000        71.5000        75.0000      
+beet .Y0        71.5000        71.5000        71.5000        75.0000      
+beet .Y1        71.5000        71.5000        71.5000          .          
+beet .Y2        71.5000        71.5000        71.5000          .          
+beet .Y3        71.5000        71.5000        71.5000          .          
+beet .Y4        71.5000        71.5000        71.5000          .          
+beet .Y5        71.5000        71.5000        71.5000          .          
+
+---- EQU expenses  expenses incurred each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .              .            -0.8333      
+Y1          .              .              .            -0.8333      
+Y2          .              .              .            -0.8333      
+Y3          .              .              .            -1.0000      
+Y4          .              .              .            -1.0000      
+Y5          .              .              .            -0.8333      
+
+---- EQU revenue  revenue generated each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .              .             1.0000      
+Y1          .              .              .             1.0000      
+Y2          .              .              .             1.0000      
+Y3          .              .              .             1.0000      
+Y4          .              .              .             1.0000      
+Y5          .              .              .             1.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU ObjFunc             .              .              .             1.0000      
+
+  ObjFunc  Objective function, 5 year cumulative profit
+
+---- VAR TotNum  Total number of heifer and milking cows each year
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+heifer .Y0        20.0000        20.0000        20.0000       441.6233      
+heifer .Y1          .           118.3500        +INF             .          
+heifer .Y2          .           124.2424        +INF             .          
+heifer .Y3          .            60.3424        +INF             .          
+heifer .Y4          .             1.0000        +INF             .          
+heifer .Y5          .              .            +INF             .          
+milkcow.Y0       100.0000       100.0000       100.0000      1155.9233      
+milkcow.Y1          .            99.0000        +INF             .          
+milkcow.Y2          .           118.0000        +INF             .          
+milkcow.Y3          .           160.1740        +INF             .          
+milkcow.Y4          .           199.3400        +INF             .          
+milkcow.Y5          .              .            +INF             .          
+
+---- VAR TotHerd  Total animals in the heard
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .           120.0000        +INF             .          
+Y1          .           217.3500        +INF             .          
+Y2          .           242.2424        +INF             .          
+Y3          .           220.5164        +INF             .          
+Y4          .           200.3400        +INF             .          
+Y5          .              .            +INF            EPS         
+
+---- VAR Calves  Number of calves born eah year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .           196.7000        +INF             .          
+Y1          .           110.0000        +INF             .          
+Y2          .           108.9000        +INF             .          
+Y3          .           129.8000        +INF             .          
+Y4          .           176.1914        +INF             .          
+Y5          .           219.2740        +INF             .          
+
+---- VAR sellbull  Number of Bullocks sold each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .            98.3500        +INF             .          
+Y1          .            55.0000        +INF             .          
+Y2          .            54.4500        +INF             .          
+Y3          .            64.9000        +INF             .          
+Y4          .            88.0957        +INF             .          
+Y5          .           109.6370        +INF             .          
+
+---- VAR babyheif  Number of heifers kept each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .            98.3500        +INF             .          
+Y1          .            25.8924        +INF             .          
+Y2          .            54.4500        +INF             .          
+Y3          .            64.9000        +INF             .          
+Y4          .            59.3424        +INF             .          
+Y5          .             1.0000        +INF             .          
+
+---- VAR sellheif  Number of heifers sold each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .            +INF           30.0000 UNBND
+Y1          .            29.1076        +INF             .          
+Y2          .              .            +INF         -150.0000      
+Y3          .              .            +INF         -222.6540      
+Y4          .            28.7533        +INF             .          
+Y5          .           108.6370        +INF             .          
+
+---- VAR oldcowsold  old milking cow sold each year. Minimum 1
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0         1.0000         1.0000        +INF         -735.0233      
+Y1         1.0000         1.0000        +INF         -351.6233      
+Y2         1.0000        76.1760        +INF             .          
+Y3         1.0000        85.0764        +INF             .          
+Y4         1.0000       259.6824        +INF             .          
+Y5         1.0000         1.0000        +INF         -295.3080      
+
+---- VAR eaten  Amount of feedstock (grain and sugarbeet) consumed each year
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+grain.Y0          .            60.0000        +INF             .          
+grain.Y1          .            59.4000        +INF             .          
+grain.Y2          .            70.8000        +INF             .          
+grain.Y3          .            96.1044        +INF             .          
+grain.Y4          .           119.6040        +INF             .          
+grain.Y5          .              .            +INF          -75.0000      
+beet .Y0          .            70.0000        +INF             .          
+beet .Y1          .            69.3000        +INF             .          
+beet .Y2          .            82.6000        +INF             .          
+beet .Y3          .           112.1218        +INF             .          
+beet .Y4          .           139.5380        +INF             .          
+beet .Y5          .              .            +INF          -58.0000      
+
+---- VAR produced  Amount of feedstock produced each year
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+grain.Y0          .            71.5000        +INF             .          
+grain.Y1          .            71.5000        +INF             .          
+grain.Y2          .            71.5000        +INF             .          
+grain.Y3          .            71.5000        +INF             .          
+grain.Y4          .            71.5000        +INF             .          
+grain.Y5          .            71.5000        +INF             .          
+beet .Y0          .           180.0000        +INF             .          
+beet .Y1          .           180.0000        +INF             .          
+beet .Y2          .           180.0000        +INF             .          
+beet .Y3          .           180.0000        +INF             .          
+beet .Y4          .           180.0000        +INF             .          
+beet .Y5          .           180.0000        +INF             .          
+
+---- VAR purchased  Amount of feedstock purchased each year
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+grain.Y0          .              .            +INF             .          
+grain.Y1          .              .            +INF             .          
+grain.Y2          .              .            +INF             .          
+grain.Y3          .            24.6044        +INF             .          
+grain.Y4          .            48.1040        +INF             .          
+grain.Y5          .              .            +INF             .          
+beet .Y0          .              .            +INF           -0.3333      
+beet .Y1          .              .            +INF           -0.3333      
+beet .Y2          .              .            +INF           -0.3333      
+beet .Y3          .              .            +INF          -12.0000      
+beet .Y4          .              .            +INF          -12.0000      
+beet .Y5          .              .            +INF           -0.3333      
+
+---- VAR feedsold  Amount of feedstock sold each year
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+grain.Y0          .            11.5000        +INF             .          
+grain.Y1          .            12.1000        +INF             .          
+grain.Y2          .             0.7000        +INF             .          
+grain.Y3          .              .            +INF          -15.0000      
+grain.Y4          .              .            +INF          -15.0000      
+grain.Y5          .            71.5000        +INF             .          
+beet .Y0          .           110.0000        +INF             .          
+beet .Y1          .           110.7000        +INF             .          
+beet .Y2          .            97.4000        +INF             .          
+beet .Y3          .            67.8782        +INF             .          
+beet .Y4          .            40.4620        +INF             .          
+beet .Y5          .           180.0000        +INF             .          
+
+---- VAR Abeet  Area for growing sugar beet ecah year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0       120.0000       120.0000        +INF             .          
+Y1       120.0000       120.0000        +INF             .          
+Y2       120.0000       120.0000        +INF             .          
+Y3       120.0000       120.0000        +INF             .          
+Y4       120.0000       120.0000        +INF             .          
+Y5       120.0000       120.0000        +INF             .          
+
+---- VAR TotCost  Total cost incurred each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .              .            +INF           -0.1667      
+Y1          .              .            +INF           -0.1667      
+Y2          .              .            +INF           -0.1667      
+Y3          .          2214.3960        +INF             .          
+Y4          .          4329.3600        +INF             .          
+Y5          .              .            +INF           -0.1667      
+
+---- VAR TotSell  Total revenue made each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+Y0          .         47313.0000        +INF             .          
+Y1          .         45728.1000        +INF             .          
+Y2          .         60136.3200        +INF             .          
+Y3          .         75357.4865        +INF             .          
+Y4          .        109907.3579        +INF             .          
+Y5          .         19211.6100        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR Profit            -INF       351110.1184        +INF             .          
+
+  Profit  Cumulative profit for 5 years
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             1  UNBOUNDED (UNBND)
+
+****
+****  19 Integer levels greater than 100
+****
+
+
+EXECUTION TIME       =        0.000 SECONDS      2 MB  25.1.2 r67455 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\farmplan\farmplanning.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\farmplan\farmplanning.lst
