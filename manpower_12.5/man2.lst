@@ -1,5 +1,9 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 1
+=======
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 1
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 =======
 GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 1
 >>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
@@ -129,6 +133,7 @@ C o m p i l a t i o n
  124   
  125  solve manpowerplan using MIP minimizing objval;
  126   
+<<<<<<< HEAD
  127   
  128  solve manpowerplan using RMIP minimizing TotCTC ;
  129   
@@ -139,6 +144,12 @@ C o m p i l a t i o n
 COMPILATION TIME     =        0.001 SECONDS      3 MB  25.1.2 r67455 DEX-DEG
 GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 2
 =======
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 2
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
+=======
+
+
 COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
 GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 2
 >>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
@@ -302,7 +313,11 @@ totalcosts..  - Cret(y0) - Cret(y1) - Cret(y2) - Cret(y3) - Cred(y0) - Cred(y1) 
 objfunc..  - Wred(y0,s1) - Wred(y0,s2) - Wred(y0,s3) - Wred(y1,s1) - Wred(y1,s2) - Wred(y1,s3) - Wred(y2,s1) - Wred(y2,s2) - Wred(y2,s3) - Wred(y3,s1) - Wred(y3,s2) - Wred(y3,s3) + objval =E= 0 ; (LHS = 0)
      
 <<<<<<< HEAD
+<<<<<<< HEAD
 GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 3
+=======
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 3
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 =======
 GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 3
 >>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
@@ -972,7 +987,11 @@ objval
         1       objfunc
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 4
+=======
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 4
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 =======
 GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 4
 >>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
@@ -988,17 +1007,23 @@ NON ZERO ELEMENTS           273     DISCRETE VARIABLES         78
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 GENERATION TIME      =        0.008 SECONDS      4 MB  25.1.2 r67455 DEX-DEG
 
 
 EXECUTION TIME       =        0.008 SECONDS      4 MB  25.1.2 r67455 DEX-DEG
 GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 5
 =======
+=======
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 GENERATION TIME      =        0.015 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
 
 
 EXECUTION TIME       =        0.015 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
 GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 5
+<<<<<<< HEAD
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
+=======
 >>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE manpowerplan Using RMIP From line 123
@@ -1015,15 +1040,21 @@ Solution Report     SOLVE manpowerplan Using RMIP From line 123
 **** OBJECTIVE VALUE              870.0000
 
 <<<<<<< HEAD
+<<<<<<< HEAD
  RESOURCE USAGE, LIMIT          0.007      1000.000
  ITERATION COUNT, LIMIT         8    2000000000
 
 IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 DEG x86 64bit/Mac OS X   
 =======
+=======
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
  RESOURCE USAGE, LIMIT          0.016      1000.000
  ITERATION COUNT, LIMIT         8    2000000000
 
 IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+<<<<<<< HEAD
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
+=======
 >>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 Cplex 12.8.0.0
 
@@ -1332,7 +1363,11 @@ y3        -INF       150000.0000        +INF             .
 ****  14 Integer levels greater than 100
 ****
 <<<<<<< HEAD
+<<<<<<< HEAD
 GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 6
+=======
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 6
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 =======
 GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 6
 >>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
@@ -1496,7 +1531,11 @@ totalcosts..  - Cret(y0) - Cret(y1) - Cret(y2) - Cret(y3) - Cred(y0) - Cred(y1) 
 objfunc..  - Wred(y0,s1) - Wred(y0,s2) - Wred(y0,s3) - Wred(y1,s1) - Wred(y1,s2) - Wred(y1,s3) - Wred(y2,s1) - Wred(y2,s2) - Wred(y2,s3) - Wred(y3,s1) - Wred(y3,s2) - Wred(y3,s3) + objval =E= 0 ; (LHS = 0)
      
 <<<<<<< HEAD
+<<<<<<< HEAD
 GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 7
+=======
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 7
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 =======
 GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 7
 >>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
@@ -2158,7 +2197,11 @@ objval
         1       objfunc
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 8
+=======
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 8
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 =======
 GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 8
 >>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
@@ -2174,11 +2217,19 @@ NON ZERO ELEMENTS           273     DISCRETE VARIABLES         78
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 GENERATION TIME      =        0.007 SECONDS      3 MB  25.1.2 r67455 DEX-DEG
 
 
 EXECUTION TIME       =        0.009 SECONDS      3 MB  25.1.2 r67455 DEX-DEG
 GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 9
+=======
+GENERATION TIME      =        0.016 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.032 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 9
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 =======
 GENERATION TIME      =        0.016 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
 
@@ -2201,15 +2252,21 @@ Solution Report     SOLVE manpowerplan Using MIP From line 125
 **** OBJECTIVE VALUE              870.0000
 
 <<<<<<< HEAD
+<<<<<<< HEAD
  RESOURCE USAGE, LIMIT          0.015      1000.000
  ITERATION COUNT, LIMIT        12    2000000000
 
 IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 DEG x86 64bit/Mac OS X   
 =======
+=======
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
  RESOURCE USAGE, LIMIT          0.016      1000.000
  ITERATION COUNT, LIMIT        11    2000000000
 
 IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+<<<<<<< HEAD
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
+=======
 >>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 --- GAMS/Cplex licensed for continuous and discrete problems.
 Cplex 12.8.0.0
@@ -2222,6 +2279,9 @@ Cplex Time: 0.01sec (det. 1.41 ticks)
 =======
 MIP status(102): integer optimal, tolerance
 Cplex Time: 0.02sec (det. 0.95 ticks)
+<<<<<<< HEAD
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
+=======
 >>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 Fixing integer variables, and solving final LP...
 Fixed MIP status(1): optimal
@@ -2534,7 +2594,11 @@ y3        -INF       154000.0000        +INF             .
 ****  16 Integer levels greater than 100
 ****
 <<<<<<< HEAD
+<<<<<<< HEAD
 GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 10
+=======
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 10
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 =======
 GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 10
 >>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
@@ -2698,7 +2762,11 @@ totalcosts..  - Cret(y0) - Cret(y1) - Cret(y2) - Cret(y3) - Cred(y0) - Cred(y1) 
 objfunc..  - Wred(y0,s1) - Wred(y0,s2) - Wred(y0,s3) - Wred(y1,s1) - Wred(y1,s2) - Wred(y1,s3) - Wred(y2,s1) - Wred(y2,s2) - Wred(y2,s3) - Wred(y3,s1) - Wred(y3,s2) - Wred(y3,s3) + objval =E= 0 ; (LHS = 0)
      
 <<<<<<< HEAD
+<<<<<<< HEAD
 GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 11
+=======
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 11
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 =======
 GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 11
 >>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
@@ -3360,7 +3428,11 @@ objval
         1       objfunc
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 12
+=======
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 12
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 =======
 GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 12
 >>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
@@ -3376,15 +3448,24 @@ NON ZERO ELEMENTS           273     DISCRETE VARIABLES         78
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 GENERATION TIME      =        0.006 SECONDS      3 MB  25.1.2 r67455 DEX-DEG
 
+=======
+GENERATION TIME      =        0.016 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 
 EXECUTION TIME       =        0.008 SECONDS      3 MB  25.1.2 r67455 DEX-DEG
 GAMS 25.1.2  r67455 Released Aug  1, 2018 DEX-DEG x86 64bit/Mac OS X - 08/13/18 15:08:21 Page 13
 =======
 GENERATION TIME      =        0.016 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
 
+<<<<<<< HEAD
 
+EXECUTION TIME       =        0.016 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 13
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
+=======
 EXECUTION TIME       =        0.016 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
 GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/10/18 17:44:05 Page 13
 >>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
@@ -3403,15 +3484,21 @@ Solution Report     SOLVE manpowerplan Using RMIP From line 128
 **** OBJECTIVE VALUE           488000.0000
 
 <<<<<<< HEAD
+<<<<<<< HEAD
  RESOURCE USAGE, LIMIT          0.006      1000.000
  ITERATION COUNT, LIMIT         6    2000000000
 
 IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 DEG x86 64bit/Mac OS X   
 =======
+=======
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
  RESOURCE USAGE, LIMIT          0.000      1000.000
  ITERATION COUNT, LIMIT         6    2000000000
 
 IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+<<<<<<< HEAD
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
+=======
 >>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 Cplex 12.8.0.0
 
@@ -3722,7 +3809,11 @@ y3        -INF             .            +INF             .
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 EXECUTION TIME       =        0.001 SECONDS      2 MB  25.1.2 r67455 DEX-DEG
+=======
+EXECUTION TIME       =        0.000 SECONDS      2 MB  25.1.2 r67455 WEX-WEI
+>>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
 =======
 EXECUTION TIME       =        0.000 SECONDS      2 MB  25.1.2 r67455 WEX-WEI
 >>>>>>> 369d6bb0c4819ccbe994de6783ee09d2d99f22d8
