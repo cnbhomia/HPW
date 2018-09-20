@@ -1,0 +1,8 @@
+[CHART]
+VERID=GAMSIDE Chart(s) V1
+GDXFILE=chartdata.gdx
+TITLE=YearDataA
+
+[SERIES1]
+SYMBOL=YearDataA
+TYPE=line

@@ -1,0 +1,1231 @@
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/13/18 14:13:54 Page 1
+Market Sharing (MARKET, SEQ =xx)
+C o m p i l a t i o n
+
+
+   2   
+      The model covers distribution of 23 retailers in the market to two suppliers
+      D1 and D2. Each retailer has access to certain distribution points in three regions,
+      with respective oil and spirit demand. The distribution is required to be done
+      in a 40-60 ratio over the distribution points, and oil and spirit demand.
+      The model is smaller version of market sharing problem faced by British Oil and
+      Shell,1972.
+      The data for the model is imported from excel. The model demostrated use of
+      DataEx Tool GDXXRW, $gdxin and $include feature.
+       
+      Model Building in Mathematical Programming, Fifth Edition,
+      H. Paul Williams, Model 12.13 : Market Sharing
+      Wiley Publication, 2013
+  17   
+INCLUDE    C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\pooling\data_import.gms
+      This file reads data for the Market Sharing Model MARKET (SEQ=xxx) from excel
+      file, and is  used as an include file in the model.
+  23   
+  24  sets
+  25      Suppliers                   'Suppliers in the market'   /D1,D2/
+  26      Retailers                   'Retailers in the market'
+  27      Regions                     'Regions in the area'
+  28      GrCat                       'Growth Categories among the retailer'
+  29      RGrps(Retailers,GrCat)      'Mapping Retailers to the Group Category'
+  30      RRegs(Retailers,Regions)    'Mapping Retailers to the Regions'
+  31      ;
+  32   
+  33  Parameters
+  34      DPoints(Retailers)     'Number of distribution point for each retailer'
+  35      DOil(Retailers)        'Data, oil market for each retailer'
+  36      DSpirit(Retailers)     'Data, Spirit market for each retailer'
+  37      Data(Retailers,Regions,GrCat)  'Data, distribution point for each retailer'
+  38      ;
+  39   
+  45   
+  47   
+GDXIN   C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\pooling\data.gdx
+--- LOAD  Retailers = 1:data
+--- LOAD  Regions = 1:data
+--- LOAD  GrCat = 1:data
+--- LOAD  Data = 1:data
+--- LOAD  DOil = 2:oil
+--- LOAD  DSpirit = 3:spirit
+  56   
+  57  DPoints(Retailers) = sum((Regions,GrCat), Data(Retailers,Regions,GrCat));
+  58  option Rgrps< Data ;
+  59  option RRegs<Data ;
+  60   
+  61   
+  62   
+  63   
+  64   
+  65   
+  66  Alias (Retailers, R), (GrCat,G), (Suppliers,S), (Regions,Rg);
+  67   
+  68  Parameter
+  69           NumRet(G)      'Number of retailers in each group'
+  70           Target(S)      'Target distribution' /D1 0.4, D2 0.6/
+  71           TotDPoint      'Total Distribution Points in the market'
+  72           TotSpirit      'Total Spirit Market, [mGallon]'
+  73           TotOil(Rg)     'Total oil market per region, [m,Gallon]'
+  74  ;
+  75   
+  76  NumRet(G) = sum(R$ RGrps(R,G), 1);
+  77  TotDPoint = sum(R, Dpoints(R));
+  78  TotSpirit = sum(R, DSpirit(R));
+  79  TotOil(Rg) = sum(R$RRegs(R,Rg),Doil(R));
+  80   
+  81  Binary Variables
+  82           RetMap(S,R)             'Mapping for retailers to suppliers , 40-60 in each group'
+  83           ;
+  84  Variables
+  85           DisPoint(S)           'Number of distribution points with each supplier'
+  86           SupSpirit(S)          'Spirit Level for each supplier'
+  87           SupOil(S,Rg)          'Oil Level for each supplier in each region'
+  88  *         PerCentD              'Objective, Minimum Percentage deviations'
+  89           RetailDev(S,G)        'Deviation , Retailer Allotment per group'
+  90           DistribDev(S)         'Deviation , Distribution Points Allotment'
+  91           SpiritDev(S)          'Deviation , Spirit demand Allotment'
+  92           OilDev(S,Rg)          'Deviation , Oil demand Allotment'
+  93           Feas
+  94  *         MaxAbsD             'Maximum Abs Deviation'
+  95           ;
+  96   
+  97  *group ratio 40-60 ratio limits on NRet
+  98   
+  99  Equations
+ 100  *Equations for retailers 40-60 in each group ( no. 6,7, from Aspect List)
+ 101           RetailAssign(G)       'Accounting retailers in each group'
+ 102           EnsureRetAssign(R)    'Ensuring each retailer is assigned to one supplier'
+ 103           MaxRetailD1(G)        'Max number of reatailers for D1 in each group'
+ 104           MinRetailD1(G)        'Min Number of retailers for D1 in each group'
+ 105           DevRetailAllot(S,G)     '% Deviations in Alloting Retailers in 40-60 ratio'
+ 106   
+ 107  *Equations for total distribution points
+ 108           CalcDPoints(S)        'Calculating Distribution points for each supplier'
+ 109           MaxDPpointsD1         'Maximum Number of Distribution Points'
+ 110           MinDPpointsD1         'Minimum Number of Distribution Points'
+ 111           TotalDPoint           'Calculating total distribution points'
+ 112           DevDPAllot(S)         '% Deviations in Alloting Distribution Points in 40-60 ratio'
+ 113   
+ 114  *Equations for Spirit Market Control
+ 115           CalcSpirit(S)         'Calculating Spirit Market for each supplier'
+ 116           MaxSpiritD1           'Maximum spirit market for D1'
+ 117           MinSpiritD1           'Minimum spirit market for D1'
+ 118           TotalSpirit           'Calculating total distribution points'
+ 119           DevSpiritAllot(S)     '% Deviations in Alloting Spirit Market in 40-60 ratio'
+ 120   
+ 121  *Equations for Oil Market Control for each region
+ 122           CalcOil(S,Rg)         'Calculating Oil Market for each supplier in each region'
+ 123           MaxOilD1(Rg)          'Maximum spirit market for D1'
+ 124           MinOilD1(Rg)          'Minimum spirit market for D1'
+ 125           TotalOil(Rg)          'Calculating total distribution points'
+ 126           DevOilAllot(S,Rg)     '% Deviations in Alloting Spirit Market in 40-60 ratio'
+ 127   
+ 128           ObjFeasibility        'Dummy objective for Feasible solutions'
+ 129  *         ObjMinDeviation       'Objective Function'
+ 130  *         ObjMinMaxDevtn(S,Rg)        'Objective Function, Min the Max Deviation'
+ 131           ;
+ 132   
+ 133  RetailAssign(G)..     sum((S,R)$RGrps(R,G), RetMap(S,R)) =E= NumRet(G) ;
+ 134  EnsureRetAssign(R)..  sum(S,RetMap(S,R)) =E= 1    ;
+ 135  MaxRetailD1(G)..      sum(R$RGrps(R,G), RetMap('D1',R)) =L= 0.45*NumRet(G) ;
+ 136  MinRetailD1(G)..      sum(R$RGrps(R,G), RetMap('D1',R)) =G= 0.35*NumRet(G) ;
+ 137  DevRetailAllot(S,G).. RetailDev(S,G) =E= sum(R$RGrps(R,G),RetMap(S,R))/NumRet(G) - Target(S) ;
+ 138   
+ 139   
+ 140  CalcDPoints(S)..      DisPoint(S) =E= sum(R, RetMap(S,R) * Dpoints(R)) ;
+ 141  MaxDPpointsD1..       DisPoint('D1') =L= 0.45*TotDPoint ;
+ 142  MinDPpointsD1..       DisPoint('D2') =G= 0.35*TotDPoint ;
+ 143  TotalDPoint ..        sum(S,DisPoint(S)) =E= TotDPoint ;
+ 144  DevDPAllot(S)..       DistribDev(S) =E= DisPoint(S)/TotDPoint - Target(S) ;
+ 145   
+ 146   
+ 147  CalcSpirit(S)..       SupSpirit(S) =E= sum(R, RetMap(S,R) * DSpirit(R)) ;
+ 148  MaxSpiritD1..         SupSpirit('D1') =L= 0.45*TotSpirit ;
+ 149  MinSpiritD1..         SupSpirit('D2') =G= 0.35*TotSpirit ;
+ 150  TotalSpirit ..        sum(S,SupSpirit(S)) =E= TotSpirit ;
+ 151  DevSpiritAllot(S)..   SpiritDev(S) =E= SupSpirit(S)/TotSpirit - Target(S) ;
+ 152   
+ 153  CalcOil(S,Rg)..       SupOil(S,Rg) =E= sum(R$RRegs(R,Rg), RetMap(S,R) * Doil(R));
+ 154  MaxOilD1(Rg)..        SupOil('D1',Rg) =L= 0.45*TotOil(Rg);
+ 155  MinOilD1(Rg)..        SupOil('D1',Rg) =G= 0.35*TotOil(Rg);
+ 156  TotalOil(Rg)..        sum(S,SupOil(S,Rg)) =E= TotOil(Rg);
+ 157  DevOilAllot(S,Rg)..   OilDev(S,Rg) =E= SupOil(S,Rg)/TotOil(Rg) - Target(S) ;
+ 158   
+ 159  objFeasibility..      Feas =E= sum((S,R),RetMap(S,R));
+ 160  *objMinDeviation..     PerCentD =E=  sum(S,abs(RetailDev(S)) + abs(DistribDev(S)) +
+ 161  *                                                 abs(SpiritDev(S)) + sum(Rg,abs(OilDev(S,Rg))));
+ 162  *objMinMaxDevtn(S,Rg)..      MaxAbsD =E= max(abs(RetailDev(S)),abs(DistribDev(S)),
+ 163  *                                                 abs(SpiritDev(S)), abs(OilDev(S,Rg))) ;
+ 164   
+ 165  model Market /all/;
+ 166  Market.optfile =1;
+ 167   
+ 168  *We create the cplex option file to enable solution pooling
+ 174   
+ 175   
+ 176  *solve Market using MIP Min PerCentD;
+ 177  solve Market using MIP Max Feas;
+ 178   
+ 179  *++++++++++=========================*++++++++++=========================*++++++++++=========================
+ 180  Set
+ 181      soln           'possible solutions'    /file1*file100/
+ 182      solnpool(soln) 'actual solutions'
+ 183      ;
+ 184   
+ 185  Scalar cardsoln 'number of solutions in the pool';
+ 186   
+ 187  Alias(soln,s1,s2) ;
+ 188   
+ 189  Parameter
+ 190            Assignment(soln,S,R)      'Assignments of R to S in a solution'
+ 191            DevTotDistrib(soln,S)     'Deviation Distribution Points for a solution'
+ 192            DevSpiritMarket(Soln,S)   'Deviation in distribution of Spirit Market'
+ 193            DevOilRegionD1(Soln,S,Rg) 'Deviation in distribution of Oil in Region R'
+ 194            DevRgroupAD1(Soln,S)      'Deviation, allotment of retailers to D1 in group A'
+ 195            DevRgroupBD1(Soln,S)      'Deviation, allotment of retailers to D1 in group B'
+ 196   
+ 197            NetDev(soln)              'Total Deviation for the criterias'
+ 198            ObjMinDev               'Soln with Minimum Total Deviation'
+ 199            BestSol(S,R)
+ 200            ;
+ 201   
+ 202  execute_load 'solnpool.gdx', solnpool =index ;
+ 203  cardsoln = card(solnpool) ;
+ 204  display cardsoln;
+ 205      ;
+ 206   
+ 207  loop(solnpool(soln),
+ 208      put_utility 'gdxin' /solnpool.te(soln)
+ 209      execute_loadpoint;
+ 210   
+ 211      Assignment(soln,S,R) = RetMap.l(S,R);
+ 212   
+ 213      DevTotDistrib(Soln,'D1') = abs(DistribDev.l('D1'));
+ 214   
+ 215      DevSpiritMarket(Soln,'D1') = abs(SpiritDev.l('D1'));
+ 216   
+ 217      DevOilRegionD1(Soln,'D1',Rg) = abs(OilDev.l('D1',Rg) );
+ 218   
+ 219      DevRgroupAD1(Soln,'D1') = abs(RetailDev.l('D1','A'));
+ 220   
+ 221      DevRgroupBD1(Soln,'D1') = abs(RetailDev.l('D1','B'));
+ 222   
+ 223      NetDev(Soln) = DevTotDistrib(Soln,'D1') + DevSpiritMarket(Soln,'D1') +DevRgroupAD1(Soln,'D1')
+ 224                      +DevRgroupBD1(Soln,'D1')+ sum(Rg,DevOilRegionD1(Soln,'D1',Rg));
+ 225   
+ 226   
+ 227      );
+ 228  *Objective 1, finding soultion with minimum Net deviation
+ 229  ObjMinDev =1;
+ 230  loop(solnpool(soln),
+ 231          if(NetDev(soln)<ObjMinDev,
+ 232              ObjMinDev = NetDev(soln);
+ 233              BestSol(S,R) = Assignment(soln,S,R);
+ 234             )
+ 235   
+ 236  *    DevRetGroupD1(G) = sum(R$RGrps(R,G),RetMap.l('D1',R))/NumRet(G) - Target('D1');
+ 237      );
+ 238   
+ 239   
+ 240  *    D1inA =  sum(R$RGrps(R,'A'),RetMap.l('D1',R))/NumRet('A') - Target('D1');
+ 241  *    D1inB = sum(R$RGrps(R,'B'),RetMap.l('D1',R))/NumRet('A') - Target('D1');
+ 242  *    PerDev(soln,S) = abs(RetailDev.l(S)) + abs(DistribDev.l(S)) + abs(SpiritDev.l(S)) + sum(Rg,abs(OilDev.l(S,Rg)));
+ 243  *    MaxD(soln) = Max(
+ 244  *    SRMap(Soln,S,R) = RetMap.l(S,R);
+ 245   
+ 246  *++++++++++=========================*++++++++++=========================*++++++++++=========================
+ 247  display Assignment, DevTotDistrib, DevSpiritMarket, DevOilRegionD1, DevRgroupAD1, DevRgroupBD1, NetDev , ObjMinDev,BestSol;
+ 248   
+ 249   
+      parameter output(*),output1(*,*);
+       
+      Output('Total D1 in A') = sum(R$RGrps(R,'A'),RetMap.l('D1',R) )  ;
+      Output('Total D1 in B') = sum(R$RGrps(R,'B'),RetMap.l('D1',R) ) ;
+      Output('Total D2 in A') = sum(R$RGrps(R,'A'),RetMap.l('D2',R) );
+      Output('Total D2 in B') = sum(R$RGrps(R,'B'),RetMap.l('D2',R) );
+      OutPut('Fraction of retailers in D1') = DisPoint.l('D1') / TotDPoint;
+      OutPut('Fraction of retailers in D2') = DisPoint.l('D2') / TotDPoint;
+       
+      OutPut('Fraction of Spirit market in D1') = SupSpirit.l('D1') / TotSpirit;
+      OutPut('Fraction of Spirit market in D2') = SupSpirit.l('D2') / TotSpirit;
+       
+       
+      OutPut1('Fraction of Oil market in D1',Rg) = SupOil.l('D1',Rg) / TotOil(Rg);
+      OutPut1('Fraction of Spirit market in D2',Rg) = SupOil.l('D2',Rg) / TotOil(Rg);
+       
+      display output,output1,TotOil;
+       
+ 270   
+ 271   
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/13/18 14:13:54 Page 2
+Market Sharing (MARKET, SEQ =xx)
+Include File Summary
+
+
+   SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
+
+     1        1 INPUT          0       0  C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\pooling\marketpool.gms
+     2       18 INCLUDE        1      18  .C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\pooling\data_import.gms
+     3       46 CALL           2      28  .gdxxrw market_data.xlsx o=data.gdx @slices.txt
+     4       48 GDXIN          2      30  .C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\pooling\data.gdx
+
+
+COMPILATION TIME     =        1.125 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/13/18 14:13:54 Page 3
+Market Sharing (MARKET, SEQ =xx)
+Equation Listing    SOLVE Market Using MIP From line 177
+
+
+---- RetailAssign  =E=  Accounting retailers in each group
+
+RetailAssign(A)..  RetMap(D1,M1) + RetMap(D1,M2) + RetMap(D1,M3) + RetMap(D1,M5) + RetMap(D1,M6) + RetMap(D1,M10) + RetMap(D1,M15) + RetMap(D1,M20) + RetMap(D2,M1) + RetMap(D2,M2) + RetMap(D2,M3) + RetMap(D2,M5) + RetMap(D2,M6) + RetMap(D2,M10)
+     
+      + RetMap(D2,M15) + RetMap(D2,M20) =E= 8 ; (LHS = 0, INFES = 8 ****)
+     
+RetailAssign(B)..  RetMap(D1,M4) + RetMap(D1,M7) + RetMap(D1,M8) + RetMap(D1,M9) + RetMap(D1,M11) + RetMap(D1,M12) + RetMap(D1,M13) + RetMap(D1,M14) + RetMap(D1,M16) + RetMap(D1,M17) + RetMap(D1,M18) + RetMap(D1,M19) + RetMap(D1,M21) + RetMap(D1,M22)
+     
+      + RetMap(D1,M23) + RetMap(D2,M4) + RetMap(D2,M7) + RetMap(D2,M8) + RetMap(D2,M9) + RetMap(D2,M11) + RetMap(D2,M12) + RetMap(D2,M13) + RetMap(D2,M14) + RetMap(D2,M16) + RetMap(D2,M17) + RetMap(D2,M18) + RetMap(D2,M19) + RetMap(D2,M21)
+     
+      + RetMap(D2,M22) + RetMap(D2,M23) =E= 15 ; (LHS = 0, INFES = 15 ****)
+     
+
+---- EnsureRetAssign  =E=  Ensuring each retailer is assigned to one supplier
+
+EnsureRetAssign(M1)..  RetMap(D1,M1) + RetMap(D2,M1) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+EnsureRetAssign(M2)..  RetMap(D1,M2) + RetMap(D2,M2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+EnsureRetAssign(M3)..  RetMap(D1,M3) + RetMap(D2,M3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 20 ENTRIES SKIPPED
+
+
+---- MaxRetailD1  =L=  Max number of reatailers for D1 in each group
+
+MaxRetailD1(A)..  RetMap(D1,M1) + RetMap(D1,M2) + RetMap(D1,M3) + RetMap(D1,M5) + RetMap(D1,M6) + RetMap(D1,M10) + RetMap(D1,M15) + RetMap(D1,M20) =L= 3.6 ; (LHS = 0)
+     
+MaxRetailD1(B)..  RetMap(D1,M4) + RetMap(D1,M7) + RetMap(D1,M8) + RetMap(D1,M9) + RetMap(D1,M11) + RetMap(D1,M12) + RetMap(D1,M13) + RetMap(D1,M14) + RetMap(D1,M16) + RetMap(D1,M17) + RetMap(D1,M18) + RetMap(D1,M19) + RetMap(D1,M21) + RetMap(D1,M22)
+     
+      + RetMap(D1,M23) =L= 6.75 ; (LHS = 0)
+     
+
+---- MinRetailD1  =G=  Min Number of retailers for D1 in each group
+
+MinRetailD1(A)..  RetMap(D1,M1) + RetMap(D1,M2) + RetMap(D1,M3) + RetMap(D1,M5) + RetMap(D1,M6) + RetMap(D1,M10) + RetMap(D1,M15) + RetMap(D1,M20) =G= 2.8 ; (LHS = 0, INFES = 2.8 ****)
+     
+MinRetailD1(B)..  RetMap(D1,M4) + RetMap(D1,M7) + RetMap(D1,M8) + RetMap(D1,M9) + RetMap(D1,M11) + RetMap(D1,M12) + RetMap(D1,M13) + RetMap(D1,M14) + RetMap(D1,M16) + RetMap(D1,M17) + RetMap(D1,M18) + RetMap(D1,M19) + RetMap(D1,M21) + RetMap(D1,M22)
+     
+      + RetMap(D1,M23) =G= 5.25 ; (LHS = 0, INFES = 5.25 ****)
+     
+
+---- DevRetailAllot  =E=  % Deviations in Alloting Retailers in 40-60 ratio
+
+DevRetailAllot(D1,A)..  - 0.125*RetMap(D1,M1) - 0.125*RetMap(D1,M2) - 0.125*RetMap(D1,M3) - 0.125*RetMap(D1,M5) - 0.125*RetMap(D1,M6) - 0.125*RetMap(D1,M10) - 0.125*RetMap(D1,M15) - 0.125*RetMap(D1,M20) + RetailDev(D1,A) =E= -0.4 ;
+     
+      (LHS = 0, INFES = 0.4 ****)
+     
+DevRetailAllot(D1,B)..  - 0.0666666666666667*RetMap(D1,M4) - 0.0666666666666667*RetMap(D1,M7) - 0.0666666666666667*RetMap(D1,M8) - 0.0666666666666667*RetMap(D1,M9) - 0.0666666666666667*RetMap(D1,M11) - 0.0666666666666667*RetMap(D1,M12)
+     
+      - 0.0666666666666667*RetMap(D1,M13) - 0.0666666666666667*RetMap(D1,M14) - 0.0666666666666667*RetMap(D1,M16) - 0.0666666666666667*RetMap(D1,M17) - 0.0666666666666667*RetMap(D1,M18) - 0.0666666666666667*RetMap(D1,M19)
+     
+      - 0.0666666666666667*RetMap(D1,M21) - 0.0666666666666667*RetMap(D1,M22) - 0.0666666666666667*RetMap(D1,M23) + RetailDev(D1,B) =E= -0.4 ; (LHS = 0, INFES = 0.4 ****)
+     
+DevRetailAllot(D2,A)..  - 0.125*RetMap(D2,M1) - 0.125*RetMap(D2,M2) - 0.125*RetMap(D2,M3) - 0.125*RetMap(D2,M5) - 0.125*RetMap(D2,M6) - 0.125*RetMap(D2,M10) - 0.125*RetMap(D2,M15) - 0.125*RetMap(D2,M20) + RetailDev(D2,A) =E= -0.6 ;
+     
+      (LHS = 0, INFES = 0.6 ****)
+     
+REMAINING ENTRY SKIPPED
+
+
+---- CalcDPoints  =E=  Calculating Distribution points for each supplier
+
+CalcDPoints(D1)..  - 11*RetMap(D1,M1) - 47*RetMap(D1,M2) - 44*RetMap(D1,M3) - 25*RetMap(D1,M4) - 10*RetMap(D1,M5) - 26*RetMap(D1,M6) - 26*RetMap(D1,M7) - 54*RetMap(D1,M8) - 18*RetMap(D1,M9) - 51*RetMap(D1,M10) - 20*RetMap(D1,M11) - 105*RetMap(D1,M12)
+     
+      - 7*RetMap(D1,M13) - 16*RetMap(D1,M14) - 34*RetMap(D1,M15) - 100*RetMap(D1,M16) - 50*RetMap(D1,M17) - 21*RetMap(D1,M18) - 11*RetMap(D1,M19) - 19*RetMap(D1,M20) - 14*RetMap(D1,M21) - 10*RetMap(D1,M22) - 11*RetMap(D1,M23) + DisPoint(D1) =E= 0 ;
+     
+      (LHS = 0)
+     
+CalcDPoints(D2)..  - 11*RetMap(D2,M1) - 47*RetMap(D2,M2) - 44*RetMap(D2,M3) - 25*RetMap(D2,M4) - 10*RetMap(D2,M5) - 26*RetMap(D2,M6) - 26*RetMap(D2,M7) - 54*RetMap(D2,M8) - 18*RetMap(D2,M9) - 51*RetMap(D2,M10) - 20*RetMap(D2,M11) - 105*RetMap(D2,M12)
+     
+      - 7*RetMap(D2,M13) - 16*RetMap(D2,M14) - 34*RetMap(D2,M15) - 100*RetMap(D2,M16) - 50*RetMap(D2,M17) - 21*RetMap(D2,M18) - 11*RetMap(D2,M19) - 19*RetMap(D2,M20) - 14*RetMap(D2,M21) - 10*RetMap(D2,M22) - 11*RetMap(D2,M23) + DisPoint(D2) =E= 0 ;
+     
+      (LHS = 0)
+     
+
+---- MaxDPpointsD1  =L=  Maximum Number of Distribution Points
+
+MaxDPpointsD1..  DisPoint(D1) =L= 328.5 ; (LHS = 0)
+     
+
+---- MinDPpointsD1  =G=  Minimum Number of Distribution Points
+
+MinDPpointsD1..  DisPoint(D2) =G= 255.5 ; (LHS = 0, INFES = 255.5 ****)
+     
+
+---- TotalDPoint  =E=  Calculating total distribution points
+
+TotalDPoint..  DisPoint(D1) + DisPoint(D2) =E= 730 ; (LHS = 0, INFES = 730 ****)
+     
+
+---- DevDPAllot  =E=  % Deviations in Alloting Distribution Points in 40-60 ratio
+
+DevDPAllot(D1)..  - 0.00136986301369863*DisPoint(D1) + DistribDev(D1) =E= -0.4 ; (LHS = 0, INFES = 0.4 ****)
+     
+DevDPAllot(D2)..  - 0.00136986301369863*DisPoint(D2) + DistribDev(D2) =E= -0.6 ; (LHS = 0, INFES = 0.6 ****)
+     
+
+---- CalcSpirit  =E=  Calculating Spirit Market for each supplier
+
+CalcSpirit(D1)..  - 34*RetMap(D1,M1) - 411*RetMap(D1,M2) - 82*RetMap(D1,M3) - 157*RetMap(D1,M4) - 5*RetMap(D1,M5) - 183*RetMap(D1,M6) - 14*RetMap(D1,M7) - 215*RetMap(D1,M8) - 102*RetMap(D1,M9) - 21*RetMap(D1,M10) - 54*RetMap(D1,M11) - 6*RetMap(D1,M13)
+     
+      - 96*RetMap(D1,M14) - 118*RetMap(D1,M15) - 112*RetMap(D1,M16) - 535*RetMap(D1,M17) - 8*RetMap(D1,M18) - 53*RetMap(D1,M19) - 28*RetMap(D1,M20) - 69*RetMap(D1,M21) - 65*RetMap(D1,M22) - 27*RetMap(D1,M23) + SupSpirit(D1) =E= 0 ; (LHS = 0)
+     
+CalcSpirit(D2)..  - 34*RetMap(D2,M1) - 411*RetMap(D2,M2) - 82*RetMap(D2,M3) - 157*RetMap(D2,M4) - 5*RetMap(D2,M5) - 183*RetMap(D2,M6) - 14*RetMap(D2,M7) - 215*RetMap(D2,M8) - 102*RetMap(D2,M9) - 21*RetMap(D2,M10) - 54*RetMap(D2,M11) - 6*RetMap(D2,M13)
+     
+      - 96*RetMap(D2,M14) - 118*RetMap(D2,M15) - 112*RetMap(D2,M16) - 535*RetMap(D2,M17) - 8*RetMap(D2,M18) - 53*RetMap(D2,M19) - 28*RetMap(D2,M20) - 69*RetMap(D2,M21) - 65*RetMap(D2,M22) - 27*RetMap(D2,M23) + SupSpirit(D2) =E= 0 ; (LHS = 0)
+     
+
+---- MaxSpiritD1  =L=  Maximum spirit market for D1
+
+MaxSpiritD1..  SupSpirit(D1) =L= 1077.75 ; (LHS = 0)
+     
+
+---- MinSpiritD1  =G=  Minimum spirit market for D1
+
+MinSpiritD1..  SupSpirit(D2) =G= 838.25 ; (LHS = 0, INFES = 838.25 ****)
+     
+
+---- TotalSpirit  =E=  Calculating total distribution points
+
+TotalSpirit..  SupSpirit(D1) + SupSpirit(D2) =E= 2395 ; (LHS = 0, INFES = 2395 ****)
+     
+
+---- DevSpiritAllot  =E=  % Deviations in Alloting Spirit Market in 40-60 ratio
+
+DevSpiritAllot(D1)..  - 0.000417536534446764*SupSpirit(D1) + SpiritDev(D1) =E= -0.4 ; (LHS = 0, INFES = 0.4 ****)
+     
+DevSpiritAllot(D2)..  - 0.000417536534446764*SupSpirit(D2) + SpiritDev(D2) =E= -0.6 ; (LHS = 0, INFES = 0.6 ****)
+     
+
+---- CalcOil  =E=  Calculating Oil Market for each supplier in each region
+
+CalcOil(D1,R1)..  - 9*RetMap(D1,M1) - 13*RetMap(D1,M2) - 14*RetMap(D1,M3) - 17*RetMap(D1,M4) - 18*RetMap(D1,M5) - 19*RetMap(D1,M6) - 23*RetMap(D1,M7) - 21*RetMap(D1,M8) + SupOil(D1,R1) =E= 0 ; (LHS = 0)
+     
+CalcOil(D1,R2)..  - 9*RetMap(D1,M9) - 11*RetMap(D1,M10) - 17*RetMap(D1,M11) - 18*RetMap(D1,M12) - 18*RetMap(D1,M13) - 17*RetMap(D1,M14) - 22*RetMap(D1,M15) - 24*RetMap(D1,M16) - 36*RetMap(D1,M17) - 43*RetMap(D1,M18) + SupOil(D1,R2) =E= 0 ; (LHS = 0)
+     
+CalcOil(D1,R3)..  - 6*RetMap(D1,M19) - 15*RetMap(D1,M20) - 15*RetMap(D1,M21) - 25*RetMap(D1,M22) - 39*RetMap(D1,M23) + SupOil(D1,R3) =E= 0 ; (LHS = 0)
+     
+REMAINING 3 ENTRIES SKIPPED
+
+
+---- MaxOilD1  =L=  Maximum spirit market for D1
+
+MaxOilD1(R1)..  SupOil(D1,R1) =L= 60.3 ; (LHS = 0)
+     
+MaxOilD1(R2)..  SupOil(D1,R2) =L= 96.75 ; (LHS = 0)
+     
+MaxOilD1(R3)..  SupOil(D1,R3) =L= 45 ; (LHS = 0)
+     
+
+---- MinOilD1  =G=  Minimum spirit market for D1
+
+MinOilD1(R1)..  SupOil(D1,R1) =G= 46.9 ; (LHS = 0, INFES = 46.9 ****)
+     
+MinOilD1(R2)..  SupOil(D1,R2) =G= 75.25 ; (LHS = 0, INFES = 75.25 ****)
+     
+MinOilD1(R3)..  SupOil(D1,R3) =G= 35 ; (LHS = 0, INFES = 35 ****)
+     
+
+---- TotalOil  =E=  Calculating total distribution points
+
+TotalOil(R1)..  SupOil(D1,R1) + SupOil(D2,R1) =E= 134 ; (LHS = 0, INFES = 134 ****)
+     
+TotalOil(R2)..  SupOil(D1,R2) + SupOil(D2,R2) =E= 215 ; (LHS = 0, INFES = 215 ****)
+     
+TotalOil(R3)..  SupOil(D1,R3) + SupOil(D2,R3) =E= 100 ; (LHS = 0, INFES = 100 ****)
+     
+
+---- DevOilAllot  =E=  % Deviations in Alloting Spirit Market in 40-60 ratio
+
+DevOilAllot(D1,R1)..  - 0.00746268656716418*SupOil(D1,R1) + OilDev(D1,R1) =E= -0.4 ; (LHS = 0, INFES = 0.4 ****)
+     
+DevOilAllot(D1,R2)..  - 0.00465116279069767*SupOil(D1,R2) + OilDev(D1,R2) =E= -0.4 ; (LHS = 0, INFES = 0.4 ****)
+     
+DevOilAllot(D1,R3)..  - 0.01*SupOil(D1,R3) + OilDev(D1,R3) =E= -0.4 ; (LHS = 0, INFES = 0.4 ****)
+     
+REMAINING 3 ENTRIES SKIPPED
+
+
+---- ObjFeasibility  =E=  Dummy objective for Feasible solutions
+
+ObjFeasibility..  - RetMap(D1,M1) - RetMap(D1,M2) - RetMap(D1,M3) - RetMap(D1,M4) - RetMap(D1,M5) - RetMap(D1,M6) - RetMap(D1,M7) - RetMap(D1,M8) - RetMap(D1,M9) - RetMap(D1,M10) - RetMap(D1,M11) - RetMap(D1,M12) - RetMap(D1,M13) - RetMap(D1,M14)
+     
+      - RetMap(D1,M15) - RetMap(D1,M16) - RetMap(D1,M17) - RetMap(D1,M18) - RetMap(D1,M19) - RetMap(D1,M20) - RetMap(D1,M21) - RetMap(D1,M22) - RetMap(D1,M23) - RetMap(D2,M1) - RetMap(D2,M2) - RetMap(D2,M3) - RetMap(D2,M4) - RetMap(D2,M5) - RetMap(D2,M6)
+     
+      - RetMap(D2,M7) - RetMap(D2,M8) - RetMap(D2,M9) - RetMap(D2,M10) - RetMap(D2,M11) - RetMap(D2,M12) - RetMap(D2,M13) - RetMap(D2,M14) - RetMap(D2,M15) - RetMap(D2,M16) - RetMap(D2,M17) - RetMap(D2,M18) - RetMap(D2,M19) - RetMap(D2,M20)
+     
+      - RetMap(D2,M21) - RetMap(D2,M22) - RetMap(D2,M23) + Feas =E= 0 ; (LHS = 0)
+     
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/13/18 14:13:54 Page 4
+Market Sharing (MARKET, SEQ =xx)
+Column Listing      SOLVE Market Using MIP From line 177
+
+
+---- RetMap  Mapping for retailers to suppliers , 40-60 in each group
+
+RetMap(D1,M1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       RetailAssign(A)
+        1       EnsureRetAssign(M1)
+        1       MaxRetailD1(A)
+        1       MinRetailD1(A)
+       -0.125   DevRetailAllot(D1,A)
+      -11       CalcDPoints(D1)
+      -34       CalcSpirit(D1)
+       -9       CalcOil(D1,R1)
+       -1       ObjFeasibility
+
+RetMap(D1,M2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       RetailAssign(A)
+        1       EnsureRetAssign(M2)
+        1       MaxRetailD1(A)
+        1       MinRetailD1(A)
+       -0.125   DevRetailAllot(D1,A)
+      -47       CalcDPoints(D1)
+     -411       CalcSpirit(D1)
+      -13       CalcOil(D1,R1)
+       -1       ObjFeasibility
+
+RetMap(D1,M3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       RetailAssign(A)
+        1       EnsureRetAssign(M3)
+        1       MaxRetailD1(A)
+        1       MinRetailD1(A)
+       -0.125   DevRetailAllot(D1,A)
+      -44       CalcDPoints(D1)
+      -82       CalcSpirit(D1)
+      -14       CalcOil(D1,R1)
+       -1       ObjFeasibility
+
+REMAINING 43 ENTRIES SKIPPED
+
+---- DisPoint  Number of distribution points with each supplier
+
+DisPoint(D1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       CalcDPoints(D1)
+        1       MaxDPpointsD1
+        1       TotalDPoint
+       -0.0014  DevDPAllot(D1)
+
+DisPoint(D2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       CalcDPoints(D2)
+        1       MinDPpointsD1
+        1       TotalDPoint
+       -0.0014  DevDPAllot(D2)
+
+
+---- SupSpirit  Spirit Level for each supplier
+
+SupSpirit(D1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       CalcSpirit(D1)
+        1       MaxSpiritD1
+        1       TotalSpirit
+       -0.0004  DevSpiritAllot(D1)
+
+SupSpirit(D2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       CalcSpirit(D2)
+        1       MinSpiritD1
+        1       TotalSpirit
+       -0.0004  DevSpiritAllot(D2)
+
+
+---- SupOil  Oil Level for each supplier in each region
+
+SupOil(D1,R1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       CalcOil(D1,R1)
+        1       MaxOilD1(R1)
+        1       MinOilD1(R1)
+        1       TotalOil(R1)
+       -0.0075  DevOilAllot(D1,R1)
+
+SupOil(D1,R2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       CalcOil(D1,R2)
+        1       MaxOilD1(R2)
+        1       MinOilD1(R2)
+        1       TotalOil(R2)
+       -0.0047  DevOilAllot(D1,R2)
+
+SupOil(D1,R3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       CalcOil(D1,R3)
+        1       MaxOilD1(R3)
+        1       MinOilD1(R3)
+        1       TotalOil(R3)
+       -0.01    DevOilAllot(D1,R3)
+
+REMAINING 3 ENTRIES SKIPPED
+
+---- RetailDev  Deviation , Retailer Allotment per group
+
+RetailDev(D1,A)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       DevRetailAllot(D1,A)
+
+RetailDev(D1,B)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       DevRetailAllot(D1,B)
+
+RetailDev(D2,A)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       DevRetailAllot(D2,A)
+
+REMAINING ENTRY SKIPPED
+
+---- DistribDev  Deviation , Distribution Points Allotment
+
+DistribDev(D1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       DevDPAllot(D1)
+
+DistribDev(D2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       DevDPAllot(D2)
+
+
+---- SpiritDev  Deviation , Spirit demand Allotment
+
+SpiritDev(D1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       DevSpiritAllot(D1)
+
+SpiritDev(D2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       DevSpiritAllot(D2)
+
+
+---- OilDev  Deviation , Oil demand Allotment
+
+OilDev(D1,R1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       DevOilAllot(D1,R1)
+
+OilDev(D1,R2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       DevOilAllot(D1,R2)
+
+OilDev(D1,R3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       DevOilAllot(D1,R3)
+
+REMAINING 3 ENTRIES SKIPPED
+
+---- Feas  
+
+Feas
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       ObjFeasibility
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/13/18 14:13:54 Page 5
+Market Sharing (MARKET, SEQ =xx)
+Model Statistics    SOLVE Market Using MIP From line 177
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS          21     SINGLE EQUATIONS           69
+BLOCKS OF VARIABLES           9     SINGLE VARIABLES           71
+NON ZERO ELEMENTS           421     DISCRETE VARIABLES         46
+
+
+GENERATION TIME      =        0.047 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.047 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/13/18 14:13:54 Page 6
+Market Sharing (MARKET, SEQ =xx)
+Solution Report     SOLVE Market Using MIP From line 177
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Market              OBJECTIVE  Feas
+     TYPE    MIP                 DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  177
+
+**** SOLVER STATUS     4 Terminated By Solver      
+**** MODEL STATUS      8 Integer Solution          
+**** OBJECTIVE VALUE               23.0000
+
+ RESOURCE USAGE, LIMIT          0.110      1000.000
+ ITERATION COUNT, LIMIT      1290    2000000000
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+Cplex 12.8.0.0
+
+Reading parameter(s) from "C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\pooling\cplex.opt"
+>>  solnpool solnpool.gdx
+>>  solnpoolintensity 4
+>>  solnpoolpop 2
+Finished reading from "C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\pooling\cplex.opt"
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+Dumping 20 solutions from the solution pool...
+Time dumping 20 GDX point files:      0.063 seconds.
+Fixing integer variables, and solving final LP...
+Fixed MIP status(1): optimal
+Cplex Time: 0.00sec (det. 0.07 ticks)
+Solution Pool population limit reached.
+
+MIP Solution:           23.000000    (1290 iterations, 729 nodes)
+Final Solve:            23.000000    (0 iterations)
+
+Best possible:          23.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+---- EQU RetailAssign  Accounting retailers in each group
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+A         8.0000         8.0000         8.0000          .          
+B        15.0000        15.0000        15.0000          .          
+
+---- EQU EnsureRetAssign  Ensuring each retailer is assigned to one supplier
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+M1          1.0000         1.0000         1.0000          .          
+M2          1.0000         1.0000         1.0000          .          
+M3          1.0000         1.0000         1.0000          .          
+M4          1.0000         1.0000         1.0000          .          
+M5          1.0000         1.0000         1.0000          .          
+M6          1.0000         1.0000         1.0000          .          
+M7          1.0000         1.0000         1.0000          .          
+M8          1.0000         1.0000         1.0000          .          
+M9          1.0000         1.0000         1.0000          .          
+M10         1.0000         1.0000         1.0000          .          
+M11         1.0000         1.0000         1.0000          .          
+M12         1.0000         1.0000         1.0000          .          
+M13         1.0000         1.0000         1.0000          .          
+M14         1.0000         1.0000         1.0000          .          
+M15         1.0000         1.0000         1.0000          .          
+M16         1.0000         1.0000         1.0000          .          
+M17         1.0000         1.0000         1.0000          .          
+M18         1.0000         1.0000         1.0000          .          
+M19         1.0000         1.0000         1.0000          .          
+M20         1.0000         1.0000         1.0000          .          
+M21         1.0000         1.0000         1.0000          .          
+M22         1.0000         1.0000         1.0000          .          
+M23         1.0000         1.0000         1.0000          .          
+
+---- EQU MaxRetailD1  Max number of reatailers for D1 in each group
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+A        -INF            3.0000         3.6000          .          
+B        -INF            6.0000         6.7500          .          
+
+---- EQU MinRetailD1  Min Number of retailers for D1 in each group
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+A         2.8000         3.0000        +INF             .          
+B         5.2500         6.0000        +INF             .          
+
+---- EQU DevRetailAllot  % Deviations in Alloting Retailers in 40-60 ratio
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+D1.A        -0.4000        -0.4000        -0.4000         EPS         
+D1.B        -0.4000        -0.4000        -0.4000         EPS         
+D2.A        -0.6000        -0.6000        -0.6000         EPS         
+D2.B        -0.6000        -0.6000        -0.6000         EPS         
+
+---- EQU CalcDPoints  Calculating Distribution points for each supplier
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+D1          .              .              .             EPS         
+D2          .              .              .             EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU MaxDPpoin~        -INF          296.0000       328.5000          .          
+---- EQU MinDPpoin~       255.5000       434.0000        +INF             .          
+---- EQU TotalDPoi~       730.0000       730.0000       730.0000          .          
+
+  MaxDPpointsD1  Maximum Number of Distribution Points
+  MinDPpointsD1  Minimum Number of Distribution Points
+  TotalDPoint  Calculating total distribution points
+
+---- EQU DevDPAllot  % Deviations in Alloting Distribution Points in 40-60 ratio
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+D1        -0.4000        -0.4000        -0.4000         EPS         
+D2        -0.6000        -0.6000        -0.6000         EPS         
+
+---- EQU CalcSpirit  Calculating Spirit Market for each supplier
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+D1          .              .              .             EPS         
+D2          .              .              .             EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU MaxSpirit~        -INF          683.0000      1077.7500          .          
+---- EQU MinSpirit~       838.2500      1712.0000        +INF             .          
+---- EQU TotalSpir~      2395.0000      2395.0000      2395.0000          .          
+
+  MaxSpiritD1  Maximum spirit market for D1
+  MinSpiritD1  Minimum spirit market for D1
+  TotalSpirit  Calculating total distribution points
+
+---- EQU DevSpiritAllot  % Deviations in Alloting Spirit Market in 40-60 ratio
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+D1        -0.4000        -0.4000        -0.4000         EPS         
+D2        -0.6000        -0.6000        -0.6000         EPS         
+
+---- EQU CalcOil  Calculating Oil Market for each supplier in each region
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+D1.R1          .              .              .             EPS         
+D1.R2          .              .              .             EPS         
+D1.R3          .              .              .             EPS         
+D2.R1          .              .              .             EPS         
+D2.R2          .              .              .             EPS         
+D2.R3          .              .              .             EPS         
+
+---- EQU MaxOilD1  Maximum spirit market for D1
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+R1        -INF           59.0000        60.3000          .          
+R2        -INF           78.0000        96.7500          .          
+R3        -INF           45.0000        45.0000          .          
+
+---- EQU MinOilD1  Minimum spirit market for D1
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+R1        46.9000        59.0000        +INF             .          
+R2        75.2500        78.0000        +INF             .          
+R3        35.0000        45.0000        +INF             .          
+
+---- EQU TotalOil  Calculating total distribution points
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+R1       134.0000       134.0000       134.0000          .          
+R2       215.0000       215.0000       215.0000          .          
+R3       100.0000       100.0000       100.0000          .          
+
+---- EQU DevOilAllot  % Deviations in Alloting Spirit Market in 40-60 ratio
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+D1.R1        -0.4000        -0.4000        -0.4000         EPS         
+D1.R2        -0.4000        -0.4000        -0.4000         EPS         
+D1.R3        -0.4000        -0.4000        -0.4000         EPS         
+D2.R1        -0.6000        -0.6000        -0.6000         EPS         
+D2.R2        -0.6000        -0.6000        -0.6000         EPS         
+D2.R3        -0.6000        -0.6000        -0.6000         EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU ObjFeasib~          .              .              .             1.0000      
+
+  ObjFeasibility  Dummy objective for Feasible solutions
+
+---- VAR RetMap  Mapping for retailers to suppliers , 40-60 in each group
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+D1.M1           .             1.0000         1.0000         1.0000      
+D1.M2           .             1.0000         1.0000         1.0000      
+D1.M3           .             1.0000         1.0000         1.0000      
+D1.M4           .              .             1.0000         1.0000      
+D1.M5           .              .             1.0000         1.0000      
+D1.M6           .              .             1.0000         1.0000      
+D1.M7           .             1.0000         1.0000         1.0000      
+D1.M8           .              .             1.0000         1.0000      
+D1.M9           .              .             1.0000         1.0000      
+D1.M10          .              .             1.0000         1.0000      
+D1.M11          .             1.0000         1.0000         1.0000      
+D1.M12          .             1.0000         1.0000         1.0000      
+D1.M13          .              .             1.0000         1.0000      
+D1.M14          .              .             1.0000         1.0000      
+D1.M15          .              .             1.0000         1.0000      
+D1.M16          .              .             1.0000         1.0000      
+D1.M17          .              .             1.0000         1.0000      
+D1.M18          .             1.0000         1.0000         1.0000      
+D1.M19          .             1.0000         1.0000         1.0000      
+D1.M20          .              .             1.0000         1.0000      
+D1.M21          .              .             1.0000         1.0000      
+D1.M22          .              .             1.0000         1.0000      
+D1.M23          .             1.0000         1.0000         1.0000      
+D2.M1           .              .             1.0000         1.0000      
+D2.M2           .              .             1.0000         1.0000      
+D2.M3           .              .             1.0000         1.0000      
+D2.M4           .             1.0000         1.0000         1.0000      
+D2.M5           .             1.0000         1.0000         1.0000      
+D2.M6           .             1.0000         1.0000         1.0000      
+D2.M7           .              .             1.0000         1.0000      
+D2.M8           .             1.0000         1.0000         1.0000      
+D2.M9           .             1.0000         1.0000         1.0000      
+D2.M10          .             1.0000         1.0000         1.0000      
+D2.M11          .              .             1.0000         1.0000      
+D2.M12          .              .             1.0000         1.0000      
+D2.M13          .             1.0000         1.0000         1.0000      
+D2.M14          .             1.0000         1.0000         1.0000      
+D2.M15          .             1.0000         1.0000         1.0000      
+D2.M16          .             1.0000         1.0000         1.0000      
+D2.M17          .             1.0000         1.0000         1.0000      
+D2.M18          .              .             1.0000         1.0000      
+D2.M19          .              .             1.0000         1.0000      
+D2.M20          .             1.0000         1.0000         1.0000      
+D2.M21          .             1.0000         1.0000         1.0000      
+D2.M22          .             1.0000         1.0000         1.0000      
+D2.M23          .              .             1.0000         1.0000      
+
+---- VAR DisPoint  Number of distribution points with each supplier
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+D1        -INF          296.0000        +INF             .          
+D2        -INF          434.0000        +INF             .          
+
+---- VAR SupSpirit  Spirit Level for each supplier
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+D1        -INF          683.0000        +INF             .          
+D2        -INF         1712.0000        +INF             .          
+
+---- VAR SupOil  Oil Level for each supplier in each region
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+D1.R1        -INF           59.0000        +INF             .          
+D1.R2        -INF           78.0000        +INF             .          
+D1.R3        -INF           45.0000        +INF             .          
+D2.R1        -INF           75.0000        +INF             .          
+D2.R2        -INF          137.0000        +INF             .          
+D2.R3        -INF           55.0000        +INF             .          
+
+---- VAR RetailDev  Deviation , Retailer Allotment per group
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+D1.A        -INF           -0.0250        +INF             .          
+D1.B        -INF      -8.32667E-17        +INF             .          
+D2.A        -INF            0.0250        +INF             .          
+D2.B        -INF      -8.32667E-17        +INF             .          
+
+---- VAR DistribDev  Deviation , Distribution Points Allotment
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+D1        -INF            0.0055        +INF             .          
+D2        -INF           -0.0055        +INF             .          
+
+---- VAR SpiritDev  Deviation , Spirit demand Allotment
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+D1        -INF           -0.1148        +INF             .          
+D2        -INF            0.1148        +INF             .          
+
+---- VAR OilDev  Deviation , Oil demand Allotment
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+D1.R1        -INF            0.0403        +INF             .          
+D1.R2        -INF           -0.0372        +INF             .          
+D1.R3        -INF            0.0500        +INF             .          
+D2.R1        -INF           -0.0403        +INF             .          
+D2.R2        -INF            0.0372        +INF             .          
+D2.R3        -INF           -0.0500        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR Feas              -INF           23.0000        +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/13/18 14:13:54 Page 7
+Market Sharing (MARKET, SEQ =xx)
+E x e c u t i o n
+
+
+----    204 PARAMETER cardsoln             =       20.000  number of solutions in the pool
+
+----    247 PARAMETER Assignment  Assignments of R to S in a solution
+
+                   M1          M2          M3          M4          M5          M6          M7          M8          M9         M10         M11         M12         M13         M14         M15         M16         M17         M18         M19         M20
+
+file1 .D1       1.000       1.000       1.000                                           1.000                                           1.000       1.000                                                                   1.000       1.000
+file1 .D2                                           1.000       1.000       1.000                   1.000       1.000       1.000                               1.000       1.000       1.000       1.000       1.000                               1.000
+file2 .D1       1.000                               1.000                                           1.000                                           1.000                               1.000                               1.000       1.000       1.000
+file2 .D2                   1.000       1.000                   1.000       1.000       1.000                   1.000       1.000       1.000                   1.000       1.000                   1.000       1.000
+file3 .D1       1.000                               1.000                                           1.000                                                                   1.000       1.000                               1.000       1.000       1.000
+file3 .D2                   1.000       1.000                   1.000       1.000       1.000                   1.000       1.000       1.000       1.000       1.000                               1.000       1.000
+file4 .D1       1.000                               1.000                                           1.000                                                                               1.000       1.000                   1.000       1.000       1.000
+file4 .D2                   1.000       1.000                   1.000       1.000       1.000                   1.000       1.000       1.000       1.000       1.000       1.000                               1.000
+file5 .D1       1.000                               1.000                                           1.000       1.000       1.000                                                       1.000                               1.000       1.000
+file5 .D2                   1.000       1.000                   1.000       1.000       1.000                                           1.000       1.000       1.000       1.000                   1.000       1.000                               1.000
+file6 .D1                               1.000                                           1.000       1.000                   1.000                                                                               1.000       1.000       1.000       1.000
+file6 .D2       1.000       1.000                   1.000       1.000       1.000                               1.000                   1.000       1.000       1.000       1.000       1.000       1.000
+file7 .D1       1.000                               1.000                                           1.000                               1.000                                           1.000                               1.000       1.000       1.000
+file7 .D2                   1.000       1.000                   1.000       1.000       1.000                   1.000       1.000                   1.000       1.000       1.000                   1.000       1.000
+file8 .D1                               1.000                   1.000                   1.000                   1.000                                                                                           1.000       1.000       1.000       1.000
+file8 .D2       1.000       1.000                   1.000                   1.000                   1.000                   1.000       1.000       1.000       1.000       1.000       1.000       1.000
+file9 .D1                               1.000                   1.000                   1.000                   1.000                                                       1.000                   1.000       1.000                               1.000
+file9 .D2       1.000       1.000                   1.000                   1.000                   1.000                   1.000       1.000       1.000       1.000                   1.000                               1.000       1.000
+file10.D1                               1.000                   1.000       1.000                                                       1.000                   1.000       1.000                               1.000                   1.000
+file10.D2       1.000       1.000                   1.000                               1.000       1.000       1.000       1.000                   1.000                               1.000       1.000                   1.000                   1.000
+file11.D1                               1.000                   1.000                   1.000                   1.000                                           1.000       1.000                               1.000                               1.000
+file11.D2       1.000       1.000                   1.000                   1.000                   1.000                   1.000       1.000       1.000                               1.000       1.000                   1.000       1.000
+file12.D1                               1.000                   1.000                   1.000                   1.000                                                       1.000       1.000                   1.000                   1.000
+file12.D2       1.000       1.000                   1.000                   1.000                   1.000                   1.000       1.000       1.000       1.000                               1.000                   1.000                   1.000
+file13.D1                               1.000                   1.000                   1.000                   1.000                               1.000                               1.000                   1.000                   1.000
+file13.D2       1.000       1.000                   1.000                   1.000                   1.000                   1.000       1.000                   1.000       1.000                   1.000                   1.000                   1.000
+file14.D1                               1.000                   1.000                   1.000                   1.000                               1.000                               1.000                   1.000
+file14.D2       1.000       1.000                   1.000                   1.000                   1.000                   1.000       1.000                   1.000       1.000                   1.000                   1.000       1.000       1.000
+file15.D1       1.000                                                                   1.000       1.000                                                                   1.000       1.000                               1.000       1.000       1.000
+file15.D2                   1.000       1.000       1.000       1.000       1.000                               1.000       1.000       1.000       1.000       1.000                               1.000       1.000
+file16.D1       1.000                                                                   1.000       1.000                                                       1.000                   1.000                               1.000       1.000       1.000
+file16.D2                   1.000       1.000       1.000       1.000       1.000                               1.000       1.000       1.000       1.000                   1.000                   1.000       1.000
+file17.D1       1.000                                                                   1.000       1.000                                                                               1.000       1.000                   1.000       1.000       1.000
+file17.D2                   1.000       1.000       1.000       1.000       1.000                               1.000       1.000       1.000       1.000       1.000       1.000                               1.000
+file18.D1       1.000                               1.000                               1.000                   1.000       1.000                                                                   1.000       1.000                               1.000
+file18.D2                   1.000       1.000                   1.000       1.000                   1.000                               1.000       1.000       1.000       1.000       1.000                               1.000       1.000
+file19.D1                               1.000                   1.000       1.000                               1.000                   1.000       1.000                                                       1.000                   1.000
+file19.D2       1.000       1.000                   1.000                               1.000       1.000                   1.000                               1.000       1.000       1.000       1.000                   1.000                   1.000
+file20.D1       1.000                                                                   1.000       1.000                                           1.000                               1.000                   1.000                   1.000       1.000
+file20.D2                   1.000       1.000       1.000       1.000       1.000                               1.000       1.000       1.000                   1.000       1.000                   1.000                   1.000
+
+        +         M21         M22         M23
+
+file1 .D1                               1.000
+file1 .D2       1.000       1.000
+file2 .D1       1.000
+file2 .D2                   1.000       1.000
+file3 .D1       1.000
+file3 .D2                   1.000       1.000
+file4 .D1       1.000
+file4 .D2                   1.000       1.000
+file5 .D1                               1.000
+file5 .D2       1.000       1.000
+file6 .D1       1.000
+file6 .D2                   1.000       1.000
+file7 .D1       1.000
+file7 .D2                   1.000       1.000
+file8 .D1       1.000
+file8 .D2                   1.000       1.000
+file9 .D1                   1.000
+file9 .D2       1.000                   1.000
+file10.D1                               1.000
+file10.D2       1.000       1.000
+file11.D1                   1.000
+file11.D2       1.000                   1.000
+file12.D1                               1.000
+file12.D2       1.000       1.000
+file13.D1                               1.000
+file13.D2       1.000       1.000
+file14.D1       1.000       1.000
+file14.D2                               1.000
+file15.D1       1.000
+file15.D2                   1.000       1.000
+file16.D1       1.000
+file16.D2                   1.000       1.000
+file17.D1       1.000
+file17.D2                   1.000       1.000
+file18.D1                   1.000
+file18.D2       1.000                   1.000
+file19.D1                               1.000
+file19.D2       1.000       1.000
+file20.D1       1.000
+file20.D2                   1.000       1.000
+
+
+----    247 PARAMETER DevTotDistrib  Deviation Distribution Points for a solution
+
+                D1
+
+file1        0.005
+file2        0.003
+file3        0.119
+file4        0.004
+file5        0.077
+file6        0.003
+file7        0.114
+file8        0.108
+file9        0.001
+file10       0.133
+file11       0.126
+file12       0.099
+file13       0.023
+file14       0.026
+file15       0.118
+file16       0.130
+file17       0.003
+file18       0.025
+file19       0.004
+file20       0.044
+
+
+----    247 PARAMETER DevSpiritMarket  Deviation in distribution of Spirit Market
+
+                D1
+
+file1        0.115
+file2        0.115
+file3        0.075
+file4        0.068
+file5        0.093
+file6        0.028
+file7        0.093
+file8        0.026
+file9        0.034
+file10       0.035
+file11       0.010
+file12       0.031
+file13       0.009
+file14       0.013
+file15       0.135
+file16       0.172
+file17       0.128
+file18       0.046
+file19       0.035
+file20       0.045
+
+
+----    247 PARAMETER DevOilRegionD1  Deviation in distribution of Oil in Region R
+
+                   R1          R2          R3
+
+file1 .D1       0.040       0.037       0.050
+file2 .D1       0.049       0.014       0.040
+file3 .D1       0.049       0.019       0.040
+file4 .D1       0.049       0.014       0.040
+file5 .D1       0.049       0.005       0.050
+file6 .D1       0.033       0.019       0.040
+file7 .D1       0.049       0.019       0.040
+file8 .D1       0.010       0.009       0.040
+file9 .D1       0.010
+file10.D1       0.019       0.009       0.050
+file11.D1       0.010       0.028
+file12.D1       0.010       0.009       0.050
+file13.D1       0.010       0.005       0.050
+file14.D1       0.010       0.005
+file15.D1       0.004       0.019       0.040
+file16.D1       0.004       0.014       0.040
+file17.D1       0.004       0.014       0.040
+file18.D1       0.034       0.028
+file19.D1       0.019       0.028       0.050
+file20.D1       0.004       0.047       0.040
+
+
+----    247 PARAMETER DevRgroupAD1  Deviation, allotment of retailers to D1 in group A
+
+                D1
+
+file1        0.025
+file2        0.025
+file3        0.025
+file4        0.025
+file5        0.025
+file6        0.025
+file7        0.025
+file8        0.025
+file9        0.025
+file10       0.025
+file11       0.025
+file12       0.025
+file13       0.025
+file14       0.025
+file15       0.025
+file16       0.025
+file17       0.025
+file18       0.025
+file19       0.025
+file20       0.025
+
+
+----    247 PARAMETER DevRgroupBD1  Deviation, allotment of retailers to D1 in group B
+
+                D1
+
+file1  2.77556E-17
+file2  8.32667E-17
+file3  8.32667E-17
+file4  8.32667E-17
+file5  8.32667E-17
+file6  8.32667E-17
+file7  8.32667E-17
+file8  8.32667E-17
+file9  2.77556E-17
+file10 8.32667E-17
+file11 2.77556E-17
+file12 2.77556E-17
+file13 2.77556E-17
+file14 2.77556E-17
+file15 2.77556E-17
+file16 8.32667E-17
+file17 8.32667E-17
+file18 2.77556E-17
+file19 2.77556E-17
+file20 2.77556E-17
+
+
+----    247 PARAMETER NetDev  Total Deviation for the criterias
+
+file1  0.273,    file2  0.246,    file3  0.327,    file4  0.201,    file5  0.299,    file6  0.147,    file7  0.339,    file8  0.219,    file9  0.071,    file10 0.271,    file11 0.200,    file12 0.224,    file13 0.123,    file14 0.079,    file15 0.341
+file16 0.386,    file17 0.214,    file18 0.158,    file19 0.161,    file20 0.205
+
+
+----    247 PARAMETER ObjMinDev            =        0.071  Soln with Minimum Total Deviation
+
+----    247 PARAMETER BestSol  
+
+            M1          M2          M3          M4          M5          M6          M7          M8          M9         M10         M11         M12         M13         M14         M15         M16         M17         M18         M19         M20         M21
+
+D1                               1.000                   1.000                   1.000                   1.000                                                       1.000                   1.000       1.000                               1.000
+D2       1.000       1.000                   1.000                   1.000                   1.000                   1.000       1.000       1.000       1.000                   1.000                               1.000       1.000                   1.000
+
+ +         M22         M23
+
+D1       1.000
+D2                   1.000
+
+
+**** REPORT FILE SUMMARY
+
+ puDummy C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\pooling\225a\myPuDummy.dat
+
+
+EXECUTION TIME       =        0.016 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\pooling\marketpool.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\pooling\marketpool.lst

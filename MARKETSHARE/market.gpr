@@ -1,0 +1,61 @@
+[PROJECT]
+
+[RP:MARKET]
+1=
+2=restart aaa
+3=save aaa
+4=savepoint aaa
+
+[RP:MARKETPOOL]
+1=
+
+[RP:DATAREAD]
+1=
+
+[RP:DATA_IMPORT]
+1=
+
+[RP:DATAREADPOOL]
+1=
+
+[RP:CHARTDAT]
+1=
+
+[GDXDISP: GanttData Par 3]
+PlaneDim=0
+RowDim=3
+Squeeze=1
+SqTrail0=0
+Order=1,2,3
+Decim=7
+PlaneRownr=-1
+
+[GDXDISP: YearDataA Par 1]
+PlaneDim=0
+RowDim=1
+Squeeze=1
+SqTrail0=0
+Order=1
+Decim=7
+PlaneRownr=-1
+
+[OPENWINDOW_1]
+MAXIM=0
+TOP=19
+LEFT=211
+HEIGHT=649
+WIDTH=1145
+
+[RP:UNTITLED_1]
+1=
+
+[MRUFILES]
+1=C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\Untitled_1.gms
+2=C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\market.lst
+3=C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\data_import.gms
+4=C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\chartdata.YearDataA.gch
+5=C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\chartdata.gdx
+6=C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\chartdat.lst
+7=C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\chartdat.gms
+8=C:\Users\cnbho\Documents\GAMSStudio\learn\GDXXRW\dataread.gms
+9=C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\testchart.gch

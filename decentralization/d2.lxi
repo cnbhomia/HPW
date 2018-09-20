@@ -1,0 +1,35 @@
+B 2 C o m p i l a t i o n
+B 105 Equation Listing    SOLVE Decentre Using MIP From line 84
+D 106 Benefits
+D 113 Communication
+D 132 BinaryCon1
+D 315 BinaryCon2
+D 498 BinaryCon3
+D 681 MaxDept
+D 690 MaxCity
+D 703 Savings
+B 710 Column Listing      SOLVE Decentre Using MIP From line 84
+E 711 Locate
+E 805 ComOpen
+E 827 MovCost
+E 835 ComCost
+E 843 NetCost
+B 852 Model Statistics    SOLVE Decentre Using MIP From line 84
+B 868 Solution Report     SOLVE Decentre Using MIP From line 84
+F 907 Benefits
+F 908 Communication
+F 917 BinaryCon1
+F 1012 BinaryCon2
+F 1107 BinaryCon3
+F 1202 MaxDept
+F 1210 MaxCity
+F 1218 Savings
+G 1221 Locate
+G 1241 ComOpen
+G 1336 MovCost
+G 1340 ComCost
+G 1341 NetCost
+B 1353 E x e c u t i o n
+I 1354 Locate
+I 1367 MovCost
+I 1368 ComCost

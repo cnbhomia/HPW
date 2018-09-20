@@ -1,149 +1,150 @@
 $ontext
-this model is the manpower planning model from HP WIlliams book, excercise 12.5
+
+This multiperiod problem COmpares two different strategies for laying-off employees
+under dynamic ManPower requirement. One strategy focuses on miminum lay-offs (redundancy)
+without concern to cost of retaining employees,while other focuses on minimizing Costs
+without concern for number of employees laid-off
+
+Each year, following decisions are made across three categories of workers
+1. Recruitment
+2. Retraining and Downgrading
+3. Redundacy
+4. overmanning
+5. Transfer from full time to short-time 
+
+Model Building in Mathematical Programming,Fifth Edition, H. Paul Williams,
+Model 12.5 : ManPower Planning
+Wiley Publication, 2013
 
 $offtext
 
-sets
-         year 'years in question' /y0*y3/
-         iyear(year) 'initial/existing year' /y0/
-         dyear(year) 'decision years' /y1*y3/
-         workcat 'work category' /unskill, semskill, skill/
-         
-         ;
-
-table manpow(year,workcat)  'manpower requirements'
-         unskill         semskill        skill
-y0       2000            1500            1000
-y1       1000            1400            1000
-y2       500             2000            1500
-y3       0               2500            2000
-         ;
-
-parameters
-        Cretrain(workcat)   'cost to retrain per worker'        /unskill 400, semskill 500/
-        Credund(workcat)       'cost of redundancy per worker'     / unskill 200, semskill 500, skill 500/
-        Coverman(workcat)   'cost of overmanning per worker'    / unskill 1500, semskill 2000, skill 3000/
-        Cshortt(workcat)    'cost of shorttime worker'          / unskill 500, semskill 400, skill 400/
-        Rnewatt(workcat)    'rate of attrition of new workers'  /unskill 0.25, semskill 0.20, skill 0.10 /
-        Roldatt(workcat)    'rate of attrition of old workers'  /unskill 0.10, semskill 0.05, skill 0.05 /
-        Rdownatt           'rate of attrition of downgraded workers' /0.5/
-        RecLim(workcat)     'max recruitment each year in each category' / unskill 500, semskill 800 , skill 500/
+Sets
+        Years               'years/time horizon'    /Y0*Y3/
+        DYears(years)       'decision years'        /Y1*Y3/
+        SkillCat            'skill category'        /S1*S3/
         ;
-Alias(workcat,wc)
 
-*all calculation checkpoint as begining of a year'
-integer variable
-         Wrec(year,workcat)   'number of recruits at end of each year'
-         Wret(year,workcat)   'number of retrained personnel'
-         Wred(year,workcat)   'number of workers declared redundant'
-         Wsho(year,workcat)   'number of workers on short work'
-         Wextra(year,workcat)       'number of extra workers each year. sum over categories'
-         Woverman(year)         'total extra workers each year, up to 150 max'
-         Watt(year,workcat)           'number of workers leaving. includes current and past year workers'
-*         Wdown(year,workcat,wc) 'number of workers downgraded'
-         Wtotal(year,workcat) ' total number of manpower in each category each year'
-         ;
-variables
-         Cret(year)          'Cost of retraining'
-         Cred(year)      'Redundancy cost each year'
-         Cextra(year)    'extraworker costs each year'
-         Csho(year)     'short time worker cost'
-         TotCTC               'total cost to company'
-         objval         'total number of layoffs / redundancy workers'
-         ;
+Table Manpower(years,SkillCat)   'Estimated manpower requirements in future'
+          S1       S2         S3
+Y0       2000     1500       1000
+Y1       1000     1400       1000
+Y2        500     2000       1500
+Y3                2500       2000
+;
 
-*defining limits on variables
-Wret.up(year,'unskill') = 200 ;
-Wret.up(year,'semskill') = 0.25*Wret.l(year,'skill') ;
+Alias(SkillCat,skp,sk);
+Alias (Years,y)
 
-Woverman.up(year) = 150 ;
+Parameters
+        RetrainC(sk)    'Retrain Cost each worker per skill leve;[$]'   /S1 400, S2 500/
+        RedundC(sk)     'cost of redundancy per worker [$]'             /S1 200, S2 500, S3 500/
+        OvermanC(sk)    'cost of overmanning per worker [$]'            /S1 1500, S2 2000, S3 3000/
+        ShorttC(sk)     'cost of having shorttime worker [$]'           /S1 500, S2 400, S3 400/
+        RnewAtrn(sk)     'rate of attrition of new workers [$]'         /S1 0.25, S2 0.20, S3 0.10 /
+        Roldatt(sk)     'rate of attrition of old workers [$]'          /S1 0.10, S2 0.05, S3 0.05 /
+        Rdownatt        'rate of attrition of downgraded workers'       /0.5/
+        RecLim(sk)      'max recruitment each year in each category'    /S1 500, S2 800 , S3 500/
+        ;
 
-Wsho.up(year,workcat) = 50;
+Integer variable
+        Wrecruit(y,sk)          'number of recruits at end of each year'
+        Wretrain(y,sk)          'number of workers retrained'
+        Wredund(y,sk)           'number of workers declared redundant'
+        Wshortt(y,sk)           'number of workers on short work'
+        Wextra(y,sk)            'total number of extra workers each year each category'
+        Wattritn(y,sk)          'number of workers leaving. Includes current and past year workers'
+        Wdowngrad(y,sk,skp)     'number of workers downgraded from sk to skp'
+        Wtotal(y,sk)            'total number of workers in each category each year'
+        ;
 
-*Wtotal.lo(year,workcat) = manpow(year,workcat);
-
-Wrec.up(year,workcat) = RecLim(workcat) ; 
+Variables
+        CostRetrain(y)          'Cost of retraining [$]'
+        CostRedund(y)           'Redundancy cost each year [$]'
+        CostExtra(y)            'cost of having extraworkers each year [$]'
+        CostStime(y)            'short time worker cost each year [$]'
+        TotCTC                  'total cost to company [$]'
+        TotRed                  'total number of layoffs / redundancy workers'
+        ;
 
 equations
-        attrition(year,workcat)  'attrition rate equation'
-        workers(year,workcat) 'worker each year in each category'
-        extramanning(year,workcat) 'extra man each year eachcategory'
-        overmanning(year) 'overmanpower each year'
-        redundantworkers 'total redundant workers'
-        
-        retraincosts(year) 'retraining costs each each'
-        redundancycosts(year) ' cost of redundancy each year'
-        extraworkercosts(year) 'cost of extraworker each year'
-        shorttimecosts(year) 'cost of shorttime worker each year'
-        totalcosts  'total costs for 3 years'
-        
-        ;
-
-*values for year 0
-Wrec.l(year,workcat) =0;
-Wret.l(year,workcat) = 0;
-Wred.l(year,workcat) =0 ; 
-Wsho.l(year,workcat) =0 ; 
-Wextra.l(year,workcat) =0;
-Woverman.l(year)   =0 ;
-Watt.l(year,workcat)  =0  ;
-*Wdown(year,workcat,wc) 'number of workers downgraded'
-Wtotal.fx('y0',workcat) = manpow('y0',workcat) ;
+         total(y,sk)            'total workers each year per skill level'
+         attrition(y,sk)        'attrition each year per skill level'
+         Overmanning(y)         'limit on extra workers each year'
+         Extraman(y,sk)         'number of extra workers per year per skill level'
+         retrainlim(y,sk)       'retrainlim equations'
+         retraincosts(y)        'cost to retrain'
+         overmancosts(y)        'cost of overmanning'
+         redundancycosts(y)     'cost of redundancy'
+         shorttimecosts(y)      'cost of having short time workers'
+         totalcosts             'total costs for 3 years'
+         objfunc                'cumulative redundancy minimization'
+         ;
 
 
-attrition(year,workcat)$(not iyear(year)).. Watt(year,workcat) =e= Rnewatt(workcat)*Wrec(year,workcat) + Roldatt(workcat)*Wtotal(year-1,workcat);
-*                                                                    + Rdownatt * Wdown(year,workcat) ;
+*Minimum Manpower contraints as bound    
+Wtotal.lo(y,sk) = ManPower(y,sk) ;
+*Max extra manpower each year is 150. A safe upper cound on the variable Wtotal
+Wtotal.up(y,sk)= ManPower(y,sk) + 150 ;
 
-workers(year,workcat)$(ord(year)>1).. Wtotal(year,workcat) =e= Wtotal(year-1,workcat) + Wrec(year,workcat) - Watt(year,workcat) - Wret(year,workcat) + Wret(year,workcat-1) ;
+*Limits on recruitment
+Wrecruit.lo(y,sk) = 0;
+Wrecruit.up(y,sk) = Reclim(sk);
 
-extramanning(dyear,workcat).. Wextra(dyear,workcat) =e= Wtotal(dyear,workcat) - manpow(dyear,workcat) ;
+*Limits on retraining
 
-overmanning(dyear).. Woverman(dyear) =e= sum(workcat,Wextra(dyear,workcat)) ;
+Wretrain.up(y,'S1') = 200;
+Wretrain.fx(y,'S3') = 0;
+Wretrain.lo(y,sk) =0 ;
 
-retraincosts(dyear).. Cret(dyear) =e= sum(workcat, Cretrain(workcat)*Wret(dyear,workcat)) ;
+*Limits on Short Time workers
+Wshortt.up(y,sk) = 50;
 
-redundancycosts(dyear).. Cred(dyear) =e= sum(workcat, Credund(workcat)*Wred(dyear,workcat));
+*Current values, inital year, Y0
+Wtotal.fx('y0',sk)   = ManPower('y0',sk) ;
+Wrecruit.fx('y0',sk) =0   ;
+Wretrain.fx('y0',sk) =0   ;
+Wredund.fx('y0',sk)  =0   ;
+Wdowngrad.fx('y0',skp,sk) =0 ;
+Wredund.lo(y,sk) = 0;
 
-extraworkercosts(dyear).. Cextra(dyear) =e= sum(workcat, Coverman(workcat)*Wextra(dyear,workcat));
 
-shorttimecosts(dyear).. Csho(dyear) =e= sum(workcat, Cshortt(workcat)* Wsho(dyear,workcat)) ;
+total(y,sk)$(ord(y)>1)..    Wtotal(y,sk) =E= Wtotal(y-1,sk) + Wrecruit(y,sk)
+                                            - Wredund(y,sk)- Wattritn(y,sk) + [Wretrain(y,sk-1) - Wretrain(y,sk)]
+                                            + { sum(skp$(ord(skp) > ord(sk)),Wdowngrad(y,skp,sk))
+                                                    -sum(skp$(ord(skp)<ord(sk)),Wdowngrad(y,sk,skp))}   ;
 
-totalcosts.. TotCTC =e= sum(year, Cret(year) + Cred(year) + Cextra(year) + Csho(year)) ;
 
-redundantworkers.. objval =e= sum((year,workcat), Wred(year,workcat)) ; 
-                                                       
-$ontext      
-attrition(year,workcat)$(not iyear(year)).. Watt(year,workcat) =e= Rnewatt(workcat)*Wrec(year,workcat) + Roldatt(workcat)*Wtotal(year-1,workcat)
-                                                                    + Rdownatt * Wred(year,workcat) ;
+attrition(y,sk)..           Wattritn(y,sk) =E= RnewAtrn(sk)*Wrecruit(y,sk) + Roldatt(sk)*Wtotal(y-1,sk)+ Roldatt(sk)*Wretrain(y,sk-1)
+                                            + 0.5*[sum(skp$(ord(skp) > ord(sk)),Wdowngrad(y,skp,sk))]    ;
 
-workers(year,workcat).. Wtotal(year,workcat) =e= Wtotal(year-1,workcat) + Wrec(year,workcat) - Watt(year,workcat) +0.5*Wsho(year,workcat) - Wret(year,workcat+1) + Wdown(year,workcat+2) + Wdown(year,workcat+1) -Wdown(year,workcat-1) - Wdown(year,workcat-2) ;
+Overmanning(y)..            sum(sk, Wextra(y,sk)) =L= 150 ;
 
-extramanning(dyear,workcat).. Wextra(dyear,workcat) =e= Wtotal(dyear,workcat) - manpow(dyear,workcat) ;
+extraman(y,sk)..            Wextra(y,sk) +  0.5*Wshortt(y,sk) =E= Wtotal(y,sk) - ManPower(y,sk) ;
 
-overmanning(dyear).. Woverman(dyear) =e= sum(workcat,Wextra(dyear,workcat)) ;
+retrainlim(y,sk)..          Wretrain(y,'S2') =L= 0.25* Wtotal(y,'S3') ;
 
-retraincosts(dyear).. Cret(dyear) =e= sum(workcat, Cretrain(workcat)*Wret(dyear,workcat)) ;
+retraincosts(y)..           CostRetrain(y) =E= sum(sk, RetrainC(sk)*Wretrain(y,sk)) ;
 
-redundancycosts(dyear).. Cred(dyear) =e= sum(workcat, Credund(workcat)*Wred(dyear,workcat));
+redundancycosts(y)..        CostRedund(y) =E= sum(sk, RedundC(sk)*Wredund(y,sk));
 
-extraworkercosts(dyear).. Cextra(dyear) =e= sum(workcat, Coverman(workcat)*Wextra(dyear,workcat));
+overmancosts(y)..           CostExtra(y) =E= sum(sk, OvermanC(sk)*Wextra(y,sk));
 
-shorttimecosts(dyear).. Csho(dyear) =e= sum(workcat, Cshortt(workcat)* Wsho(dyear,workcat)) ;
+shorttimecosts(y)..         CostStime(y) =E= sum(sk, ShorttC(sk)* Wshortt(y,sk)) ;
 
-totalcosts.. TotCTC =e= sum(year, Cret(year) + Cred(year) + Cextra(year) + Csho(year)) ;
+totalcosts..                TotCTC =E= sum(y, CostRetrain(y) + CostRedund(y) + CostExtra(y) + CostStime(y) ) ;
 
-redundantworkers.. objval =e= sum((year,workcat), Wred(year,workcat)) ; 
+objfunc..                   TotRed =E= sum((y,sk), Wredund(y,sk)) ;
 
-$ontext
-totalmanpower(year)$(not year('y0')).. TotMan(year) =e= sum(workcat,Wtotal(year,workcat));
-
-manpower(year,workcat).. Wtotal(year+1,workcat) =  Wtotal(year,workcat) + Wrec(year,workcat) - Wred(year-1,workcat) - Watt(year) ) ;
-
-overmanning(year).. Woverman(year) =e= [TotMan(year) - sum(workcat,manpow(year,workcat))]$ [TotMan(year) > sum(workcat,manpow(year,workcat))] ;
-attrition(year)..   Watt(year) =e= TotMan(year-1)           
-        
-$offtext
 
 model manpowerplan /all/ ;
-option limrow = 100;
-solve manpowerplan using RMIP minimizing objval ; 
+option limrow = 100,limcol=100;
+option intVarup =2;
+option optcr=0;
+
+solve manpowerplan using MIP minimizing TotRed ;
+
+display Wredund.l,Wrecruit.l,Wdowngrad.l,Wshortt.l;
+
+solve manpowerplan using MIP minimizing TotCTC ;
+
+display Wredund.l,Wrecruit.l,Wdowngrad.l,Wshortt.l;

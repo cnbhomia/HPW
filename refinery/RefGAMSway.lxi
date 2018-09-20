@@ -1,0 +1,21 @@
+B 2 C o m p i l a t i o n
+B 134 Equation Listing    SOLVE ref Using LP From line 126
+D 135 conversions
+D 199 splitbalance
+D 242 mixingbal
+D 253 Qgasoline
+D 262 obj
+B 269 Column Listing      SOLVE ref Using LP From line 126
+E 270 Zmade
+E 290 Zuse
+E 316 Profit
+B 325 Model Statistics    SOLVE ref Using LP From line 126
+B 341 Solution Report     SOLVE ref Using LP From line 126
+F 377 conversions
+F 412 splitbalance
+F 427 mixingbal
+F 436 Qgasoline
+F 442 obj
+G 443 Zmade
+G 531 Zuse
+G 608 Profit

@@ -1,0 +1,37 @@
+B 2 C o m p i l a t i o n
+B 139 Equation Listing    SOLVE Plan3 Using LP From line 113
+D 140 StockBal
+D 186 Endogenous
+D 231 Manpower
+D 248 OutputLim
+D 293 CapacityLim
+D 332 ObjMaxMan
+B 339 Column Listing      SOLVE Plan3 Using LP From line 113
+E 340 Store
+E 447 Output
+E 619 Endo
+E 723 Exog
+E 807 Capacity
+E 926 ExtraProd
+E 1056 Mpow
+E 1092 fstock
+E 1107 MaxMan
+B 1116 Model Statistics    SOLVE Plan3 Using LP From line 113
+B 1132 Solution Report     SOLVE Plan3 Using LP From line 113
+F 1163 StockBal
+F 1189 Endogenous
+F 1215 Manpower
+F 1227 OutputLim
+F 1253 CapacityLim
+F 1274 ObjMaxMan
+G 1277 Store
+G 1303 Output
+G 1329 Endo
+G 1355 Exog
+G 1381 Capacity
+G 1407 ExtraProd
+G 1430 Mpow
+G 1442 fstock
+G 1450 MaxMan
+B 1463 E x e c u t i o n
+I 1464 outRep

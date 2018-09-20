@@ -1,0 +1,670 @@
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/05/18 09:01:02 Page 1
+Economic Planning , Dynamic Input-Ouput Leontief Model, LP (Leontief, SEQ =xx)
+C o m p i l a t i o n
+
+
+   2  *         *         *         *         *         *         *         *         *
+      This problem is a sample three industry input-output Leontief economic model.
+      The problem is a dynamic model with optimization for three different goals over
+      a 5 year period. The model is build for a 10 year period to account for the lag
+      associated with effects in year 't+2' of a decision taken in year 't' .
+      Detailed description of the Leontief Model is provided in section 5.2 of the reference.
+       
+      The good balance equation is
+       
+      (Output) + existing stock >= (Input back into Eco) + market demand + new stock
+       
+      Model Building in Mathematical Programming, Fifth Edition,
+      H. Paul Williams, Model 12.9 : Economic Planning
+      Wiley Publication, 2013
+  18   
+  19  Sets
+  20      i       'industries in economy'     /coal,steel,transport/
+  21      t       'years under consideration' /1*7/
+  22      dt(t)   'decision years'            /1*5/
+  23      ;
+  24   
+  25  Parameters
+  26      Stock(i)       'stock for goods i in year 0[m£]'
+  27                          /coal 150, steel 80, transport 100/
+  28      LimCapacity(i)     'Productive Capacity for goods i in year 0 , [m£]'
+  29                          /coal 300, steel 350, transport 280/
+  30      ProdManPow(i)    'manpower required for unit quantity of good i'
+  31                          /coal 0.6, steel 0.3, transport 0.2/
+  32      UpCapManPow(i)  'manpower required for increase in capacity for good i'
+  33                          /coal 0.4, steel 0.2, transport 0.1/
+  34      Demand(i)      'demand for good i each year [m£] for objective 1'
+  35                          /coal 60, steel 60, transport 30/
+  36      LimManpower      'Maximum Yearly Manpower Available [m£]' /470/
+  37      ;
+  38   
+  39  Alias(i,j);
+  40  Alias(t,lt);
+  41   
+  42  Table InOutCoef(i,j)   'Input of good j for unit increase in output of j'
+  43                  coal      steel     transport
+  44   
+  45  coal            0.1       0.5         0.4
+  46  steel           0.1       0.1         0.2
+  47  transport       0.2       0.1         0.2
+  48      ;
+  49   
+  50   
+  51  Table UpCapCoef(i,j)   'amount of good j for unit increase in production capacity for good i'
+  52                  coal      steel     transport
+  53   
+  54  coal                      0.7         0.9
+  55  steel           0.1       0.1         0.2
+  56  transport       0.2       0.1         0.2
+  57      ;
+  58   
+  59   
+  60  Positive Variables
+  61      Output(i,t)
+  62      Input(i,t)      'input back into the economy for production [m£/year]'
+  63      UpCap(i,t)      'input back into the economy for productive capacity, [m£/year]'
+  64      x(i,t)          'quantity of output marked for endogenour consumption [m£/year]'
+  65      y(i,t)          'quantity of input marked for increasing capacity [m£/year]'
+  66      store(i,t)      'good i stored in year t [m£]'
+  67      capacity(i,t)   'Production capacity of good i in year t'
+  68   
+  69      ;
+  70   
+  71  store.up(i,t) = 4000;
+  72   
+  73   
+  74   
+  75  Variables
+  76      Target         'Objective for maximizing productive capacity'
+  77      ;
+  78  *year 0 values
+  79   
+  80  *variables which are zero
+  81  y.fx(i,'1')=0;
+  82  y.fx(i,'2')=0;
+  83   
+  84  *fixed values for time horizon t>5th year
+  85  upcap.fx(i,t)$(ord(t)>6) =0;
+  86  *store.fx(i,t)$(ord(t) >6) = stock(i);
+  87   
+  88  Equations
+  89      GoodsBalanceYr0(i)
+  90      GoodsBalance(i,t)
+  91  *    In4Output(i,t)       'Economic Input for output calculation'
+  92  *    In4UpCap(i,t)        'Economic Input for rising productive capacity'
+  93      horizonstore1(i)
+  94       horizonstore2(i)
+  95      LimCapCalc(i,t)     'Limit of Productive Capacity Calculation'
+  96      LimOutput(i,t)      'Limit for total output'
+  97  *    ManpowerCap(t)      'Yearly Manpower Capacity'
+  98      objFunc1            'First Objective for maximizing production capacity'
+  99   
+ 100      ;
+ 101   
+ 102  GoodsBalanceYr0(i)..     Stock(i) =E= sum(j,InOutCoef(i,j)*x(j,'1')) + sum(j,UpCapCoef(i,j)*y(j,'2')) + Store(i,'1');
+ 103   
+ 104  GoodsBalance(i,t)$dt(t)..     Output(i,t) + Store(i,t) =E= sum(j,InOutCoef(i,j)*x(j,t+1)) +
+ 105                                                      sum(j,UpCapCoef(i,j)*y(j,t+2)) + Demand(i) + Store(i,t+1);
+ 106   
+ 107  horizonstore1(i)..       Store(i,'6') =E= Store(i,'7');
+ 108  horizonstore2(i)..       Store(i,'5') =E= Store(i,'6');
+ 109   
+ 110  LimCapCalc(i,t)$(dt(t))..    Capacity(i,t) =E= LimCapacity(i) + sum(lt $ [ord(lt)<=ord(t)], y(i,lt)) ;
+ 111   
+ 112  LimOutput(i,t)$(dt(t))..        Output(i,t) =L= capacity(i,t) ;
+ 113   
+ 114  *ManpowerCap(t)..     sum(i, ProdManPow(i)*x(i,t+1)) + sum(i, UpCapManPow(i)*y(i,t+2)) =L= LimManpower ;
+ 115   
+ 116  objFunc1..           Target =E=sum((i,t)$[ord(t)<6], ProdManPow(i)*x(i,t+1)+ UpCapManPow(i)*y(i,t+2))  ;
+ 117   
+      upcap.fx(i,t)$[ord(t) <= 3] =0;
+       
+      inout(i,t)$[(ord(t)>1) and (ord(t)<7)]..   x(i,t) +store(i,t-1) =E= sum(j,InOutCoef(i,j)*x(j,t+1)) + sum(j,UpCapCoef(i,j)*upcap(j,t+2)) + demand(i) + store(i,t);
+       
+      ProdLimit(i,t)$(ord(t)>1)..   x(i,t) =L= LimCapacity(i) + sum(lt$ {[ord(lt)<ord(t)]}, upcap(i,lt)) ;
+       
+      objFunc1..                    BestCap =E= sum[(i,dt), upcap(i,dt)] ;
+       
+      ManpowerCap(dt)..        sum(i, ProdManPow(i)*x(i,dt)) + sum(i, UpCapManPow(i)*upcap(i,dt)) =L= MaxManPow ;
+       
+      capdata(i,t)$(ord(t)>1)..          capacity(i,t) =E= LimCapacity(i) + sum(lt${[ord(lt)<ord(t)]}, upcap(i,lt)) ;
+       
+      $ontext
+      Endogenous(i,t)$..   x(i,t) =E=  sum(j, InOutCoef(i,j) * x(j,t-1) ) ;
+       
+      Capacity(i,t)$(ord(t)>3)..     upcap(i,t) =E= sum(j, UpCapCoef(i,j)* x(j,t-2));
+       
+      balance(i,t)..                 store(i,t) =E= store(i,t-1) + x(i,t) - demand(i) ;
+       
+      ProdLimit(i,t)..               x(i,t) =L= LimCapacity(i) + sum(lt$ {[ord(lt)<ord(t)] and [ord(lt)<6]}, upcap(i,t)) ;
+       
+      objFunc1..                     BestCap =E= sum[(i,t)$(ord(t)<7), upcap(i,t)] ;
+       
+      *ManpowerCap(t)..    sum(i, ProdManPow(i)*x(i,t)) + sum(i, UpCapManPow(i)*upcap(i,t)) =L= MaxManPow ; 
+ 144   
+ 145  model ecoplan /all/;
+ 146   
+ 147  solve ecoplan using LP maximizing Target ;
+ 148   
+ 149  display output.l, x.l,y.l,store.l;
+ 150   
+ 151   
+ 152   
+ 153   
+ 154   
+ 155   
+ 156   
+ 157   
+ 158   
+ 159   
+ 160   
+ 161   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/05/18 09:01:02 Page 2
+Economic Planning , Dynamic Input-Ouput Leontief Model, LP (Leontief, SEQ =xx)
+Equation Listing    SOLVE ecoplan Using LP From line 147
+
+
+---- GoodsBalanceYr0  =E=  
+
+GoodsBalanceYr0(coal)..  - 0.1*x(coal,1) - 0.5*x(steel,1) - 0.4*x(transport,1) - 0.7*y(steel,2) - 0.9*y(transport,2) - store(coal,1) =E= -150 ; (LHS = 0, INFES = 150 ****)
+     
+GoodsBalanceYr0(steel)..  - 0.1*x(coal,1) - 0.1*x(steel,1) - 0.2*x(transport,1) - 0.1*y(coal,2) - 0.1*y(steel,2) - 0.2*y(transport,2) - store(steel,1) =E= -80 ; (LHS = 0, INFES = 80 ****)
+     
+GoodsBalanceYr0(transport)..  - 0.2*x(coal,1) - 0.1*x(steel,1) - 0.2*x(transport,1) - 0.2*y(coal,2) - 0.1*y(steel,2) - 0.2*y(transport,2) - store(transport,1) =E= -100 ; (LHS = 0, INFES = 100 ****)
+     
+
+---- GoodsBalance  =E=  
+
+GoodsBalance(coal,1)..  Output(coal,1) - 0.1*x(coal,2) - 0.5*x(steel,2) - 0.4*x(transport,2) - 0.7*y(steel,3) - 0.9*y(transport,3) + store(coal,1) - store(coal,2) =E= 60 ; (LHS = 0, INFES = 60 ****)
+     
+GoodsBalance(coal,2)..  Output(coal,2) - 0.1*x(coal,3) - 0.5*x(steel,3) - 0.4*x(transport,3) - 0.7*y(steel,4) - 0.9*y(transport,4) + store(coal,2) - store(coal,3) =E= 60 ; (LHS = 0, INFES = 60 ****)
+     
+GoodsBalance(coal,3)..  Output(coal,3) - 0.1*x(coal,4) - 0.5*x(steel,4) - 0.4*x(transport,4) - 0.7*y(steel,5) - 0.9*y(transport,5) + store(coal,3) - store(coal,4) =E= 60 ; (LHS = 0, INFES = 60 ****)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+
+---- horizonstore1  =E=  
+
+horizonstore1(coal)..  store(coal,6) - store(coal,7) =E= 0 ; (LHS = 0)
+     
+horizonstore1(steel)..  store(steel,6) - store(steel,7) =E= 0 ; (LHS = 0)
+     
+horizonstore1(transport)..  store(transport,6) - store(transport,7) =E= 0 ; (LHS = 0)
+     
+
+---- horizonstore2  =E=  
+
+horizonstore2(coal)..  store(coal,5) - store(coal,6) =E= 0 ; (LHS = 0)
+     
+horizonstore2(steel)..  store(steel,5) - store(steel,6) =E= 0 ; (LHS = 0)
+     
+horizonstore2(transport)..  store(transport,5) - store(transport,6) =E= 0 ; (LHS = 0)
+     
+
+---- LimCapCalc  =E=  Limit of Productive Capacity Calculation
+
+LimCapCalc(coal,1)..  - y(coal,1) + capacity(coal,1) =E= 300 ; (LHS = 0, INFES = 300 ****)
+     
+LimCapCalc(coal,2)..  - y(coal,1) - y(coal,2) + capacity(coal,2) =E= 300 ; (LHS = 0, INFES = 300 ****)
+     
+LimCapCalc(coal,3)..  - y(coal,1) - y(coal,2) - y(coal,3) + capacity(coal,3) =E= 300 ; (LHS = 0, INFES = 300 ****)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+
+---- LimOutput  =L=  Limit for total output
+
+LimOutput(coal,1)..  Output(coal,1) - capacity(coal,1) =L= 0 ; (LHS = 0)
+     
+LimOutput(coal,2)..  Output(coal,2) - capacity(coal,2) =L= 0 ; (LHS = 0)
+     
+LimOutput(coal,3)..  Output(coal,3) - capacity(coal,3) =L= 0 ; (LHS = 0)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+
+---- objFunc1  =E=  First Objective for maximizing production capacity
+
+objFunc1..  - 0.6*x(coal,2) - 0.6*x(coal,3) - 0.6*x(coal,4) - 0.6*x(coal,5) - 0.6*x(coal,6) - 0.3*x(steel,2) - 0.3*x(steel,3) - 0.3*x(steel,4) - 0.3*x(steel,5) - 0.3*x(steel,6) - 0.2*x(transport,2) - 0.2*x(transport,3) - 0.2*x(transport,4)
+     
+      - 0.2*x(transport,5) - 0.2*x(transport,6) - 0.4*y(coal,3) - 0.4*y(coal,4) - 0.4*y(coal,5) - 0.4*y(coal,6) - 0.4*y(coal,7) - 0.2*y(steel,3) - 0.2*y(steel,4) - 0.2*y(steel,5) - 0.2*y(steel,6) - 0.2*y(steel,7) - 0.1*y(transport,3) - 0.1*y(transport,4)
+     
+      - 0.1*y(transport,5) - 0.1*y(transport,6) - 0.1*y(transport,7) + Target =E= 0 ; (LHS = 0)
+     
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/05/18 09:01:02 Page 3
+Economic Planning , Dynamic Input-Ouput Leontief Model, LP (Leontief, SEQ =xx)
+Column Listing      SOLVE ecoplan Using LP From line 147
+
+
+---- Output  
+
+Output(coal,1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       GoodsBalance(coal,1)
+        1       LimOutput(coal,1)
+
+Output(coal,2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       GoodsBalance(coal,2)
+        1       LimOutput(coal,2)
+
+Output(coal,3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       GoodsBalance(coal,3)
+        1       LimOutput(coal,3)
+
+REMAINING 12 ENTRIES SKIPPED
+
+---- x  quantity of output marked for endogenour consumption [m£/year]
+
+x(coal,1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -0.1     GoodsBalanceYr0(coal)
+       -0.1     GoodsBalanceYr0(steel)
+       -0.2     GoodsBalanceYr0(transport)
+
+x(coal,2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -0.1     GoodsBalance(coal,1)
+       -0.1     GoodsBalance(steel,1)
+       -0.2     GoodsBalance(transport,1)
+       -0.6     objFunc1
+
+x(coal,3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -0.1     GoodsBalance(coal,2)
+       -0.1     GoodsBalance(steel,2)
+       -0.2     GoodsBalance(transport,2)
+       -0.6     objFunc1
+
+REMAINING 15 ENTRIES SKIPPED
+
+---- y  quantity of input marked for increasing capacity [m£/year]
+
+y(coal,1)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+       -1       LimCapCalc(coal,1)
+       -1       LimCapCalc(coal,2)
+       -1       LimCapCalc(coal,3)
+       -1       LimCapCalc(coal,4)
+       -1       LimCapCalc(coal,5)
+
+y(coal,2)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+       -0.1     GoodsBalanceYr0(steel)
+       -0.2     GoodsBalanceYr0(transport)
+       -1       LimCapCalc(coal,2)
+       -1       LimCapCalc(coal,3)
+       -1       LimCapCalc(coal,4)
+       -1       LimCapCalc(coal,5)
+
+y(coal,3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -0.1     GoodsBalance(steel,1)
+       -0.2     GoodsBalance(transport,1)
+       -1       LimCapCalc(coal,3)
+       -1       LimCapCalc(coal,4)
+       -1       LimCapCalc(coal,5)
+       -0.4     objFunc1
+
+REMAINING 18 ENTRIES SKIPPED
+
+---- store  good i stored in year t [m£]
+
+store(coal,1)
+                (.LO, .L, .UP, .M = 0, 0, 4000, 0)
+       -1       GoodsBalanceYr0(coal)
+        1       GoodsBalance(coal,1)
+
+store(coal,2)
+                (.LO, .L, .UP, .M = 0, 0, 4000, 0)
+       -1       GoodsBalance(coal,1)
+        1       GoodsBalance(coal,2)
+
+store(coal,3)
+                (.LO, .L, .UP, .M = 0, 0, 4000, 0)
+       -1       GoodsBalance(coal,2)
+        1       GoodsBalance(coal,3)
+
+REMAINING 18 ENTRIES SKIPPED
+
+---- capacity  Production capacity of good i in year t
+
+capacity(coal,1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       LimCapCalc(coal,1)
+       -1       LimOutput(coal,1)
+
+capacity(coal,2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       LimCapCalc(coal,2)
+       -1       LimOutput(coal,2)
+
+capacity(coal,3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       LimCapCalc(coal,3)
+       -1       LimOutput(coal,3)
+
+REMAINING 12 ENTRIES SKIPPED
+
+---- Target  Objective for maximizing productive capacity
+
+Target
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       objFunc1
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/05/18 09:01:02 Page 4
+Economic Planning , Dynamic Input-Ouput Leontief Model, LP (Leontief, SEQ =xx)
+Model Statistics    SOLVE ecoplan Using LP From line 147
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           7     SINGLE EQUATIONS           55
+BLOCKS OF VARIABLES           6     SINGLE VARIABLES           91
+NON ZERO ELEMENTS           283
+
+
+GENERATION TIME      =        0.047 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.047 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/05/18 09:01:02 Page 5
+Economic Planning , Dynamic Input-Ouput Leontief Model, LP (Leontief, SEQ =xx)
+Solution Report     SOLVE ecoplan Using LP From line 147
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   ecoplan             OBJECTIVE  Target
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  147
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE            11565.5704
+
+ RESOURCE USAGE, LIMIT          0.000      1000.000
+ ITERATION COUNT, LIMIT        34    2000000000
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.00sec (det. 0.19 ticks)
+Optimal solution found.
+Objective :       11565.570370
+
+
+---- EQU GoodsBalanceYr0  
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+coal           -150.0000      -150.0000      -150.0000        -5.0000      
+steel           -80.0000       -80.0000       -80.0000        -1.5192      
+transport      -100.0000      -100.0000      -100.0000       -10.2808      
+
+---- EQU GoodsBalance  
+
+                   LOWER          LEVEL          UPPER         MARGINAL
+
+coal     .1        60.0000        60.0000        60.0000        -5.0000      
+coal     .2        60.0000        60.0000        60.0000        -4.2974      
+coal     .3        60.0000        60.0000        60.0000        -1.8081      
+coal     .4        60.0000        60.0000        60.0000         EPS         
+coal     .5        60.0000        60.0000        60.0000         EPS         
+steel    .1        60.0000        60.0000        60.0000        -1.5192      
+steel    .2        60.0000        60.0000        60.0000        -1.5192      
+steel    .3        60.0000        60.0000        60.0000        -1.5192      
+steel    .4        60.0000        60.0000        60.0000        -1.5192      
+steel    .5        60.0000        60.0000        60.0000        -1.4416      
+transport.1        30.0000        30.0000        30.0000       -10.2808      
+transport.2        30.0000        30.0000        30.0000        -2.2404      
+transport.3        30.0000        30.0000        30.0000        -2.2404      
+transport.4        30.0000        30.0000        30.0000        -2.2404      
+transport.5        30.0000        30.0000        30.0000        -2.2792      
+
+---- EQU horizonstore1  
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+coal               .              .              .             EPS         
+steel              .              .              .             EPS         
+transport          .              .              .             EPS         
+
+---- EQU horizonstore2  
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+coal               .              .              .             EPS         
+steel              .              .              .             1.4416      
+transport          .              .              .             2.2792      
+
+---- EQU LimCapCalc  Limit of Productive Capacity Calculation
+
+                   LOWER          LEVEL          UPPER         MARGINAL
+
+coal     .1       300.0000       300.0000       300.0000         5.0000      
+coal     .2       300.0000       300.0000       300.0000         4.2974      
+coal     .3       300.0000       300.0000       300.0000         1.8081      
+coal     .4       300.0000       300.0000       300.0000         EPS         
+coal     .5       300.0000       300.0000       300.0000         EPS         
+steel    .1       350.0000       350.0000       350.0000         1.5192      
+steel    .2       350.0000       350.0000       350.0000         1.5192      
+steel    .3       350.0000       350.0000       350.0000         1.5192      
+steel    .4       350.0000       350.0000       350.0000         1.5192      
+steel    .5       350.0000       350.0000       350.0000         1.4416      
+transport.1       280.0000       280.0000       280.0000        10.2808      
+transport.2       280.0000       280.0000       280.0000         2.2404      
+transport.3       280.0000       280.0000       280.0000         2.2404      
+transport.4       280.0000       280.0000       280.0000         2.2404      
+transport.5       280.0000       280.0000       280.0000         2.2792      
+
+---- EQU LimOutput  Limit for total output
+
+                   LOWER          LEVEL          UPPER         MARGINAL
+
+coal     .1        -INF             .              .             5.0000      
+coal     .2        -INF             .              .             4.2974      
+coal     .3        -INF             .              .             1.8081      
+coal     .4        -INF         -833.4852          .              .          
+coal     .5        -INF         -516.7778          .              .          
+steel    .1        -INF             .              .             1.5192      
+steel    .2        -INF             .              .             1.5192      
+steel    .3        -INF             .              .             1.5192      
+steel    .4        -INF             .              .             1.5192      
+steel    .5        -INF             .              .             1.4416      
+transport.1        -INF             .              .            10.2808      
+transport.2        -INF             .              .             2.2404      
+transport.3        -INF             .              .             2.2404      
+transport.4        -INF             .              .             2.2404      
+transport.5        -INF             .              .             2.2792      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU objFunc1            .              .              .             1.0000      
+
+  objFunc1  First Objective for maximizing production capacity
+
+---- VAR Output  
+
+                   LOWER          LEVEL          UPPER         MARGINAL
+
+coal     .1          .           300.0000        +INF             .          
+coal     .2          .           300.0000        +INF             .          
+coal     .3          .          1626.6296        +INF             .          
+coal     .4          .           793.1444        +INF             .          
+coal     .5          .          1109.8519        +INF             .          
+steel    .1          .           350.0000        +INF             .          
+steel    .2          .           350.0000        +INF             .          
+steel    .3          .           385.8667        +INF             .          
+steel    .4          .           385.8667        +INF             .          
+steel    .5          .          1109.8519        +INF             .          
+transport.1          .           280.0000        +INF             .          
+transport.2          .           280.0000        +INF             .          
+transport.3          .           685.4370        +INF             .          
+transport.4          .           952.1037        +INF             .          
+transport.5          .          2129.7037        +INF             .          
+
+---- VAR x  quantity of output marked for endogenour consumption [m£/year]
+
+                   LOWER          LEVEL          UPPER         MARGINAL
+
+coal     .1          .              .            +INF           -2.7081      
+coal     .2          .              .            +INF           -2.1081      
+coal     .3          .              .            +INF           -0.4297      
+coal     .4          .              .            +INF           -0.1808      
+coal     .5          .          7331.4444        +INF             .          
+coal     .6          .         10498.5185        +INF             .          
+steel    .1          .              .            +INF           -3.6800      
+steel    .2          .              .            +INF           -3.3800      
+steel    .3          .              .            +INF           -2.2247      
+steel    .4          .              .            +INF           -0.9800      
+steel    .5          .              .            +INF           -0.0760      
+steel    .6          .              .            +INF           -0.0721      
+transport.1          .              .            +INF           -4.3600      
+transport.2          .              .            +INF           -4.1600      
+transport.3          .              .            +INF           -2.2709      
+transport.4          .              .            +INF           -1.2752      
+transport.5          .              .            +INF           -0.5519      
+transport.6          .              .            +INF           -0.5442      
+
+---- VAR y  quantity of input marked for increasing capacity [m£/year]
+
+                   LOWER          LEVEL          UPPER         MARGINAL
+
+coal     .1          .              .              .            11.1055      
+coal     .2          .              .              .             3.8974      
+coal     .3          .          1326.6296        +INF             .          
+coal     .4          .              .            +INF           -0.2000      
+coal     .5          .              .            +INF           -0.2000      
+coal     .6          .              .            +INF           -0.2000      
+coal     .7          .              .            +INF           -0.2000      
+steel    .1          .              .              .             7.5184      
+steel    .2          .              .              .             1.3192      
+steel    .3          .            35.8667        +INF             .          
+steel    .4          .              .            +INF           -0.2233      
+steel    .5          .           723.9852        +INF             .          
+steel    .6          .              .            +INF           -0.1760      
+steel    .7          .              .            +INF           -0.1721      
+transport.1          .              .              .            19.2812      
+transport.2          .              .              .             2.1404      
+transport.3          .           405.4370        +INF             .          
+transport.4          .           266.6667        +INF             .          
+transport.5          .          1177.6000        +INF             .          
+transport.6          .              .            +INF           -0.6519      
+transport.7          .              .            +INF           -0.6442      
+
+---- VAR store  good i stored in year t [m£]
+
+                   LOWER          LEVEL          UPPER         MARGINAL
+
+coal     .1          .           150.0000      4000.0000          .          
+coal     .2          .              .          4000.0000        -0.7026      
+coal     .3          .              .          4000.0000        -2.4893      
+coal     .4          .              .          4000.0000        -1.8081      
+coal     .5          .              .          4000.0000         EPS         
+coal     .6          .              .          4000.0000          .          
+coal     .7          .              .          4000.0000          .          
+steel    .1          .            80.0000      4000.0000          .          
+steel    .2          .           152.6630      4000.0000          .          
+steel    .3          .           389.3296      4000.0000          .          
+steel    .4          .           407.2778      4000.0000          .          
+steel    .5          .              .          4000.0000        -1.5192      
+steel    .6          .              .          4000.0000          .          
+steel    .7          .              .          4000.0000          .          
+transport.1          .           100.0000      4000.0000          .          
+transport.2          .              .          4000.0000        -8.0404      
+transport.3          .           196.6667      4000.0000          .          
+transport.4          .           544.1852      4000.0000          .          
+transport.5          .              .          4000.0000        -2.2404      
+transport.6          .              .          4000.0000          .          
+transport.7          .              .          4000.0000          .          
+
+---- VAR capacity  Production capacity of good i in year t
+
+                   LOWER          LEVEL          UPPER         MARGINAL
+
+coal     .1          .           300.0000        +INF             .          
+coal     .2          .           300.0000        +INF             .          
+coal     .3          .          1626.6296        +INF             .          
+coal     .4          .          1626.6296        +INF             .          
+coal     .5          .          1626.6296        +INF             .          
+steel    .1          .           350.0000        +INF             .          
+steel    .2          .           350.0000        +INF             .          
+steel    .3          .           385.8667        +INF             .          
+steel    .4          .           385.8667        +INF             .          
+steel    .5          .          1109.8519        +INF             .          
+transport.1          .           280.0000        +INF             .          
+transport.2          .           280.0000        +INF             .          
+transport.3          .           685.4370        +INF             .          
+transport.4          .           952.1037        +INF             .          
+transport.5          .          2129.7037        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR Target            -INF        11565.5704        +INF             .          
+
+  Target  Objective for maximizing productive capacity
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/05/18 09:01:02 Page 6
+Economic Planning , Dynamic Input-Ouput Leontief Model, LP (Leontief, SEQ =xx)
+E x e c u t i o n
+
+
+----    149 VARIABLE Output.L  
+
+                    1           2           3           4           5
+
+coal          300.000     300.000    1626.630     793.144    1109.852
+steel         350.000     350.000     385.867     385.867    1109.852
+transport     280.000     280.000     685.437     952.104    2129.704
+
+
+----    149 VARIABLE x.L  quantity of output marked for endogenour consumption [m£/year]
+
+                    5           6
+
+coal         7331.444   10498.519
+
+
+----    149 VARIABLE y.L  quantity of input marked for increasing capacity [m£/year]
+
+                    3           4           5
+
+coal         1326.630
+steel          35.867                 723.985
+transport     405.437     266.667    1177.600
+
+
+----    149 VARIABLE store.L  good i stored in year t [m£]
+
+                    1           2           3           4
+
+coal          150.000
+steel          80.000     152.663     389.330     407.278
+transport     100.000                 196.667     544.185
+
+
+
+EXECUTION TIME       =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\ecoplan\eco3.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\ecoplan\eco3.lst

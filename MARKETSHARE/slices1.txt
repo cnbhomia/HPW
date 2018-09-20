@@ -1,0 +1,3 @@
+par =data rng=Sheet1!A1 rdim=3 trace=99
+par=oil rng=Sheet2!A1 rdim=1 trace=99
+par=spirit rng=Sheet3!A1 rdim=1 trace =99

@@ -1,0 +1,2353 @@
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/06/18 12:11:18 Page 1
+Economic Planning , Dynamic Input-Ouput Leontief Model, LP (Leontief, SEQ =xx)
+C o m p i l a t i o n
+
+
+   2  *         *         *         *         *         *         *         *         *
+      This problem is a sample three industry input-output Leontief economic model.
+      The problem is a dynamic model with optimization for three different goals over
+      a 5 year period. The model is build for a 10 year period to account for the lag
+      associated with effects in year 't+2' of a decision taken in year 't' .
+      Detailed description of the Leontief Model is provided in section 5.2 of the reference.
+       
+      The good balance equation is
+       
+      (Output) + existing stock >= (Input back into Eco) + market demand + new stock
+       
+      Model Building in Mathematical Programming, Fifth Edition,
+      H. Paul Williams, Model 12.9 : Economic Planning
+      Wiley Publication, 2013
+  18   
+  19  Sets
+  20      ind     'industry + manpower'           /coal,steel,trans,manpow/
+  21      i(ind)  'industry'                      /coal,steel,trans/
+  22      t       'years under consideration'     /t1*t7/
+  23      dt(t)   'years for decisions'           /t1*t5/
+  24      ;
+  25   
+  26  Parameters
+  27      Stock(i)       'stock for goods i begining of t=1, [m£]'
+  28                          /coal 150, steel 80, trans 100/
+  29      ICapacity(i)     'Productive Capacity for goods i begining of t=1 , [m£]'
+  30                          /coal 300, steel 350, trans 280/
+  31      Demand(i)      'demand for good i each year [m£] for objective 1'
+  32                          /coal 60, steel 60, trans 30/
+  33      MaxManpower      'Maximum Yearly Manpower Available [m£]' /470/
+  34      ;
+  35   
+  36  Alias(i,j);
+  37  Alias(t,lt);
+  38   
+  39  Table ProdCoef(ind,i)   'Input of good j for unit increase in output of j'
+  40                  coal      steel     trans
+  41   
+  42  coal            0.1       0.5         0.4
+  43  steel           0.1       0.1         0.2
+  44  trans           0.2       0.1         0.2
+  45  Manpow          0.6       0.3         0.2
+  46      ;
+  47   
+  48   
+  49  Table CapCoef(ind,i)   'amount of good j for unit increase in production capacity for good i'
+  50                  coal      steel     trans
+  51   
+  52  coal                      0.7         0.9
+  53  steel           0.1       0.1         0.2
+  54  trans           0.2       0.1         0.2
+  55  Manpow          0.4       0.2         0.1
+  56      ;
+  57   
+  58  Positive Variables
+  59      Store(i,t)          'Quantity of good i in storage at begining of time t, [m£]'
+  60      Output(i,t)         'Quantity of output of good i in time t for future use, [m£]'
+  61      Endo(i,t)           'Endogenous Consumption of good i each year,[m£]'
+  62      Exog(i,t)           'Exogenous Consumption of good i each year,[m£]'
+  63      Capacity(i,t)       'Production Capacity of good i each year, [m£]'
+  64      ExtraProd(i,t)      'Quantity of extra production capacity desired, [m£]'
+  65      Mpow(t)             'Quantity of manpower, [m£]'
+  66      fstock(i,t)         'Slack Variable for final year goods balance equation, [m£]'
+  67      ;
+  68  Variable
+  69      MaxCap              'Objective, Maximum Productive capacity'
+  70      MaxProd             'Objective, Maximum Production t4,t5'
+  71      MaxMan              'Objective, Maximize Manpower Requirement'
+  72      ;
+  73   
+  74  *unbounded rays
+  75  ExtraProd.fx(i,t)$(ord(t)<3) =0;
+  76   
+  77  *initial capacity
+  78  Capacity.fx(i,'t1') = ICapacity(i);
+  79   
+  80  *timehorizon
+  81  store.lo(i,t)$(ord(t)>5)= stock(i);
+  82  store.fx(i,'t1') = stock(i);
+  83   
+  84  Equations
+  85      StockBal(i,t)      'Balance of good in each time perios'
+  86      Endogenous(i,t)    'Endogenous consumption for production and capacity rise'
+  87      Manpower(t)        'Manpower consumption each year'
+  88      OutputLim(i,t)     'Max limit on Output'
+  89      CapacityLim(i,t)   'Calculate new production limits'
+  90      ManPowLim(t)       'Manpower Limit each year'
+  91      ObjMaxCap          'Objective function max Productive Capacity'
+  92      ObjMaxProd         'Objective function max Production t4,t5'
+  93      ObjMaxMan          'Objective function max Manpower requirement'
+  94      ;
+  95   
+  96  StockBal(i,t)..        Store(i,t) + Output(i,t) =E= Endo(i,t)  + Exog(i,t) + Store(i,t+1) + fstock(i,t)$(ord(t) =7) ;
+  97   
+  98  Endogenous(i,t)..      Endo(i,t) =E= sum(j, ProdCoef(i,j)* Output(j,t+1)) + sum(j,CapCoef(i,j)*ExtraProd(j,t+2)) ;
+  99   
+ 100  Manpower(t)..          MPow(t) =E=sum(j, ProdCoef('ManPow',j) * OutPut(j,t+1) + CapCoef('Manpow',j)* ExtraProd(j,t+2));
+ 101   
+ 102  OutputLim(i,t)..       Output(i,t) =L= Capacity(i,t);
+ 103   
+ 104  CapacityLim(i,t+1)..   Capacity(i,t+1) =E= Capacity(i,t) + ExtraProd(i,t+1);
+ 105   
+ 106  ManPowLim(t)..         Mpow(t) =L= MaxManPower;
+ 107   
+ 108  ObjMaxCap..            MaxCap =E= sum(i, Capacity(i,'t5') - ICapacity(i));
+ 109   
+ 110  ObjMaxProd..           MaxProd =E= sum(i, Output(i,'t4') + Output(i,'t5'));
+ 111   
+ 112  ObjMaxMan..            MaxMan =E= sum(dt(t),Mpow(t));
+ 113   
+ 114  Model base      'common constraints'     /StockBal,Endogenous,Manpower,OutputLim,CapacityLim/ ;
+ 115   
+ 116   
+ 117  *fixed demand for model 1
+ 118  Exog.fx(i,t) =Demand(i);
+ 119  Model Plan1     'plan 1 : max capacity'  /base, ManPowLim, ObjMaxCap/;
+ 120  Solve Plan1 using LP maximizing MaxCap;
+ 121   
+ 122  *ignore exogenous demand for model 2
+ 123  Exog.fx(i,t) = 0;
+ 124  Model Plan2     'plan 2 : max production' /base, ManPowLim, ObjMaxProd/;
+ 125  Solve Plan2 using LP maximizing MaxProd;
+ 126   
+ 127  *fixed demand for model 1
+ 128  Exog.fx(i,t) =Demand(i);
+ 129  Model Plan3     'plan 3 :max manpower requirement'  /base, ObjMaxMan/;
+ 130  Solve Plan3 using LP maximizing MaxMan;
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/06/18 12:11:18 Page 2
+Economic Planning , Dynamic Input-Ouput Leontief Model, LP (Leontief, SEQ =xx)
+Equation Listing    SOLVE Plan1 Using LP From line 120
+
+
+---- StockBal  =E=  Balance of good in each time perios
+
+StockBal(coal,t1)..  Store(coal,t1) - Store(coal,t2) + Output(coal,t1) - Endo(coal,t1) - Exog(coal,t1) =E= 0 ; (LHS = 90, INFES = 90 ****)
+     
+StockBal(coal,t2)..  Store(coal,t2) - Store(coal,t3) + Output(coal,t2) - Endo(coal,t2) - Exog(coal,t2) =E= 0 ; (LHS = -60, INFES = 60 ****)
+     
+StockBal(coal,t3)..  Store(coal,t3) - Store(coal,t4) + Output(coal,t3) - Endo(coal,t3) - Exog(coal,t3) =E= 0 ; (LHS = -60, INFES = 60 ****)
+     
+StockBal(coal,t4)..  Store(coal,t4) - Store(coal,t5) + Output(coal,t4) - Endo(coal,t4) - Exog(coal,t4) =E= 0 ; (LHS = -60, INFES = 60 ****)
+     
+StockBal(coal,t5)..  Store(coal,t5) - Store(coal,t6) + Output(coal,t5) - Endo(coal,t5) - Exog(coal,t5) =E= 0 ; (LHS = -210, INFES = 210 ****)
+     
+StockBal(coal,t6)..  Store(coal,t6) - Store(coal,t7) + Output(coal,t6) - Endo(coal,t6) - Exog(coal,t6) =E= 0 ; (LHS = -60, INFES = 60 ****)
+     
+StockBal(coal,t7)..  Store(coal,t7) + Output(coal,t7) - Endo(coal,t7) - Exog(coal,t7) - fstock(coal,t7) =E= 0 ; (LHS = 90, INFES = 90 ****)
+     
+StockBal(steel,t1)..  Store(steel,t1) - Store(steel,t2) + Output(steel,t1) - Endo(steel,t1) - Exog(steel,t1) =E= 0 ; (LHS = 20, INFES = 20 ****)
+     
+StockBal(steel,t2)..  Store(steel,t2) - Store(steel,t3) + Output(steel,t2) - Endo(steel,t2) - Exog(steel,t2) =E= 0 ; (LHS = -60, INFES = 60 ****)
+     
+StockBal(steel,t3)..  Store(steel,t3) - Store(steel,t4) + Output(steel,t3) - Endo(steel,t3) - Exog(steel,t3) =E= 0 ; (LHS = -60, INFES = 60 ****)
+     
+StockBal(steel,t4)..  Store(steel,t4) - Store(steel,t5) + Output(steel,t4) - Endo(steel,t4) - Exog(steel,t4) =E= 0 ; (LHS = -60, INFES = 60 ****)
+     
+StockBal(steel,t5)..  Store(steel,t5) - Store(steel,t6) + Output(steel,t5) - Endo(steel,t5) - Exog(steel,t5) =E= 0 ; (LHS = -140, INFES = 140 ****)
+     
+StockBal(steel,t6)..  Store(steel,t6) - Store(steel,t7) + Output(steel,t6) - Endo(steel,t6) - Exog(steel,t6) =E= 0 ; (LHS = -60, INFES = 60 ****)
+     
+StockBal(steel,t7)..  Store(steel,t7) + Output(steel,t7) - Endo(steel,t7) - Exog(steel,t7) - fstock(steel,t7) =E= 0 ; (LHS = 20, INFES = 20 ****)
+     
+StockBal(trans,t1)..  Store(trans,t1) - Store(trans,t2) + Output(trans,t1) - Endo(trans,t1) - Exog(trans,t1) =E= 0 ; (LHS = 70, INFES = 70 ****)
+     
+StockBal(trans,t2)..  Store(trans,t2) - Store(trans,t3) + Output(trans,t2) - Endo(trans,t2) - Exog(trans,t2) =E= 0 ; (LHS = -30, INFES = 30 ****)
+     
+StockBal(trans,t3)..  Store(trans,t3) - Store(trans,t4) + Output(trans,t3) - Endo(trans,t3) - Exog(trans,t3) =E= 0 ; (LHS = -30, INFES = 30 ****)
+     
+StockBal(trans,t4)..  Store(trans,t4) - Store(trans,t5) + Output(trans,t4) - Endo(trans,t4) - Exog(trans,t4) =E= 0 ; (LHS = -30, INFES = 30 ****)
+     
+StockBal(trans,t5)..  Store(trans,t5) - Store(trans,t6) + Output(trans,t5) - Endo(trans,t5) - Exog(trans,t5) =E= 0 ; (LHS = -130, INFES = 130 ****)
+     
+StockBal(trans,t6)..  Store(trans,t6) - Store(trans,t7) + Output(trans,t6) - Endo(trans,t6) - Exog(trans,t6) =E= 0 ; (LHS = -30, INFES = 30 ****)
+     
+StockBal(trans,t7)..  Store(trans,t7) + Output(trans,t7) - Endo(trans,t7) - Exog(trans,t7) - fstock(trans,t7) =E= 0 ; (LHS = 70, INFES = 70 ****)
+     
+
+---- Endogenous  =E=  Endogenous consumption for production and capacity rise
+
+Endogenous(coal,t1)..  - 0.1*Output(coal,t2) - 0.5*Output(steel,t2) - 0.4*Output(trans,t2) + Endo(coal,t1) - 0.7*ExtraProd(steel,t3) - 0.9*ExtraProd(trans,t3) =E= 0 ; (LHS = 0)
+     
+Endogenous(coal,t2)..  - 0.1*Output(coal,t3) - 0.5*Output(steel,t3) - 0.4*Output(trans,t3) + Endo(coal,t2) - 0.7*ExtraProd(steel,t4) - 0.9*ExtraProd(trans,t4) =E= 0 ; (LHS = 0)
+     
+Endogenous(coal,t3)..  - 0.1*Output(coal,t4) - 0.5*Output(steel,t4) - 0.4*Output(trans,t4) + Endo(coal,t3) - 0.7*ExtraProd(steel,t5) - 0.9*ExtraProd(trans,t5) =E= 0 ; (LHS = 0)
+     
+Endogenous(coal,t4)..  - 0.1*Output(coal,t5) - 0.5*Output(steel,t5) - 0.4*Output(trans,t5) + Endo(coal,t4) - 0.7*ExtraProd(steel,t6) - 0.9*ExtraProd(trans,t6) =E= 0 ; (LHS = 0)
+     
+Endogenous(coal,t5)..  - 0.1*Output(coal,t6) - 0.5*Output(steel,t6) - 0.4*Output(trans,t6) + Endo(coal,t5) - 0.7*ExtraProd(steel,t7) - 0.9*ExtraProd(trans,t7) =E= 0 ; (LHS = 0)
+     
+Endogenous(coal,t6)..  - 0.1*Output(coal,t7) - 0.5*Output(steel,t7) - 0.4*Output(trans,t7) + Endo(coal,t6) =E= 0 ; (LHS = 0)
+     
+Endogenous(coal,t7)..  Endo(coal,t7) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t1)..  - 0.1*Output(coal,t2) - 0.1*Output(steel,t2) - 0.2*Output(trans,t2) + Endo(steel,t1) - 0.1*ExtraProd(coal,t3) - 0.1*ExtraProd(steel,t3) - 0.2*ExtraProd(trans,t3) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t2)..  - 0.1*Output(coal,t3) - 0.1*Output(steel,t3) - 0.2*Output(trans,t3) + Endo(steel,t2) - 0.1*ExtraProd(coal,t4) - 0.1*ExtraProd(steel,t4) - 0.2*ExtraProd(trans,t4) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t3)..  - 0.1*Output(coal,t4) - 0.1*Output(steel,t4) - 0.2*Output(trans,t4) + Endo(steel,t3) - 0.1*ExtraProd(coal,t5) - 0.1*ExtraProd(steel,t5) - 0.2*ExtraProd(trans,t5) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t4)..  - 0.1*Output(coal,t5) - 0.1*Output(steel,t5) - 0.2*Output(trans,t5) + Endo(steel,t4) - 0.1*ExtraProd(coal,t6) - 0.1*ExtraProd(steel,t6) - 0.2*ExtraProd(trans,t6) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t5)..  - 0.1*Output(coal,t6) - 0.1*Output(steel,t6) - 0.2*Output(trans,t6) + Endo(steel,t5) - 0.1*ExtraProd(coal,t7) - 0.1*ExtraProd(steel,t7) - 0.2*ExtraProd(trans,t7) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t6)..  - 0.1*Output(coal,t7) - 0.1*Output(steel,t7) - 0.2*Output(trans,t7) + Endo(steel,t6) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t7)..  Endo(steel,t7) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t1)..  - 0.2*Output(coal,t2) - 0.1*Output(steel,t2) - 0.2*Output(trans,t2) + Endo(trans,t1) - 0.2*ExtraProd(coal,t3) - 0.1*ExtraProd(steel,t3) - 0.2*ExtraProd(trans,t3) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t2)..  - 0.2*Output(coal,t3) - 0.1*Output(steel,t3) - 0.2*Output(trans,t3) + Endo(trans,t2) - 0.2*ExtraProd(coal,t4) - 0.1*ExtraProd(steel,t4) - 0.2*ExtraProd(trans,t4) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t3)..  - 0.2*Output(coal,t4) - 0.1*Output(steel,t4) - 0.2*Output(trans,t4) + Endo(trans,t3) - 0.2*ExtraProd(coal,t5) - 0.1*ExtraProd(steel,t5) - 0.2*ExtraProd(trans,t5) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t4)..  - 0.2*Output(coal,t5) - 0.1*Output(steel,t5) - 0.2*Output(trans,t5) + Endo(trans,t4) - 0.2*ExtraProd(coal,t6) - 0.1*ExtraProd(steel,t6) - 0.2*ExtraProd(trans,t6) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t5)..  - 0.2*Output(coal,t6) - 0.1*Output(steel,t6) - 0.2*Output(trans,t6) + Endo(trans,t5) - 0.2*ExtraProd(coal,t7) - 0.1*ExtraProd(steel,t7) - 0.2*ExtraProd(trans,t7) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t6)..  - 0.2*Output(coal,t7) - 0.1*Output(steel,t7) - 0.2*Output(trans,t7) + Endo(trans,t6) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t7)..  Endo(trans,t7) =E= 0 ; (LHS = 0)
+     
+
+---- Manpower  =E=  Manpower consumption each year
+
+Manpower(t1)..  - 0.6*Output(coal,t2) - 0.3*Output(steel,t2) - 0.2*Output(trans,t2) - 0.4*ExtraProd(coal,t3) - 0.2*ExtraProd(steel,t3) - 0.1*ExtraProd(trans,t3) + Mpow(t1) =E= 0 ; (LHS = 0)
+     
+Manpower(t2)..  - 0.6*Output(coal,t3) - 0.3*Output(steel,t3) - 0.2*Output(trans,t3) - 0.4*ExtraProd(coal,t4) - 0.2*ExtraProd(steel,t4) - 0.1*ExtraProd(trans,t4) + Mpow(t2) =E= 0 ; (LHS = 0)
+     
+Manpower(t3)..  - 0.6*Output(coal,t4) - 0.3*Output(steel,t4) - 0.2*Output(trans,t4) - 0.4*ExtraProd(coal,t5) - 0.2*ExtraProd(steel,t5) - 0.1*ExtraProd(trans,t5) + Mpow(t3) =E= 0 ; (LHS = 0)
+     
+Manpower(t4)..  - 0.6*Output(coal,t5) - 0.3*Output(steel,t5) - 0.2*Output(trans,t5) - 0.4*ExtraProd(coal,t6) - 0.2*ExtraProd(steel,t6) - 0.1*ExtraProd(trans,t6) + Mpow(t4) =E= 0 ; (LHS = 0)
+     
+Manpower(t5)..  - 0.6*Output(coal,t6) - 0.3*Output(steel,t6) - 0.2*Output(trans,t6) - 0.4*ExtraProd(coal,t7) - 0.2*ExtraProd(steel,t7) - 0.1*ExtraProd(trans,t7) + Mpow(t5) =E= 0 ; (LHS = 0)
+     
+Manpower(t6)..  - 0.6*Output(coal,t7) - 0.3*Output(steel,t7) - 0.2*Output(trans,t7) + Mpow(t6) =E= 0 ; (LHS = 0)
+     
+Manpower(t7)..  Mpow(t7) =E= 0 ; (LHS = 0)
+     
+
+---- OutputLim  =L=  Max limit on Output
+
+OutputLim(coal,t1)..  Output(coal,t1) - Capacity(coal,t1) =L= 0 ; (LHS = -300)
+     
+OutputLim(coal,t2)..  Output(coal,t2) - Capacity(coal,t2) =L= 0 ; (LHS = 0)
+     
+OutputLim(coal,t3)..  Output(coal,t3) - Capacity(coal,t3) =L= 0 ; (LHS = 0)
+     
+OutputLim(coal,t4)..  Output(coal,t4) - Capacity(coal,t4) =L= 0 ; (LHS = 0)
+     
+OutputLim(coal,t5)..  Output(coal,t5) - Capacity(coal,t5) =L= 0 ; (LHS = 0)
+     
+OutputLim(coal,t6)..  Output(coal,t6) - Capacity(coal,t6) =L= 0 ; (LHS = 0)
+     
+OutputLim(coal,t7)..  Output(coal,t7) - Capacity(coal,t7) =L= 0 ; (LHS = 0)
+     
+OutputLim(steel,t1)..  Output(steel,t1) - Capacity(steel,t1) =L= 0 ; (LHS = -350)
+     
+OutputLim(steel,t2)..  Output(steel,t2) - Capacity(steel,t2) =L= 0 ; (LHS = 0)
+     
+OutputLim(steel,t3)..  Output(steel,t3) - Capacity(steel,t3) =L= 0 ; (LHS = 0)
+     
+OutputLim(steel,t4)..  Output(steel,t4) - Capacity(steel,t4) =L= 0 ; (LHS = 0)
+     
+OutputLim(steel,t5)..  Output(steel,t5) - Capacity(steel,t5) =L= 0 ; (LHS = 0)
+     
+OutputLim(steel,t6)..  Output(steel,t6) - Capacity(steel,t6) =L= 0 ; (LHS = 0)
+     
+OutputLim(steel,t7)..  Output(steel,t7) - Capacity(steel,t7) =L= 0 ; (LHS = 0)
+     
+OutputLim(trans,t1)..  Output(trans,t1) - Capacity(trans,t1) =L= 0 ; (LHS = -280)
+     
+OutputLim(trans,t2)..  Output(trans,t2) - Capacity(trans,t2) =L= 0 ; (LHS = 0)
+     
+OutputLim(trans,t3)..  Output(trans,t3) - Capacity(trans,t3) =L= 0 ; (LHS = 0)
+     
+OutputLim(trans,t4)..  Output(trans,t4) - Capacity(trans,t4) =L= 0 ; (LHS = 0)
+     
+OutputLim(trans,t5)..  Output(trans,t5) - Capacity(trans,t5) =L= 0 ; (LHS = 0)
+     
+OutputLim(trans,t6)..  Output(trans,t6) - Capacity(trans,t6) =L= 0 ; (LHS = 0)
+     
+OutputLim(trans,t7)..  Output(trans,t7) - Capacity(trans,t7) =L= 0 ; (LHS = 0)
+     
+
+---- CapacityLim  =E=  Calculate new production limits
+
+CapacityLim(coal,t2)..  - Capacity(coal,t1) + Capacity(coal,t2) - ExtraProd(coal,t2) =E= 0 ; (LHS = -300, INFES = 300 ****)
+     
+CapacityLim(coal,t3)..  - Capacity(coal,t2) + Capacity(coal,t3) - ExtraProd(coal,t3) =E= 0 ; (LHS = 0)
+     
+CapacityLim(coal,t4)..  - Capacity(coal,t3) + Capacity(coal,t4) - ExtraProd(coal,t4) =E= 0 ; (LHS = 0)
+     
+CapacityLim(coal,t5)..  - Capacity(coal,t4) + Capacity(coal,t5) - ExtraProd(coal,t5) =E= 0 ; (LHS = 0)
+     
+CapacityLim(coal,t6)..  - Capacity(coal,t5) + Capacity(coal,t6) - ExtraProd(coal,t6) =E= 0 ; (LHS = 0)
+     
+CapacityLim(coal,t7)..  - Capacity(coal,t6) + Capacity(coal,t7) - ExtraProd(coal,t7) =E= 0 ; (LHS = 0)
+     
+CapacityLim(steel,t2)..  - Capacity(steel,t1) + Capacity(steel,t2) - ExtraProd(steel,t2) =E= 0 ; (LHS = -350, INFES = 350 ****)
+     
+CapacityLim(steel,t3)..  - Capacity(steel,t2) + Capacity(steel,t3) - ExtraProd(steel,t3) =E= 0 ; (LHS = 0)
+     
+CapacityLim(steel,t4)..  - Capacity(steel,t3) + Capacity(steel,t4) - ExtraProd(steel,t4) =E= 0 ; (LHS = 0)
+     
+CapacityLim(steel,t5)..  - Capacity(steel,t4) + Capacity(steel,t5) - ExtraProd(steel,t5) =E= 0 ; (LHS = 0)
+     
+CapacityLim(steel,t6)..  - Capacity(steel,t5) + Capacity(steel,t6) - ExtraProd(steel,t6) =E= 0 ; (LHS = 0)
+     
+CapacityLim(steel,t7)..  - Capacity(steel,t6) + Capacity(steel,t7) - ExtraProd(steel,t7) =E= 0 ; (LHS = 0)
+     
+CapacityLim(trans,t2)..  - Capacity(trans,t1) + Capacity(trans,t2) - ExtraProd(trans,t2) =E= 0 ; (LHS = -280, INFES = 280 ****)
+     
+CapacityLim(trans,t3)..  - Capacity(trans,t2) + Capacity(trans,t3) - ExtraProd(trans,t3) =E= 0 ; (LHS = 0)
+     
+CapacityLim(trans,t4)..  - Capacity(trans,t3) + Capacity(trans,t4) - ExtraProd(trans,t4) =E= 0 ; (LHS = 0)
+     
+CapacityLim(trans,t5)..  - Capacity(trans,t4) + Capacity(trans,t5) - ExtraProd(trans,t5) =E= 0 ; (LHS = 0)
+     
+CapacityLim(trans,t6)..  - Capacity(trans,t5) + Capacity(trans,t6) - ExtraProd(trans,t6) =E= 0 ; (LHS = 0)
+     
+CapacityLim(trans,t7)..  - Capacity(trans,t6) + Capacity(trans,t7) - ExtraProd(trans,t7) =E= 0 ; (LHS = 0)
+     
+
+---- ManPowLim  =L=  Manpower Limit each year
+
+ManPowLim(t1)..  Mpow(t1) =L= 470 ; (LHS = 0)
+     
+ManPowLim(t2)..  Mpow(t2) =L= 470 ; (LHS = 0)
+     
+ManPowLim(t3)..  Mpow(t3) =L= 470 ; (LHS = 0)
+     
+ManPowLim(t4)..  Mpow(t4) =L= 470 ; (LHS = 0)
+     
+ManPowLim(t5)..  Mpow(t5) =L= 470 ; (LHS = 0)
+     
+ManPowLim(t6)..  Mpow(t6) =L= 470 ; (LHS = 0)
+     
+ManPowLim(t7)..  Mpow(t7) =L= 470 ; (LHS = 0)
+     
+
+---- ObjMaxCap  =E=  Objective function max Productive Capacity
+
+ObjMaxCap..  - Capacity(coal,t5) - Capacity(steel,t5) - Capacity(trans,t5) + MaxCap =E= -930 ; (LHS = 0, INFES = 930 ****)
+     
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/06/18 12:11:18 Page 3
+Economic Planning , Dynamic Input-Ouput Leontief Model, LP (Leontief, SEQ =xx)
+Column Listing      SOLVE Plan1 Using LP From line 120
+
+
+---- Store  Quantity of good i in storage at begining of time t, [m£]
+
+Store(coal,t1)
+                (.LO, .L, .UP, .M = 150, 150, 150, 0)
+        1       StockBal(coal,t1)
+
+Store(coal,t2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       StockBal(coal,t1)
+        1       StockBal(coal,t2)
+
+Store(coal,t3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       StockBal(coal,t2)
+        1       StockBal(coal,t3)
+
+REMAINING 18 ENTRIES SKIPPED
+
+---- Output  Quantity of output of good i in time t for future use, [m£]
+
+Output(coal,t1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       StockBal(coal,t1)
+        1       OutputLim(coal,t1)
+
+Output(coal,t2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       StockBal(coal,t2)
+       -0.1     Endogenous(coal,t1)
+       -0.1     Endogenous(steel,t1)
+       -0.2     Endogenous(trans,t1)
+       -0.6     Manpower(t1)
+        1       OutputLim(coal,t2)
+
+Output(coal,t3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       StockBal(coal,t3)
+       -0.1     Endogenous(coal,t2)
+       -0.1     Endogenous(steel,t2)
+       -0.2     Endogenous(trans,t2)
+       -0.6     Manpower(t2)
+        1       OutputLim(coal,t3)
+
+REMAINING 18 ENTRIES SKIPPED
+
+---- Endo  Endogenous Consumption of good i each year,[m£]
+
+Endo(coal,t1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       StockBal(coal,t1)
+        1       Endogenous(coal,t1)
+
+Endo(coal,t2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       StockBal(coal,t2)
+        1       Endogenous(coal,t2)
+
+Endo(coal,t3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       StockBal(coal,t3)
+        1       Endogenous(coal,t3)
+
+REMAINING 18 ENTRIES SKIPPED
+
+---- Exog  Exogenous Consumption of good i each year,[m£]
+
+Exog(coal,t1)
+                (.LO, .L, .UP, .M = 60, 60, 60, 0)
+       -1       StockBal(coal,t1)
+
+Exog(coal,t2)
+                (.LO, .L, .UP, .M = 60, 60, 60, 0)
+       -1       StockBal(coal,t2)
+
+Exog(coal,t3)
+                (.LO, .L, .UP, .M = 60, 60, 60, 0)
+       -1       StockBal(coal,t3)
+
+REMAINING 18 ENTRIES SKIPPED
+
+---- Capacity  Production Capacity of good i each year, [m£]
+
+Capacity(coal,t1)
+                (.LO, .L, .UP, .M = 300, 300, 300, 0)
+       -1       OutputLim(coal,t1)
+       -1       CapacityLim(coal,t2)
+
+Capacity(coal,t2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       OutputLim(coal,t2)
+        1       CapacityLim(coal,t2)
+       -1       CapacityLim(coal,t3)
+
+Capacity(coal,t3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       OutputLim(coal,t3)
+        1       CapacityLim(coal,t3)
+       -1       CapacityLim(coal,t4)
+
+REMAINING 18 ENTRIES SKIPPED
+
+---- ExtraProd  Quantity of extra production capacity desired, [m£]
+
+ExtraProd(coal,t2)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+       -1       CapacityLim(coal,t2)
+
+ExtraProd(coal,t3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -0.1     Endogenous(steel,t1)
+       -0.2     Endogenous(trans,t1)
+       -0.4     Manpower(t1)
+       -1       CapacityLim(coal,t3)
+
+ExtraProd(coal,t4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -0.1     Endogenous(steel,t2)
+       -0.2     Endogenous(trans,t2)
+       -0.4     Manpower(t2)
+       -1       CapacityLim(coal,t4)
+
+REMAINING 15 ENTRIES SKIPPED
+
+---- Mpow  Quantity of manpower, [m£]
+
+Mpow(t1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Manpower(t1)
+        1       ManPowLim(t1)
+
+Mpow(t2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Manpower(t2)
+        1       ManPowLim(t2)
+
+Mpow(t3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Manpower(t3)
+        1       ManPowLim(t3)
+
+REMAINING 4 ENTRIES SKIPPED
+
+---- fstock  Slack Variable for final year goods balance equation, [m£]
+
+fstock(coal,t7)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       StockBal(coal,t7)
+
+fstock(steel,t7)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       StockBal(steel,t7)
+
+fstock(trans,t7)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       StockBal(trans,t7)
+
+
+---- MaxCap  Objective, Maximum Productive capacity
+
+MaxCap
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       ObjMaxCap
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/06/18 12:11:18 Page 4
+Economic Planning , Dynamic Input-Ouput Leontief Model, LP (Leontief, SEQ =xx)
+Model Statistics    SOLVE Plan1 Using LP From line 120
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           7     SINGLE EQUATIONS           96
+BLOCKS OF VARIABLES           9     SINGLE VARIABLES          134  6 projected
+NON ZERO ELEMENTS           367
+
+
+GENERATION TIME      =        0.094 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.094 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/06/18 12:11:18 Page 5
+Economic Planning , Dynamic Input-Ouput Leontief Model, LP (Leontief, SEQ =xx)
+Solution Report     SOLVE Plan1 Using LP From line 120
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Plan1               OBJECTIVE  MaxCap
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  120
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE             2475.7143
+
+ RESOURCE USAGE, LIMIT          0.016      1000.000
+ ITERATION COUNT, LIMIT        23    2000000000
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+Cplex 12.8.0.0
+
+Space for names approximately 0.01 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.00sec (det. 0.21 ticks)
+Optimal solution found.
+Objective :        2475.714286
+
+
+---- EQU StockBal  Balance of good in each time perios
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1          .              .              .            -1.4286      
+coal .t2          .              .              .            -1.4286      
+coal .t3          .              .              .            -1.4286      
+coal .t4          .              .              .            -1.4286      
+coal .t5          .              .              .            -0.5714      
+coal .t6          .              .              .            -0.3857      
+coal .t7          .              .              .             EPS         
+steel.t1          .              .              .            -1.4286      
+steel.t2          .              .              .            -1.4286      
+steel.t3          .              .              .            -1.4286      
+steel.t4          .              .              .            -1.4286      
+steel.t5          .              .              .            -1.0000      
+steel.t6          .              .              .            -0.5000      
+steel.t7          .              .              .             EPS         
+trans.t1          .              .              .            -1.4286      
+trans.t2          .              .              .            -1.4286      
+trans.t3          .              .              .            -1.4286      
+trans.t4          .              .              .            -1.4286      
+trans.t5          .              .              .            -1.1429      
+trans.t6          .              .              .            -0.6571      
+trans.t7          .              .              .             EPS         
+
+---- EQU Endogenous  Endogenous consumption for production and capacity rise
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1          .              .              .            -1.4286      
+coal .t2          .              .              .            -1.4286      
+coal .t3          .              .              .            -1.4286      
+coal .t4          .              .              .            -1.4286      
+coal .t5          .              .              .            -0.5714      
+coal .t6          .              .              .            -0.3857      
+coal .t7          .              .              .              .          
+steel.t1          .              .              .            -1.4286      
+steel.t2          .              .              .            -1.4286      
+steel.t3          .              .              .            -1.4286      
+steel.t4          .              .              .            -1.4286      
+steel.t5          .              .              .            -1.0000      
+steel.t6          .              .              .            -0.5000      
+steel.t7          .              .              .              .          
+trans.t1          .              .              .            -1.4286      
+trans.t2          .              .              .            -1.4286      
+trans.t3          .              .              .            -1.4286      
+trans.t4          .              .              .            -1.4286      
+trans.t5          .              .              .            -1.1429      
+trans.t6          .              .              .            -0.6571      
+trans.t7          .              .              .              .          
+
+---- EQU Manpower  Manpower consumption each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+t1          .              .              .            -1.4286      
+t2          .              .              .            -1.4286      
+t3          .              .              .            -1.4286      
+t4          .              .              .             EPS         
+t5          .              .              .             EPS         
+t6          .              .              .             EPS         
+t7          .              .              .              .          
+
+---- EQU OutputLim  Max limit on Output
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1        -INF             .              .             1.4286      
+coal .t2        -INF             .              .       1.387779E-16      
+coal .t3        -INF         -590.9332          .              .          
+coal .t4        -INF        -1600.7143          .              .          
+coal .t5        -INF        -2517.7143          .              .          
+coal .t6        -INF        -2715.7143          .              .          
+coal .t7        -INF        -2775.7143          .              .          
+steel.t1        -INF             .              .             1.4286      
+steel.t2        -INF          -43.7548          .              .          
+steel.t3        -INF         -350.0000          .              .          
+steel.t4        -INF         -350.0000          .              .          
+steel.t5        -INF         -192.0000          .              .          
+steel.t6        -INF         -290.0000          .              .          
+steel.t7        -INF         -350.0000          .              .          
+trans.t1        -INF             .              .             1.4286      
+trans.t2        -INF             .              .       2.220446E-16      
+trans.t3        -INF          -13.9451          .              .          
+trans.t4        -INF         -280.0000          .              .          
+trans.t5        -INF         -126.0000          .              .          
+trans.t6        -INF         -250.0000          .              .          
+trans.t7        -INF         -280.0000          .              .          
+
+---- EQU CapacityLim  Calculate new production limits
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t2          .              .              .             1.0000      
+coal .t3          .              .              .             1.0000      
+coal .t4          .              .              .             1.0000      
+coal .t5          .              .              .             1.0000      
+coal .t6          .              .              .             EPS         
+coal .t7          .              .              .             EPS         
+steel.t2          .              .              .             1.0000      
+steel.t3          .              .              .             1.0000      
+steel.t4          .              .              .             1.0000      
+steel.t5          .              .              .             1.0000      
+steel.t6          .              .              .             EPS         
+steel.t7          .              .              .             EPS         
+trans.t2          .              .              .             1.0000      
+trans.t3          .              .              .             1.0000      
+trans.t4          .              .              .             1.0000      
+trans.t5          .              .              .             1.0000      
+trans.t6          .              .              .             EPS         
+trans.t7          .              .              .             EPS         
+
+---- EQU ManPowLim  Manpower Limit each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+t1        -INF          470.0000       470.0000         1.4286      
+t2        -INF          470.0000       470.0000         1.4286      
+t3        -INF          470.0000       470.0000         1.4286      
+t4        -INF          233.0000       470.0000          .          
+t5        -INF           60.0000       470.0000          .          
+t6        -INF             .           470.0000          .          
+t7        -INF             .           470.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU ObjMaxCap       -930.0000      -930.0000      -930.0000         1.0000      
+
+  ObjMaxCap  Objective function max Productive Capacity
+
+---- VAR Store  Quantity of good i in storage at begining of time t, [m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1       150.0000       150.0000       150.0000         1.4286      
+coal .t2          .            94.8774        +INF             .          
+coal .t3          .           222.0171        +INF             .          
+coal .t4          .           226.4000        +INF             .          
+coal .t5          .              .            +INF           -0.8571      
+coal .t6       150.0000       150.0000        +INF           -0.1857      
+coal .t7       150.0000       150.0000        +INF           -0.3857      
+steel.t1        80.0000        80.0000        80.0000         1.4286      
+steel.t2          .           217.8439        +INF             .          
+steel.t3          .           309.9000        +INF             .          
+steel.t4          .           132.4000        +INF             .          
+steel.t5          .              .            +INF           -0.4286      
+steel.t6        80.0000        80.0000        +INF           -0.5000      
+steel.t7        80.0000        80.0000        +INF           -0.5000      
+trans.t1       100.0000       100.0000       100.0000         1.4286      
+trans.t2          .           132.3123        +INF             .          
+trans.t3          .           127.1451        +INF             .          
+trans.t4          .           128.2000        +INF             .          
+trans.t5          .              .            +INF           -0.2857      
+trans.t6       100.0000       100.0000        +INF           -0.4857      
+trans.t7       100.0000       100.0000        +INF           -0.6571      
+
+---- VAR Output  Quantity of output of good i in time t for future use, [m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1          .           300.0000        +INF             .          
+coal .t2          .           300.0000        +INF             .          
+coal .t3          .            64.3829        +INF             .          
+coal .t4          .              .            +INF      2.220446E-16      
+coal .t5          .           258.0000        +INF             .          
+coal .t6          .            60.0000        +INF             .          
+coal .t7          .              .            +INF           -0.2200      
+steel.t1          .           350.0000        +INF             .          
+steel.t2          .           306.2452        +INF             .          
+steel.t3          .              .            +INF      1.665335E-16      
+steel.t4          .              .            +INF      2.220446E-16      
+steel.t5          .           158.0000        +INF             .          
+steel.t6          .            60.0000        +INF             .          
+steel.t7          .              .            +INF           -0.3086      
+trans.t1          .           280.0000        +INF             .          
+trans.t2          .           280.0000        +INF             .          
+trans.t3          .           266.0549        +INF             .          
+trans.t4          .              .            +INF      1.665335E-16      
+trans.t5          .           154.0000        +INF             .          
+trans.t6          .            30.0000        +INF             .          
+trans.t7          .              .            +INF           -0.3857      
+
+---- VAR Endo  Endogenous Consumption of good i each year,[m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1          .           295.1226        +INF             .          
+coal .t2          .           112.8603        +INF             .          
+coal .t3          .              .            +INF             .          
+coal .t4          .           166.4000        +INF             .          
+coal .t5          .            48.0000        +INF             .          
+coal .t6          .              .            +INF             .          
+coal .t7          .              .            +INF            EPS         
+steel.t1          .           152.1561        +INF             .          
+steel.t2          .           154.1891        +INF             .          
+steel.t3          .           117.5000        +INF             .          
+steel.t4          .            72.4000        +INF             .          
+steel.t5          .            18.0000        +INF             .          
+steel.t6          .              .            +INF             .          
+steel.t7          .              .            +INF            EPS         
+trans.t1          .           217.6877        +INF             .          
+trans.t2          .           255.1672        +INF             .          
+trans.t3          .           235.0000        +INF             .          
+trans.t4          .            98.2000        +INF             .          
+trans.t5          .            24.0000        +INF             .          
+trans.t6          .              .            +INF             .          
+trans.t7          .              .            +INF            EPS         
+
+---- VAR Exog  Exogenous Consumption of good i each year,[m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1        60.0000        60.0000        60.0000        -1.4286      
+coal .t2        60.0000        60.0000        60.0000        -1.4286      
+coal .t3        60.0000        60.0000        60.0000        -1.4286      
+coal .t4        60.0000        60.0000        60.0000        -1.4286      
+coal .t5        60.0000        60.0000        60.0000        -0.5714      
+coal .t6        60.0000        60.0000        60.0000        -0.3857      
+coal .t7        60.0000        60.0000        60.0000         EPS         
+steel.t1        60.0000        60.0000        60.0000        -1.4286      
+steel.t2        60.0000        60.0000        60.0000        -1.4286      
+steel.t3        60.0000        60.0000        60.0000        -1.4286      
+steel.t4        60.0000        60.0000        60.0000        -1.4286      
+steel.t5        60.0000        60.0000        60.0000        -1.0000      
+steel.t6        60.0000        60.0000        60.0000        -0.5000      
+steel.t7        60.0000        60.0000        60.0000         EPS         
+trans.t1        30.0000        30.0000        30.0000        -1.4286      
+trans.t2        30.0000        30.0000        30.0000        -1.4286      
+trans.t3        30.0000        30.0000        30.0000        -1.4286      
+trans.t4        30.0000        30.0000        30.0000        -1.4286      
+trans.t5        30.0000        30.0000        30.0000        -1.1429      
+trans.t6        30.0000        30.0000        30.0000        -0.6571      
+trans.t7        30.0000        30.0000        30.0000         EPS         
+
+---- VAR Capacity  Production Capacity of good i each year, [m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1       300.0000       300.0000       300.0000         2.4286      
+coal .t2          .           300.0000        +INF             .          
+coal .t3          .           655.3161        +INF             .          
+coal .t4          .          1600.7143        +INF             .          
+coal .t5          .          2775.7143        +INF             .          
+coal .t6          .          2775.7143        +INF             .          
+coal .t7          .          2775.7143        +INF             .          
+steel.t1       350.0000       350.0000       350.0000         2.4286      
+steel.t2          .           350.0000        +INF             .          
+steel.t3          .           350.0000        +INF             .          
+steel.t4          .           350.0000        +INF             .          
+steel.t5          .           350.0000        +INF             .          
+steel.t6          .           350.0000        +INF             .          
+steel.t7          .           350.0000        +INF             .          
+trans.t1       280.0000       280.0000       280.0000         2.4286      
+trans.t2          .           280.0000        +INF             .          
+trans.t3          .           280.0000        +INF             .          
+trans.t4          .           280.0000        +INF             .          
+trans.t5          .           280.0000        +INF             .          
+trans.t6          .           280.0000        +INF             .          
+trans.t7          .           280.0000        +INF             .          
+
+---- VAR ExtraProd  Quantity of extra production capacity desired, [m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t2          .              .              .             1.0000      
+coal .t3          .           355.3161        +INF             .          
+coal .t4          .           945.3982        +INF             .          
+coal .t5          .          1175.0000        +INF             .          
+coal .t6          .              .            +INF           -0.4286      
+coal .t7          .              .            +INF           -0.3286      
+steel.t2          .              .              .             1.0000      
+steel.t3          .              .            +INF           -0.5714      
+steel.t4          .              .            +INF           -0.5714      
+steel.t5          .              .            +INF           -0.5714      
+steel.t6          .              .            +INF           -1.2857      
+steel.t7          .              .            +INF           -0.6143      
+trans.t2          .              .              .             1.0000      
+trans.t3          .              .            +INF           -1.0000      
+trans.t4          .              .            +INF           -1.0000      
+trans.t5          .              .            +INF           -1.0000      
+trans.t6          .              .            +INF           -1.8571      
+trans.t7          .              .            +INF           -0.9429      
+
+---- VAR Mpow  Quantity of manpower, [m£]
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+t1          .           470.0000        +INF             .          
+t2          .           470.0000        +INF             .          
+t3          .           470.0000        +INF             .          
+t4          .           233.0000        +INF             .          
+t5          .            60.0000        +INF             .          
+t6          .              .            +INF             .          
+t7          .              .            +INF            EPS         
+
+---- VAR fstock  Slack Variable for final year goods balance equation, [m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t7          .            90.0000        +INF             .          
+steel.t7          .            20.0000        +INF             .          
+trans.t7          .            70.0000        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR MaxCap            -INF         2475.7143        +INF             .          
+
+  MaxCap  Objective, Maximum Productive capacity
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/06/18 12:11:18 Page 6
+Economic Planning , Dynamic Input-Ouput Leontief Model, LP (Leontief, SEQ =xx)
+Equation Listing    SOLVE Plan2 Using LP From line 125
+
+
+---- StockBal  =E=  Balance of good in each time perios
+
+StockBal(coal,t1)..  Store(coal,t1) - Store(coal,t2) + Output(coal,t1) - Endo(coal,t1) - Exog(coal,t1) =E= 0 ; (LHS = 60, INFES = 60 ****)
+     
+StockBal(coal,t2)..  Store(coal,t2) - Store(coal,t3) + Output(coal,t2) - Endo(coal,t2) - Exog(coal,t2) =E= 0 ; (LHS = 60, INFES = 60 ****)
+     
+StockBal(coal,t3)..  Store(coal,t3) - Store(coal,t4) + Output(coal,t3) - Endo(coal,t3) - Exog(coal,t3) =E= 0 ; (LHS = 60, INFES = 60 ****)
+     
+StockBal(coal,t4)..  Store(coal,t4) - Store(coal,t5) + Output(coal,t4) - Endo(coal,t4) - Exog(coal,t4) =E= 0 ; (LHS = 60, INFES = 60 ****)
+     
+StockBal(coal,t5)..  Store(coal,t5) - Store(coal,t6) + Output(coal,t5) - Endo(coal,t5) - Exog(coal,t5) =E= 0 ; (LHS = 60, INFES = 60 ****)
+     
+StockBal(coal,t6)..  Store(coal,t6) - Store(coal,t7) + Output(coal,t6) - Endo(coal,t6) - Exog(coal,t6) =E= 0 ; (LHS = 60, INFES = 60 ****)
+     
+StockBal(coal,t7)..  Store(coal,t7) + Output(coal,t7) - Endo(coal,t7) - Exog(coal,t7) - fstock(coal,t7) =E= 0 ; (LHS = 60, INFES = 60 ****)
+     
+StockBal(steel,t1)..  Store(steel,t1) - Store(steel,t2) + Output(steel,t1) - Endo(steel,t1) - Exog(steel,t1) =E= 0 ; (LHS = 60, INFES = 60 ****)
+     
+StockBal(steel,t2)..  Store(steel,t2) - Store(steel,t3) + Output(steel,t2) - Endo(steel,t2) - Exog(steel,t2) =E= 0 ; (LHS = 60, INFES = 60 ****)
+     
+StockBal(steel,t3)..  Store(steel,t3) - Store(steel,t4) + Output(steel,t3) - Endo(steel,t3) - Exog(steel,t3) =E= 0 ; (LHS = 60, INFES = 60 ****)
+     
+StockBal(steel,t4)..  Store(steel,t4) - Store(steel,t5) + Output(steel,t4) - Endo(steel,t4) - Exog(steel,t4) =E= 0 ; (LHS = 60, INFES = 60 ****)
+     
+StockBal(steel,t5)..  Store(steel,t5) - Store(steel,t6) + Output(steel,t5) - Endo(steel,t5) - Exog(steel,t5) =E= 0 ; (LHS = 60, INFES = 60 ****)
+     
+StockBal(steel,t6)..  Store(steel,t6) - Store(steel,t7) + Output(steel,t6) - Endo(steel,t6) - Exog(steel,t6) =E= 0 ; (LHS = 60, INFES = 60 ****)
+     
+StockBal(steel,t7)..  Store(steel,t7) + Output(steel,t7) - Endo(steel,t7) - Exog(steel,t7) - fstock(steel,t7) =E= 0 ; (LHS = 60, INFES = 60 ****)
+     
+StockBal(trans,t1)..  Store(trans,t1) - Store(trans,t2) + Output(trans,t1) - Endo(trans,t1) - Exog(trans,t1) =E= 0 ; (LHS = 30, INFES = 30 ****)
+     
+StockBal(trans,t2)..  Store(trans,t2) - Store(trans,t3) + Output(trans,t2) - Endo(trans,t2) - Exog(trans,t2) =E= 0 ; (LHS = 30, INFES = 30 ****)
+     
+StockBal(trans,t3)..  Store(trans,t3) - Store(trans,t4) + Output(trans,t3) - Endo(trans,t3) - Exog(trans,t3) =E= 0 ; (LHS = 30, INFES = 30 ****)
+     
+StockBal(trans,t4)..  Store(trans,t4) - Store(trans,t5) + Output(trans,t4) - Endo(trans,t4) - Exog(trans,t4) =E= 0 ; (LHS = 30, INFES = 30 ****)
+     
+StockBal(trans,t5)..  Store(trans,t5) - Store(trans,t6) + Output(trans,t5) - Endo(trans,t5) - Exog(trans,t5) =E= 0 ; (LHS = 30, INFES = 30 ****)
+     
+StockBal(trans,t6)..  Store(trans,t6) - Store(trans,t7) + Output(trans,t6) - Endo(trans,t6) - Exog(trans,t6) =E= 0 ; (LHS = 30, INFES = 30 ****)
+     
+StockBal(trans,t7)..  Store(trans,t7) + Output(trans,t7) - Endo(trans,t7) - Exog(trans,t7) - fstock(trans,t7) =E= 0 ; (LHS = 30, INFES = 30 ****)
+     
+
+---- Endogenous  =E=  Endogenous consumption for production and capacity rise
+
+Endogenous(coal,t1)..  - 0.1*Output(coal,t2) - 0.5*Output(steel,t2) - 0.4*Output(trans,t2) + Endo(coal,t1) - 0.7*ExtraProd(steel,t3) - 0.9*ExtraProd(trans,t3) =E= 0 ; (LHS = 0)
+     
+Endogenous(coal,t2)..  - 0.1*Output(coal,t3) - 0.5*Output(steel,t3) - 0.4*Output(trans,t3) + Endo(coal,t2) - 0.7*ExtraProd(steel,t4) - 0.9*ExtraProd(trans,t4) =E= 0 ; (LHS = 0)
+     
+Endogenous(coal,t3)..  - 0.1*Output(coal,t4) - 0.5*Output(steel,t4) - 0.4*Output(trans,t4) + Endo(coal,t3) - 0.7*ExtraProd(steel,t5) - 0.9*ExtraProd(trans,t5) =E= 0 ; (LHS = 0)
+     
+Endogenous(coal,t4)..  - 0.1*Output(coal,t5) - 0.5*Output(steel,t5) - 0.4*Output(trans,t5) + Endo(coal,t4) - 0.7*ExtraProd(steel,t6) - 0.9*ExtraProd(trans,t6) =E= 0 ; (LHS = 0)
+     
+Endogenous(coal,t5)..  - 0.1*Output(coal,t6) - 0.5*Output(steel,t6) - 0.4*Output(trans,t6) + Endo(coal,t5) - 0.7*ExtraProd(steel,t7) - 0.9*ExtraProd(trans,t7) =E= 0 ; (LHS = 0)
+     
+Endogenous(coal,t6)..  - 0.1*Output(coal,t7) - 0.5*Output(steel,t7) - 0.4*Output(trans,t7) + Endo(coal,t6) =E= 0 ; (LHS = 0)
+     
+Endogenous(coal,t7)..  Endo(coal,t7) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t1)..  - 0.1*Output(coal,t2) - 0.1*Output(steel,t2) - 0.2*Output(trans,t2) + Endo(steel,t1) - 0.1*ExtraProd(coal,t3) - 0.1*ExtraProd(steel,t3) - 0.2*ExtraProd(trans,t3) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t2)..  - 0.1*Output(coal,t3) - 0.1*Output(steel,t3) - 0.2*Output(trans,t3) + Endo(steel,t2) - 0.1*ExtraProd(coal,t4) - 0.1*ExtraProd(steel,t4) - 0.2*ExtraProd(trans,t4) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t3)..  - 0.1*Output(coal,t4) - 0.1*Output(steel,t4) - 0.2*Output(trans,t4) + Endo(steel,t3) - 0.1*ExtraProd(coal,t5) - 0.1*ExtraProd(steel,t5) - 0.2*ExtraProd(trans,t5) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t4)..  - 0.1*Output(coal,t5) - 0.1*Output(steel,t5) - 0.2*Output(trans,t5) + Endo(steel,t4) - 0.1*ExtraProd(coal,t6) - 0.1*ExtraProd(steel,t6) - 0.2*ExtraProd(trans,t6) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t5)..  - 0.1*Output(coal,t6) - 0.1*Output(steel,t6) - 0.2*Output(trans,t6) + Endo(steel,t5) - 0.1*ExtraProd(coal,t7) - 0.1*ExtraProd(steel,t7) - 0.2*ExtraProd(trans,t7) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t6)..  - 0.1*Output(coal,t7) - 0.1*Output(steel,t7) - 0.2*Output(trans,t7) + Endo(steel,t6) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t7)..  Endo(steel,t7) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t1)..  - 0.2*Output(coal,t2) - 0.1*Output(steel,t2) - 0.2*Output(trans,t2) + Endo(trans,t1) - 0.2*ExtraProd(coal,t3) - 0.1*ExtraProd(steel,t3) - 0.2*ExtraProd(trans,t3) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t2)..  - 0.2*Output(coal,t3) - 0.1*Output(steel,t3) - 0.2*Output(trans,t3) + Endo(trans,t2) - 0.2*ExtraProd(coal,t4) - 0.1*ExtraProd(steel,t4) - 0.2*ExtraProd(trans,t4) =E= 0 ;
+     
+      (LHS = -1.13686837721616E-13, INFES = 1.13686837721616E-13 ****)
+     
+Endogenous(trans,t3)..  - 0.2*Output(coal,t4) - 0.1*Output(steel,t4) - 0.2*Output(trans,t4) + Endo(trans,t3) - 0.2*ExtraProd(coal,t5) - 0.1*ExtraProd(steel,t5) - 0.2*ExtraProd(trans,t5) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t4)..  - 0.2*Output(coal,t5) - 0.1*Output(steel,t5) - 0.2*Output(trans,t5) + Endo(trans,t4) - 0.2*ExtraProd(coal,t6) - 0.1*ExtraProd(steel,t6) - 0.2*ExtraProd(trans,t6) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t5)..  - 0.2*Output(coal,t6) - 0.1*Output(steel,t6) - 0.2*Output(trans,t6) + Endo(trans,t5) - 0.2*ExtraProd(coal,t7) - 0.1*ExtraProd(steel,t7) - 0.2*ExtraProd(trans,t7) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t6)..  - 0.2*Output(coal,t7) - 0.1*Output(steel,t7) - 0.2*Output(trans,t7) + Endo(trans,t6) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t7)..  Endo(trans,t7) =E= 0 ; (LHS = 0)
+     
+
+---- Manpower  =E=  Manpower consumption each year
+
+Manpower(t1)..  - 0.6*Output(coal,t2) - 0.3*Output(steel,t2) - 0.2*Output(trans,t2) - 0.4*ExtraProd(coal,t3) - 0.2*ExtraProd(steel,t3) - 0.1*ExtraProd(trans,t3) + Mpow(t1) =E= 0 ; (LHS = 0)
+     
+Manpower(t2)..  - 0.6*Output(coal,t3) - 0.3*Output(steel,t3) - 0.2*Output(trans,t3) - 0.4*ExtraProd(coal,t4) - 0.2*ExtraProd(steel,t4) - 0.1*ExtraProd(trans,t4) + Mpow(t2) =E= 0 ; (LHS = 0)
+     
+Manpower(t3)..  - 0.6*Output(coal,t4) - 0.3*Output(steel,t4) - 0.2*Output(trans,t4) - 0.4*ExtraProd(coal,t5) - 0.2*ExtraProd(steel,t5) - 0.1*ExtraProd(trans,t5) + Mpow(t3) =E= 0 ; (LHS = 0)
+     
+Manpower(t4)..  - 0.6*Output(coal,t5) - 0.3*Output(steel,t5) - 0.2*Output(trans,t5) - 0.4*ExtraProd(coal,t6) - 0.2*ExtraProd(steel,t6) - 0.1*ExtraProd(trans,t6) + Mpow(t4) =E= 0 ; (LHS = 0)
+     
+Manpower(t5)..  - 0.6*Output(coal,t6) - 0.3*Output(steel,t6) - 0.2*Output(trans,t6) - 0.4*ExtraProd(coal,t7) - 0.2*ExtraProd(steel,t7) - 0.1*ExtraProd(trans,t7) + Mpow(t5) =E= 0 ; (LHS = 0)
+     
+Manpower(t6)..  - 0.6*Output(coal,t7) - 0.3*Output(steel,t7) - 0.2*Output(trans,t7) + Mpow(t6) =E= 0 ; (LHS = 0)
+     
+Manpower(t7)..  Mpow(t7) =E= 0 ; (LHS = 0)
+     
+
+---- OutputLim  =L=  Max limit on Output
+
+OutputLim(coal,t1)..  Output(coal,t1) - Capacity(coal,t1) =L= 0 ; (LHS = 0)
+     
+OutputLim(coal,t2)..  Output(coal,t2) - Capacity(coal,t2) =L= 0 ; (LHS = 0)
+     
+OutputLim(coal,t3)..  Output(coal,t3) - Capacity(coal,t3) =L= 0 ; (LHS = -590.933198380567)
+     
+OutputLim(coal,t4)..  Output(coal,t4) - Capacity(coal,t4) =L= 0 ; (LHS = -1600.71428571429)
+     
+OutputLim(coal,t5)..  Output(coal,t5) - Capacity(coal,t5) =L= 0 ; (LHS = -2517.71428571429)
+     
+OutputLim(coal,t6)..  Output(coal,t6) - Capacity(coal,t6) =L= 0 ; (LHS = -2715.71428571429)
+     
+OutputLim(coal,t7)..  Output(coal,t7) - Capacity(coal,t7) =L= 0 ; (LHS = -2775.71428571429)
+     
+OutputLim(steel,t1)..  Output(steel,t1) - Capacity(steel,t1) =L= 0 ; (LHS = 0)
+     
+OutputLim(steel,t2)..  Output(steel,t2) - Capacity(steel,t2) =L= 0 ; (LHS = -43.7547715442453)
+     
+OutputLim(steel,t3)..  Output(steel,t3) - Capacity(steel,t3) =L= 0 ; (LHS = -350)
+     
+OutputLim(steel,t4)..  Output(steel,t4) - Capacity(steel,t4) =L= 0 ; (LHS = -350)
+     
+OutputLim(steel,t5)..  Output(steel,t5) - Capacity(steel,t5) =L= 0 ; (LHS = -192)
+     
+OutputLim(steel,t6)..  Output(steel,t6) - Capacity(steel,t6) =L= 0 ; (LHS = -290)
+     
+OutputLim(steel,t7)..  Output(steel,t7) - Capacity(steel,t7) =L= 0 ; (LHS = -350)
+     
+OutputLim(trans,t1)..  Output(trans,t1) - Capacity(trans,t1) =L= 0 ; (LHS = 0)
+     
+OutputLim(trans,t2)..  Output(trans,t2) - Capacity(trans,t2) =L= 0 ; (LHS = 0)
+     
+OutputLim(trans,t3)..  Output(trans,t3) - Capacity(trans,t3) =L= 0 ; (LHS = -13.9450549450551)
+     
+OutputLim(trans,t4)..  Output(trans,t4) - Capacity(trans,t4) =L= 0 ; (LHS = -280)
+     
+OutputLim(trans,t5)..  Output(trans,t5) - Capacity(trans,t5) =L= 0 ; (LHS = -126)
+     
+OutputLim(trans,t6)..  Output(trans,t6) - Capacity(trans,t6) =L= 0 ; (LHS = -250)
+     
+OutputLim(trans,t7)..  Output(trans,t7) - Capacity(trans,t7) =L= 0 ; (LHS = -280)
+     
+
+---- CapacityLim  =E=  Calculate new production limits
+
+CapacityLim(coal,t2)..  - Capacity(coal,t1) + Capacity(coal,t2) - ExtraProd(coal,t2) =E= 0 ; (LHS = 0)
+     
+CapacityLim(coal,t3)..  - Capacity(coal,t2) + Capacity(coal,t3) - ExtraProd(coal,t3) =E= 0 ; (LHS = 0)
+     
+CapacityLim(coal,t4)..  - Capacity(coal,t3) + Capacity(coal,t4) - ExtraProd(coal,t4) =E= 0 ; (LHS = 0)
+     
+CapacityLim(coal,t5)..  - Capacity(coal,t4) + Capacity(coal,t5) - ExtraProd(coal,t5) =E= 0 ; (LHS = 0)
+     
+CapacityLim(coal,t6)..  - Capacity(coal,t5) + Capacity(coal,t6) - ExtraProd(coal,t6) =E= 0 ; (LHS = 0)
+     
+CapacityLim(coal,t7)..  - Capacity(coal,t6) + Capacity(coal,t7) - ExtraProd(coal,t7) =E= 0 ; (LHS = 0)
+     
+CapacityLim(steel,t2)..  - Capacity(steel,t1) + Capacity(steel,t2) - ExtraProd(steel,t2) =E= 0 ; (LHS = 0)
+     
+CapacityLim(steel,t3)..  - Capacity(steel,t2) + Capacity(steel,t3) - ExtraProd(steel,t3) =E= 0 ; (LHS = 0)
+     
+CapacityLim(steel,t4)..  - Capacity(steel,t3) + Capacity(steel,t4) - ExtraProd(steel,t4) =E= 0 ; (LHS = 0)
+     
+CapacityLim(steel,t5)..  - Capacity(steel,t4) + Capacity(steel,t5) - ExtraProd(steel,t5) =E= 0 ; (LHS = 0)
+     
+CapacityLim(steel,t6)..  - Capacity(steel,t5) + Capacity(steel,t6) - ExtraProd(steel,t6) =E= 0 ; (LHS = 0)
+     
+CapacityLim(steel,t7)..  - Capacity(steel,t6) + Capacity(steel,t7) - ExtraProd(steel,t7) =E= 0 ; (LHS = 0)
+     
+CapacityLim(trans,t2)..  - Capacity(trans,t1) + Capacity(trans,t2) - ExtraProd(trans,t2) =E= 0 ; (LHS = 0)
+     
+CapacityLim(trans,t3)..  - Capacity(trans,t2) + Capacity(trans,t3) - ExtraProd(trans,t3) =E= 0 ; (LHS = 0)
+     
+CapacityLim(trans,t4)..  - Capacity(trans,t3) + Capacity(trans,t4) - ExtraProd(trans,t4) =E= 0 ; (LHS = 0)
+     
+CapacityLim(trans,t5)..  - Capacity(trans,t4) + Capacity(trans,t5) - ExtraProd(trans,t5) =E= 0 ; (LHS = 0)
+     
+CapacityLim(trans,t6)..  - Capacity(trans,t5) + Capacity(trans,t6) - ExtraProd(trans,t6) =E= 0 ; (LHS = 0)
+     
+CapacityLim(trans,t7)..  - Capacity(trans,t6) + Capacity(trans,t7) - ExtraProd(trans,t7) =E= 0 ; (LHS = 0)
+     
+
+---- ManPowLim  =L=  Manpower Limit each year
+
+ManPowLim(t1)..  Mpow(t1) =L= 470 ; (LHS = 470)
+     
+ManPowLim(t2)..  Mpow(t2) =L= 470 ; (LHS = 470)
+     
+ManPowLim(t3)..  Mpow(t3) =L= 470 ; (LHS = 470)
+     
+ManPowLim(t4)..  Mpow(t4) =L= 470 ; (LHS = 233)
+     
+ManPowLim(t5)..  Mpow(t5) =L= 470 ; (LHS = 60)
+     
+ManPowLim(t6)..  Mpow(t6) =L= 470 ; (LHS = 0)
+     
+ManPowLim(t7)..  Mpow(t7) =L= 470 ; (LHS = 0)
+     
+
+---- ObjMaxProd  =E=  Objective function max Production t4,t5
+
+ObjMaxProd..  - Output(coal,t4) - Output(coal,t5) - Output(steel,t4) - Output(steel,t5) - Output(trans,t4) - Output(trans,t5) + MaxProd =E= 0 ; (LHS = -570, INFES = 570 ****)
+     
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/06/18 12:11:18 Page 7
+Economic Planning , Dynamic Input-Ouput Leontief Model, LP (Leontief, SEQ =xx)
+Column Listing      SOLVE Plan2 Using LP From line 125
+
+
+---- Store  Quantity of good i in storage at begining of time t, [m£]
+
+Store(coal,t1)
+                (.LO, .L, .UP, .M = 150, 150, 150, 1.42857142857143)
+        1       StockBal(coal,t1)
+
+Store(coal,t2)
+                (.LO, .L, .UP, .M = 0, 94.8773857721226, +INF, 0)
+       -1       StockBal(coal,t1)
+        1       StockBal(coal,t2)
+
+Store(coal,t3)
+                (.LO, .L, .UP, .M = 0, 222.017119722383, +INF, 0)
+       -1       StockBal(coal,t2)
+        1       StockBal(coal,t3)
+
+REMAINING 18 ENTRIES SKIPPED
+
+---- Output  Quantity of output of good i in time t for future use, [m£]
+
+Output(coal,t1)
+                (.LO, .L, .UP, .M = 0, 300, +INF, 0)
+        1       StockBal(coal,t1)
+        1       OutputLim(coal,t1)
+
+Output(coal,t2)
+                (.LO, .L, .UP, .M = 0, 300, +INF, 0)
+        1       StockBal(coal,t2)
+       -0.1     Endogenous(coal,t1)
+       -0.1     Endogenous(steel,t1)
+       -0.2     Endogenous(trans,t1)
+       -0.6     Manpower(t1)
+        1       OutputLim(coal,t2)
+
+Output(coal,t3)
+                (.LO, .L, .UP, .M = 0, 64.382880277617, +INF, 0)
+        1       StockBal(coal,t3)
+       -0.1     Endogenous(coal,t2)
+       -0.1     Endogenous(steel,t2)
+       -0.2     Endogenous(trans,t2)
+       -0.6     Manpower(t2)
+        1       OutputLim(coal,t3)
+
+REMAINING 18 ENTRIES SKIPPED
+
+---- Endo  Endogenous Consumption of good i each year,[m£]
+
+Endo(coal,t1)
+                (.LO, .L, .UP, .M = 0, 295.122614227877, +INF, 0)
+       -1       StockBal(coal,t1)
+        1       Endogenous(coal,t1)
+
+Endo(coal,t2)
+                (.LO, .L, .UP, .M = 0, 112.86026604974, +INF, 0)
+       -1       StockBal(coal,t2)
+        1       Endogenous(coal,t2)
+
+Endo(coal,t3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       StockBal(coal,t3)
+        1       Endogenous(coal,t3)
+
+REMAINING 18 ENTRIES SKIPPED
+
+---- Exog  Exogenous Consumption of good i each year,[m£]
+
+Exog(coal,t1)
+                (.LO, .L, .UP, .M = 0, 0, 0, -1.42857142857143)
+       -1       StockBal(coal,t1)
+
+Exog(coal,t2)
+                (.LO, .L, .UP, .M = 0, 0, 0, -1.42857142857143)
+       -1       StockBal(coal,t2)
+
+Exog(coal,t3)
+                (.LO, .L, .UP, .M = 0, 0, 0, -1.42857142857143)
+       -1       StockBal(coal,t3)
+
+REMAINING 18 ENTRIES SKIPPED
+
+---- Capacity  Production Capacity of good i each year, [m£]
+
+Capacity(coal,t1)
+                (.LO, .L, .UP, .M = 300, 300, 300, 2.42857142857143)
+       -1       OutputLim(coal,t1)
+       -1       CapacityLim(coal,t2)
+
+Capacity(coal,t2)
+                (.LO, .L, .UP, .M = 0, 300, +INF, 0)
+       -1       OutputLim(coal,t2)
+        1       CapacityLim(coal,t2)
+       -1       CapacityLim(coal,t3)
+
+Capacity(coal,t3)
+                (.LO, .L, .UP, .M = 0, 655.316078658184, +INF, 0)
+       -1       OutputLim(coal,t3)
+        1       CapacityLim(coal,t3)
+       -1       CapacityLim(coal,t4)
+
+REMAINING 18 ENTRIES SKIPPED
+
+---- ExtraProd  Quantity of extra production capacity desired, [m£]
+
+ExtraProd(coal,t2)
+                (.LO, .L, .UP, .M = 0, 0, 0, 1)
+       -1       CapacityLim(coal,t2)
+
+ExtraProd(coal,t3)
+                (.LO, .L, .UP, .M = 0, 355.316078658184, +INF, 0)
+       -0.1     Endogenous(steel,t1)
+       -0.2     Endogenous(trans,t1)
+       -0.4     Manpower(t1)
+       -1       CapacityLim(coal,t3)
+
+ExtraProd(coal,t4)
+                (.LO, .L, .UP, .M = 0, 945.398207056102, +INF, 0)
+       -0.1     Endogenous(steel,t2)
+       -0.2     Endogenous(trans,t2)
+       -0.4     Manpower(t2)
+       -1       CapacityLim(coal,t4)
+
+REMAINING 15 ENTRIES SKIPPED
+
+---- Mpow  Quantity of manpower, [m£]
+
+Mpow(t1)
+                (.LO, .L, .UP, .M = 0, 470, +INF, 0)
+        1       Manpower(t1)
+        1       ManPowLim(t1)
+
+Mpow(t2)
+                (.LO, .L, .UP, .M = 0, 470, +INF, 0)
+        1       Manpower(t2)
+        1       ManPowLim(t2)
+
+Mpow(t3)
+                (.LO, .L, .UP, .M = 0, 470, +INF, 0)
+        1       Manpower(t3)
+        1       ManPowLim(t3)
+
+REMAINING 4 ENTRIES SKIPPED
+
+---- fstock  Slack Variable for final year goods balance equation, [m£]
+
+fstock(coal,t7)
+                (.LO, .L, .UP, .M = 0, 90, +INF, 0)
+       -1       StockBal(coal,t7)
+
+fstock(steel,t7)
+                (.LO, .L, .UP, .M = 0, 20, +INF, 0)
+       -1       StockBal(steel,t7)
+
+fstock(trans,t7)
+                (.LO, .L, .UP, .M = 0, 70, +INF, 0)
+       -1       StockBal(trans,t7)
+
+
+---- MaxProd  Objective, Maximum Production t4,t5
+
+MaxProd
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       ObjMaxProd
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/06/18 12:11:18 Page 8
+Economic Planning , Dynamic Input-Ouput Leontief Model, LP (Leontief, SEQ =xx)
+Model Statistics    SOLVE Plan2 Using LP From line 125
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           7     SINGLE EQUATIONS           96
+BLOCKS OF VARIABLES           9     SINGLE VARIABLES          134
+NON ZERO ELEMENTS           370
+
+
+GENERATION TIME      =        0.047 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.062 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/06/18 12:11:18 Page 9
+Economic Planning , Dynamic Input-Ouput Leontief Model, LP (Leontief, SEQ =xx)
+Solution Report     SOLVE Plan2 Using LP From line 125
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Plan2               OBJECTIVE  MaxProd
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  125
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE             2962.6973
+
+ RESOURCE USAGE, LIMIT          0.031      1000.000
+ ITERATION COUNT, LIMIT        31    2000000000
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+Cplex 12.8.0.0
+
+Space for names approximately 0.01 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.00sec (det. 0.33 ticks)
+Optimal solution found.
+Objective :        2962.697281
+
+
+---- EQU StockBal  Balance of good in each time perios
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1          .              .              .            -0.7128      
+coal .t2          .              .              .            -0.7128      
+coal .t3          .              .              .            -0.3482      
+coal .t4          .              .              .            -0.3482      
+coal .t5          .              .              .             EPS         
+coal .t6          .              .              .             EPS         
+coal .t7          .              .              .             EPS         
+steel.t1          .              .              .            -0.4480      
+steel.t2          .              .              .            -0.4480      
+steel.t3          .              .              .            -0.4480      
+steel.t4          .              .              .             EPS         
+steel.t5          .              .              .             EPS         
+steel.t6          .              .              .             EPS         
+steel.t7          .              .              .             EPS         
+trans.t1          .              .              .            -0.4684      
+trans.t2          .              .              .            -0.4684      
+trans.t3          .              .              .            -0.4684      
+trans.t4          .              .              .             EPS         
+trans.t5          .              .              .             EPS         
+trans.t6          .              .              .             EPS         
+trans.t7          .              .              .             EPS         
+
+---- EQU Endogenous  Endogenous consumption for production and capacity rise
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1          .              .              .            -0.7128      
+coal .t2          .              .              .            -0.7128      
+coal .t3          .              .              .            -0.3482      
+coal .t4          .              .              .            -0.3482      
+coal .t5          .              .              .             EPS         
+coal .t6          .              .              .             EPS         
+coal .t7          .              .              .              .          
+steel.t1          .              .              .            -0.4480      
+steel.t2          .              .              .            -0.4480      
+steel.t3          .              .              .            -0.4480      
+steel.t4          .              .              .             EPS         
+steel.t5          .              .              .             EPS         
+steel.t6          .              .              .             EPS         
+steel.t7          .              .              .              .          
+trans.t1          .              .              .            -0.4684      
+trans.t2          .              .              .            -0.4684      
+trans.t3          .              .              .            -0.4684      
+trans.t4          .              .              .             EPS         
+trans.t5          .              .              .             EPS         
+trans.t6          .              .              .             EPS         
+trans.t7          .              .              .              .          
+
+---- EQU Manpower  Manpower consumption each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+t1          .              .              .             EPS         
+t2          .              .              .             EPS         
+t3          .              .              .            -1.9582      
+t4          .              .              .            -1.6086      
+t5          .              .              .             EPS         
+t6          .              .              .             EPS         
+t7          .              .              .              .          
+
+---- EQU OutputLim  Max limit on Output
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1        -INF             .              .             0.7128      
+coal .t2        -INF             .              .             0.5030      
+coal .t3        -INF             .              .             0.1385      
+coal .t4        -INF         -353.3321          .              .          
+coal .t5        -INF         -353.3321          .              .          
+coal .t6        -INF         -700.1578          .              .          
+coal .t7        -INF         -700.1578          .              .          
+steel.t1        -INF             .              .             0.4480      
+steel.t2        -INF         -232.1912          .              .          
+steel.t3        -INF         -350.0000          .              .          
+steel.t4        -INF             .              .             0.1468      
+steel.t5        -INF             .              .             0.3433      
+steel.t6        -INF         -350.0000          .              .          
+steel.t7        -INF         -350.0000          .              .          
+trans.t1        -INF             .              .             0.4684      
+trans.t2        -INF             .              .       -1.66533E-16      
+trans.t3        -INF         -494.2500          .              .          
+trans.t4        -INF             .              .             0.2858      
+trans.t5        -INF             .              .             0.5390      
+trans.t6        -INF         -784.5230          .              .          
+trans.t7        -INF         -784.5230          .              .          
+
+---- EQU CapacityLim  Calculate new production limits
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t2          .              .              .             0.6415      
+coal .t3          .              .              .             0.1385      
+coal .t4          .              .              .             EPS         
+coal .t5          .              .              .             EPS         
+coal .t6          .              .              .             EPS         
+coal .t7          .              .              .             EPS         
+steel.t2          .              .              .             0.4901      
+steel.t3          .              .              .             0.4901      
+steel.t4          .              .              .             0.4901      
+steel.t5          .              .              .             0.3433      
+steel.t6          .              .              .             EPS         
+steel.t7          .              .              .             EPS         
+trans.t2          .              .              .             0.8248      
+trans.t3          .              .              .             0.8248      
+trans.t4          .              .              .             0.8248      
+trans.t5          .              .              .             0.5390      
+trans.t6          .              .              .             EPS         
+trans.t7          .              .              .             EPS         
+
+---- EQU ManPowLim  Manpower Limit each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+t1        -INF          459.0831       470.0000          .          
+t2        -INF          455.3743       470.0000          .          
+t3        -INF          470.0000       470.0000         1.9582      
+t4        -INF          470.0000       470.0000         1.6086      
+t5        -INF             .           470.0000          .          
+t6        -INF             .           470.0000          .          
+t7        -INF             .           470.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU ObjMaxProd          .              .              .             1.0000      
+
+  ObjMaxProd  Objective function max Production t4,t5
+
+---- VAR Store  Quantity of good i in storage at begining of time t, [m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1       150.0000       150.0000       150.0000         0.7128      
+coal .t2          .              .            +INF      -1.11022E-16      
+coal .t3          .              .            +INF           -0.3645      
+coal .t4          .           176.6661        +INF             .          
+coal .t5          .              .            +INF           -0.3482      
+coal .t6       150.0000       346.8257        +INF             .          
+coal .t7       150.0000       346.8257        +INF             .          
+steel.t1        80.0000        80.0000        80.0000         0.4480      
+steel.t2          .           236.8488        +INF             .          
+steel.t3          .           226.5872        +INF             .          
+steel.t4          .              .            +INF           -0.4480      
+steel.t5          .           123.4128        +INF             .          
+steel.t6        80.0000       473.4128        +INF             .          
+steel.t7        80.0000       473.4128        +INF             .          
+trans.t1       100.0000       100.0000       100.0000         0.4684      
+trans.t2          .           116.8330        +INF             .          
+trans.t3          .           198.7468        +INF             .          
+trans.t4          .              .            +INF           -0.4684      
+trans.t5          .           523.2532        +INF             .          
+trans.t6       100.0000      1307.7762        +INF             .          
+trans.t7       100.0000      1307.7762        +INF             .          
+
+---- VAR Output  Quantity of output of good i in time t for future use, [m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1          .           300.0000        +INF             .          
+coal .t2          .           300.0000        +INF             .          
+coal .t3          .           700.1578        +INF             .          
+coal .t4          .           346.8257        +INF             .          
+coal .t5          .           346.8257        +INF             .          
+coal .t6          .              .            +INF            EPS         
+coal .t7          .              .            +INF            EPS         
+steel.t1          .           350.0000        +INF             .          
+steel.t2          .           117.8088        +INF             .          
+steel.t3          .              .            +INF      7.632783E-17      
+steel.t4          .           350.0000        +INF             .          
+steel.t5          .           350.0000        +INF             .          
+steel.t6          .              .            +INF            EPS         
+steel.t7          .              .            +INF            EPS         
+trans.t1          .           280.0000        +INF             .          
+trans.t2          .           280.0000        +INF             .          
+trans.t3          .            62.5229        +INF             .          
+trans.t4          .           784.5230        +INF             .          
+trans.t5          .           784.5230        +INF             .          
+trans.t6          .              .            +INF            EPS         
+trans.t7          .              .            +INF            EPS         
+
+---- VAR Endo  Endogenous Consumption of good i each year,[m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1          .           450.0000        +INF             .          
+coal .t2          .           300.0000        +INF             .          
+coal .t3          .           523.4918        +INF             .          
+coal .t4          .           523.4918        +INF             .          
+coal .t5          .              .            +INF             .          
+coal .t6          .              .            +INF             .          
+coal .t7          .              .            +INF            EPS         
+steel.t1          .           193.1512        +INF             .          
+steel.t2          .           128.0704        +INF             .          
+steel.t3          .           226.5872        +INF             .          
+steel.t4          .           226.5872        +INF             .          
+steel.t5          .              .            +INF             .          
+steel.t6          .              .            +INF             .          
+steel.t7          .              .            +INF            EPS         
+trans.t1          .           263.1670        +INF             .          
+trans.t2          .           198.0862        +INF             .          
+trans.t3          .           261.2697        +INF             .          
+trans.t4          .           261.2697        +INF             .          
+trans.t5          .              .            +INF             .          
+trans.t6          .              .            +INF             .          
+trans.t7          .              .            +INF            EPS         
+
+---- VAR Exog  Exogenous Consumption of good i each year,[m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1          .              .              .            -0.7128      
+coal .t2          .              .              .            -0.7128      
+coal .t3          .              .              .            -0.3482      
+coal .t4          .              .              .            -0.3482      
+coal .t5          .              .              .             EPS         
+coal .t6          .              .              .             EPS         
+coal .t7          .              .              .             EPS         
+steel.t1          .              .              .            -0.4480      
+steel.t2          .              .              .            -0.4480      
+steel.t3          .              .              .            -0.4480      
+steel.t4          .              .              .             EPS         
+steel.t5          .              .              .             EPS         
+steel.t6          .              .              .             EPS         
+steel.t7          .              .              .             EPS         
+trans.t1          .              .              .            -0.4684      
+trans.t2          .              .              .            -0.4684      
+trans.t3          .              .              .            -0.4684      
+trans.t4          .              .              .             EPS         
+trans.t5          .              .              .             EPS         
+trans.t6          .              .              .             EPS         
+trans.t7          .              .              .             EPS         
+
+---- VAR Capacity  Production Capacity of good i each year, [m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1       300.0000       300.0000       300.0000         1.3542      
+coal .t2          .           300.0000        +INF             .          
+coal .t3          .           700.1578        +INF             .          
+coal .t4          .           700.1578        +INF             .          
+coal .t5          .           700.1578        +INF             .          
+coal .t6          .           700.1578        +INF             .          
+coal .t7          .           700.1578        +INF             .          
+steel.t1       350.0000       350.0000       350.0000         0.9381      
+steel.t2          .           350.0000        +INF             .          
+steel.t3          .           350.0000        +INF             .          
+steel.t4          .           350.0000        +INF             .          
+steel.t5          .           350.0000        +INF             .          
+steel.t6          .           350.0000        +INF             .          
+steel.t7          .           350.0000        +INF             .          
+trans.t1       280.0000       280.0000       280.0000         1.2931      
+trans.t2          .           280.0000        +INF             .          
+trans.t3          .           556.7729        +INF             .          
+trans.t4          .           784.5230        +INF             .          
+trans.t5          .           784.5230        +INF             .          
+trans.t6          .           784.5230        +INF             .          
+trans.t7          .           784.5230        +INF             .          
+
+---- VAR ExtraProd  Quantity of extra production capacity desired, [m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t2          .              .              .             0.6415      
+coal .t3          .           400.1578        +INF             .          
+coal .t4          .              .            +INF           -0.1385      
+coal .t5          .              .            +INF           -0.9218      
+coal .t6          .              .            +INF           -0.6435      
+coal .t7          .              .            +INF            EPS         
+steel.t2          .              .              .             0.4901      
+steel.t3          .              .            +INF           -0.1005      
+steel.t4          .              .            +INF           -0.1005      
+steel.t5          .              .            +INF           -0.3838      
+steel.t6          .              .            +INF           -0.5655      
+steel.t7          .              .            +INF            EPS         
+trans.t2          .              .              .             0.8248      
+trans.t3          .           276.7729        +INF             .          
+trans.t4          .           227.7501        +INF             .          
+trans.t5          .              .            +INF           -0.1535      
+trans.t6          .              .            +INF           -0.4743      
+trans.t7          .              .            +INF            EPS         
+
+---- VAR Mpow  Quantity of manpower, [m£]
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+t1          .           459.0831        +INF             .          
+t2          .           455.3743        +INF             .          
+t3          .           470.0000        +INF             .          
+t4          .           470.0000        +INF             .          
+t5          .              .            +INF             .          
+t6          .              .            +INF             .          
+t7          .              .            +INF            EPS         
+
+---- VAR fstock  Slack Variable for final year goods balance equation, [m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t7          .           346.8257        +INF             .          
+steel.t7          .           473.4128        +INF             .          
+trans.t7          .          1307.7762        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR MaxProd           -INF         2962.6973        +INF             .          
+
+  MaxProd  Objective, Maximum Production t4,t5
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/06/18 12:11:18 Page 10
+Economic Planning , Dynamic Input-Ouput Leontief Model, LP (Leontief, SEQ =xx)
+Equation Listing    SOLVE Plan3 Using LP From line 130
+
+
+---- StockBal  =E=  Balance of good in each time perios
+
+StockBal(coal,t1)..  Store(coal,t1) - Store(coal,t2) + Output(coal,t1) - Endo(coal,t1) - Exog(coal,t1) =E= 0 ; (LHS = -60, INFES = 60 ****)
+     
+StockBal(coal,t2)..  Store(coal,t2) - Store(coal,t3) + Output(coal,t2) - Endo(coal,t2) - Exog(coal,t2) =E= 0 ; (LHS = -60, INFES = 60 ****)
+     
+StockBal(coal,t3)..  Store(coal,t3) - Store(coal,t4) + Output(coal,t3) - Endo(coal,t3) - Exog(coal,t3) =E= 0 ; (LHS = -60, INFES = 60 ****)
+     
+StockBal(coal,t4)..  Store(coal,t4) - Store(coal,t5) + Output(coal,t4) - Endo(coal,t4) - Exog(coal,t4) =E= 0 ; (LHS = -60, INFES = 60 ****)
+     
+StockBal(coal,t5)..  Store(coal,t5) - Store(coal,t6) + Output(coal,t5) - Endo(coal,t5) - Exog(coal,t5) =E= 0 ; (LHS = -60, INFES = 60 ****)
+     
+StockBal(coal,t6)..  Store(coal,t6) - Store(coal,t7) + Output(coal,t6) - Endo(coal,t6) - Exog(coal,t6) =E= 0 ; (LHS = -60, INFES = 60 ****)
+     
+StockBal(coal,t7)..  Store(coal,t7) + Output(coal,t7) - Endo(coal,t7) - Exog(coal,t7) - fstock(coal,t7) =E= 0 ; (LHS = -60, INFES = 60 ****)
+     
+StockBal(steel,t1)..  Store(steel,t1) - Store(steel,t2) + Output(steel,t1) - Endo(steel,t1) - Exog(steel,t1) =E= 0 ; (LHS = -60, INFES = 60 ****)
+     
+StockBal(steel,t2)..  Store(steel,t2) - Store(steel,t3) + Output(steel,t2) - Endo(steel,t2) - Exog(steel,t2) =E= 0 ; (LHS = -59.9999999999999, INFES = 59.9999999999999 ****)
+     
+StockBal(steel,t3)..  Store(steel,t3) - Store(steel,t4) + Output(steel,t3) - Endo(steel,t3) - Exog(steel,t3) =E= 0 ; (LHS = -60, INFES = 60 ****)
+     
+StockBal(steel,t4)..  Store(steel,t4) - Store(steel,t5) + Output(steel,t4) - Endo(steel,t4) - Exog(steel,t4) =E= 0 ; (LHS = -60, INFES = 60 ****)
+     
+StockBal(steel,t5)..  Store(steel,t5) - Store(steel,t6) + Output(steel,t5) - Endo(steel,t5) - Exog(steel,t5) =E= 0 ; (LHS = -59.9999999999999, INFES = 59.9999999999999 ****)
+     
+StockBal(steel,t6)..  Store(steel,t6) - Store(steel,t7) + Output(steel,t6) - Endo(steel,t6) - Exog(steel,t6) =E= 0 ; (LHS = -59.9999999999999, INFES = 59.9999999999999 ****)
+     
+StockBal(steel,t7)..  Store(steel,t7) + Output(steel,t7) - Endo(steel,t7) - Exog(steel,t7) - fstock(steel,t7) =E= 0 ; (LHS = -59.9999999999999, INFES = 59.9999999999999 ****)
+     
+StockBal(trans,t1)..  Store(trans,t1) - Store(trans,t2) + Output(trans,t1) - Endo(trans,t1) - Exog(trans,t1) =E= 0 ; (LHS = -30, INFES = 30 ****)
+     
+StockBal(trans,t2)..  Store(trans,t2) - Store(trans,t3) + Output(trans,t2) - Endo(trans,t2) - Exog(trans,t2) =E= 0 ; (LHS = -30, INFES = 30 ****)
+     
+StockBal(trans,t3)..  Store(trans,t3) - Store(trans,t4) + Output(trans,t3) - Endo(trans,t3) - Exog(trans,t3) =E= 0 ; (LHS = -30, INFES = 30 ****)
+     
+StockBal(trans,t4)..  Store(trans,t4) - Store(trans,t5) + Output(trans,t4) - Endo(trans,t4) - Exog(trans,t4) =E= 0 ; (LHS = -30, INFES = 30 ****)
+     
+StockBal(trans,t5)..  Store(trans,t5) - Store(trans,t6) + Output(trans,t5) - Endo(trans,t5) - Exog(trans,t5) =E= 0 ; (LHS = -30, INFES = 30 ****)
+     
+StockBal(trans,t6)..  Store(trans,t6) - Store(trans,t7) + Output(trans,t6) - Endo(trans,t6) - Exog(trans,t6) =E= 0 ; (LHS = -30, INFES = 30 ****)
+     
+StockBal(trans,t7)..  Store(trans,t7) + Output(trans,t7) - Endo(trans,t7) - Exog(trans,t7) - fstock(trans,t7) =E= 0 ; (LHS = -30, INFES = 30 ****)
+     
+
+---- Endogenous  =E=  Endogenous consumption for production and capacity rise
+
+Endogenous(coal,t1)..  - 0.1*Output(coal,t2) - 0.5*Output(steel,t2) - 0.4*Output(trans,t2) + Endo(coal,t1) - 0.7*ExtraProd(steel,t3) - 0.9*ExtraProd(trans,t3) =E= 0 ; (LHS = 0)
+     
+Endogenous(coal,t2)..  - 0.1*Output(coal,t3) - 0.5*Output(steel,t3) - 0.4*Output(trans,t3) + Endo(coal,t2) - 0.7*ExtraProd(steel,t4) - 0.9*ExtraProd(trans,t4) =E= 0 ; (LHS = -1.13686837721616E-13, INFES = 1.13686837721616E-13 ****)
+     
+Endogenous(coal,t3)..  - 0.1*Output(coal,t4) - 0.5*Output(steel,t4) - 0.4*Output(trans,t4) + Endo(coal,t3) - 0.7*ExtraProd(steel,t5) - 0.9*ExtraProd(trans,t5) =E= 0 ; (LHS = 0)
+     
+Endogenous(coal,t4)..  - 0.1*Output(coal,t5) - 0.5*Output(steel,t5) - 0.4*Output(trans,t5) + Endo(coal,t4) - 0.7*ExtraProd(steel,t6) - 0.9*ExtraProd(trans,t6) =E= 0 ; (LHS = 1.13686837721616E-13, INFES = 1.13686837721616E-13 ****)
+     
+Endogenous(coal,t5)..  - 0.1*Output(coal,t6) - 0.5*Output(steel,t6) - 0.4*Output(trans,t6) + Endo(coal,t5) - 0.7*ExtraProd(steel,t7) - 0.9*ExtraProd(trans,t7) =E= 0 ; (LHS = 0)
+     
+Endogenous(coal,t6)..  - 0.1*Output(coal,t7) - 0.5*Output(steel,t7) - 0.4*Output(trans,t7) + Endo(coal,t6) =E= 0 ; (LHS = 0)
+     
+Endogenous(coal,t7)..  Endo(coal,t7) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t1)..  - 0.1*Output(coal,t2) - 0.1*Output(steel,t2) - 0.2*Output(trans,t2) + Endo(steel,t1) - 0.1*ExtraProd(coal,t3) - 0.1*ExtraProd(steel,t3) - 0.2*ExtraProd(trans,t3) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t2)..  - 0.1*Output(coal,t3) - 0.1*Output(steel,t3) - 0.2*Output(trans,t3) + Endo(steel,t2) - 0.1*ExtraProd(coal,t4) - 0.1*ExtraProd(steel,t4) - 0.2*ExtraProd(trans,t4) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t3)..  - 0.1*Output(coal,t4) - 0.1*Output(steel,t4) - 0.2*Output(trans,t4) + Endo(steel,t3) - 0.1*ExtraProd(coal,t5) - 0.1*ExtraProd(steel,t5) - 0.2*ExtraProd(trans,t5) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t4)..  - 0.1*Output(coal,t5) - 0.1*Output(steel,t5) - 0.2*Output(trans,t5) + Endo(steel,t4) - 0.1*ExtraProd(coal,t6) - 0.1*ExtraProd(steel,t6) - 0.2*ExtraProd(trans,t6) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t5)..  - 0.1*Output(coal,t6) - 0.1*Output(steel,t6) - 0.2*Output(trans,t6) + Endo(steel,t5) - 0.1*ExtraProd(coal,t7) - 0.1*ExtraProd(steel,t7) - 0.2*ExtraProd(trans,t7) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t6)..  - 0.1*Output(coal,t7) - 0.1*Output(steel,t7) - 0.2*Output(trans,t7) + Endo(steel,t6) =E= 0 ; (LHS = 0)
+     
+Endogenous(steel,t7)..  Endo(steel,t7) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t1)..  - 0.2*Output(coal,t2) - 0.1*Output(steel,t2) - 0.2*Output(trans,t2) + Endo(trans,t1) - 0.2*ExtraProd(coal,t3) - 0.1*ExtraProd(steel,t3) - 0.2*ExtraProd(trans,t3) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t2)..  - 0.2*Output(coal,t3) - 0.1*Output(steel,t3) - 0.2*Output(trans,t3) + Endo(trans,t2) - 0.2*ExtraProd(coal,t4) - 0.1*ExtraProd(steel,t4) - 0.2*ExtraProd(trans,t4) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t3)..  - 0.2*Output(coal,t4) - 0.1*Output(steel,t4) - 0.2*Output(trans,t4) + Endo(trans,t3) - 0.2*ExtraProd(coal,t5) - 0.1*ExtraProd(steel,t5) - 0.2*ExtraProd(trans,t5) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t4)..  - 0.2*Output(coal,t5) - 0.1*Output(steel,t5) - 0.2*Output(trans,t5) + Endo(trans,t4) - 0.2*ExtraProd(coal,t6) - 0.1*ExtraProd(steel,t6) - 0.2*ExtraProd(trans,t6) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t5)..  - 0.2*Output(coal,t6) - 0.1*Output(steel,t6) - 0.2*Output(trans,t6) + Endo(trans,t5) - 0.2*ExtraProd(coal,t7) - 0.1*ExtraProd(steel,t7) - 0.2*ExtraProd(trans,t7) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t6)..  - 0.2*Output(coal,t7) - 0.1*Output(steel,t7) - 0.2*Output(trans,t7) + Endo(trans,t6) =E= 0 ; (LHS = 0)
+     
+Endogenous(trans,t7)..  Endo(trans,t7) =E= 0 ; (LHS = 0)
+     
+
+---- Manpower  =E=  Manpower consumption each year
+
+Manpower(t1)..  - 0.6*Output(coal,t2) - 0.3*Output(steel,t2) - 0.2*Output(trans,t2) - 0.4*ExtraProd(coal,t3) - 0.2*ExtraProd(steel,t3) - 0.1*ExtraProd(trans,t3) + Mpow(t1) =E= 0 ; (LHS = 0)
+     
+Manpower(t2)..  - 0.6*Output(coal,t3) - 0.3*Output(steel,t3) - 0.2*Output(trans,t3) - 0.4*ExtraProd(coal,t4) - 0.2*ExtraProd(steel,t4) - 0.1*ExtraProd(trans,t4) + Mpow(t2) =E= 0 ; (LHS = 0)
+     
+Manpower(t3)..  - 0.6*Output(coal,t4) - 0.3*Output(steel,t4) - 0.2*Output(trans,t4) - 0.4*ExtraProd(coal,t5) - 0.2*ExtraProd(steel,t5) - 0.1*ExtraProd(trans,t5) + Mpow(t3) =E= 0 ; (LHS = 0)
+     
+Manpower(t4)..  - 0.6*Output(coal,t5) - 0.3*Output(steel,t5) - 0.2*Output(trans,t5) - 0.4*ExtraProd(coal,t6) - 0.2*ExtraProd(steel,t6) - 0.1*ExtraProd(trans,t6) + Mpow(t4) =E= 0 ; (LHS = 0)
+     
+Manpower(t5)..  - 0.6*Output(coal,t6) - 0.3*Output(steel,t6) - 0.2*Output(trans,t6) - 0.4*ExtraProd(coal,t7) - 0.2*ExtraProd(steel,t7) - 0.1*ExtraProd(trans,t7) + Mpow(t5) =E= 0 ; (LHS = 0)
+     
+Manpower(t6)..  - 0.6*Output(coal,t7) - 0.3*Output(steel,t7) - 0.2*Output(trans,t7) + Mpow(t6) =E= 0 ; (LHS = 0)
+     
+Manpower(t7)..  Mpow(t7) =E= 0 ; (LHS = 0)
+     
+
+---- OutputLim  =L=  Max limit on Output
+
+OutputLim(coal,t1)..  Output(coal,t1) - Capacity(coal,t1) =L= 0 ; (LHS = 0)
+     
+OutputLim(coal,t2)..  Output(coal,t2) - Capacity(coal,t2) =L= 0 ; (LHS = 0)
+     
+OutputLim(coal,t3)..  Output(coal,t3) - Capacity(coal,t3) =L= 0 ; (LHS = 0)
+     
+OutputLim(coal,t4)..  Output(coal,t4) - Capacity(coal,t4) =L= 0 ; (LHS = -353.332145402709)
+     
+OutputLim(coal,t5)..  Output(coal,t5) - Capacity(coal,t5) =L= 0 ; (LHS = -353.332145402709)
+     
+OutputLim(coal,t6)..  Output(coal,t6) - Capacity(coal,t6) =L= 0 ; (LHS = -700.15782506873)
+     
+OutputLim(coal,t7)..  Output(coal,t7) - Capacity(coal,t7) =L= 0 ; (LHS = -700.15782506873)
+     
+OutputLim(steel,t1)..  Output(steel,t1) - Capacity(steel,t1) =L= 0 ; (LHS = 0)
+     
+OutputLim(steel,t2)..  Output(steel,t2) - Capacity(steel,t2) =L= 0 ; (LHS = -232.191222889726)
+     
+OutputLim(steel,t3)..  Output(steel,t3) - Capacity(steel,t3) =L= 0 ; (LHS = -350)
+     
+OutputLim(steel,t4)..  Output(steel,t4) - Capacity(steel,t4) =L= 0 ; (LHS = 0)
+     
+OutputLim(steel,t5)..  Output(steel,t5) - Capacity(steel,t5) =L= 0 ; (LHS = 0)
+     
+OutputLim(steel,t6)..  Output(steel,t6) - Capacity(steel,t6) =L= 0 ; (LHS = -350)
+     
+OutputLim(steel,t7)..  Output(steel,t7) - Capacity(steel,t7) =L= 0 ; (LHS = -350)
+     
+OutputLim(trans,t1)..  Output(trans,t1) - Capacity(trans,t1) =L= 0 ; (LHS = 0)
+     
+OutputLim(trans,t2)..  Output(trans,t2) - Capacity(trans,t2) =L= 0 ; (LHS = 0)
+     
+OutputLim(trans,t3)..  Output(trans,t3) - Capacity(trans,t3) =L= 0 ; (LHS = -494.249991514781)
+     
+OutputLim(trans,t4)..  Output(trans,t4) - Capacity(trans,t4) =L= 0 ; (LHS = 0)
+     
+OutputLim(trans,t5)..  Output(trans,t5) - Capacity(trans,t5) =L= 0 ; (LHS = 0)
+     
+OutputLim(trans,t6)..  Output(trans,t6) - Capacity(trans,t6) =L= 0 ; (LHS = -784.522961001935)
+     
+OutputLim(trans,t7)..  Output(trans,t7) - Capacity(trans,t7) =L= 0 ; (LHS = -784.522961001935)
+     
+
+---- CapacityLim  =E=  Calculate new production limits
+
+CapacityLim(coal,t2)..  - Capacity(coal,t1) + Capacity(coal,t2) - ExtraProd(coal,t2) =E= 0 ; (LHS = 0)
+     
+CapacityLim(coal,t3)..  - Capacity(coal,t2) + Capacity(coal,t3) - ExtraProd(coal,t3) =E= 0 ; (LHS = 0)
+     
+CapacityLim(coal,t4)..  - Capacity(coal,t3) + Capacity(coal,t4) - ExtraProd(coal,t4) =E= 0 ; (LHS = 0)
+     
+CapacityLim(coal,t5)..  - Capacity(coal,t4) + Capacity(coal,t5) - ExtraProd(coal,t5) =E= 0 ; (LHS = 0)
+     
+CapacityLim(coal,t6)..  - Capacity(coal,t5) + Capacity(coal,t6) - ExtraProd(coal,t6) =E= 0 ; (LHS = 0)
+     
+CapacityLim(coal,t7)..  - Capacity(coal,t6) + Capacity(coal,t7) - ExtraProd(coal,t7) =E= 0 ; (LHS = 0)
+     
+CapacityLim(steel,t2)..  - Capacity(steel,t1) + Capacity(steel,t2) - ExtraProd(steel,t2) =E= 0 ; (LHS = 0)
+     
+CapacityLim(steel,t3)..  - Capacity(steel,t2) + Capacity(steel,t3) - ExtraProd(steel,t3) =E= 0 ; (LHS = 0)
+     
+CapacityLim(steel,t4)..  - Capacity(steel,t3) + Capacity(steel,t4) - ExtraProd(steel,t4) =E= 0 ; (LHS = 0)
+     
+CapacityLim(steel,t5)..  - Capacity(steel,t4) + Capacity(steel,t5) - ExtraProd(steel,t5) =E= 0 ; (LHS = 0)
+     
+CapacityLim(steel,t6)..  - Capacity(steel,t5) + Capacity(steel,t6) - ExtraProd(steel,t6) =E= 0 ; (LHS = 0)
+     
+CapacityLim(steel,t7)..  - Capacity(steel,t6) + Capacity(steel,t7) - ExtraProd(steel,t7) =E= 0 ; (LHS = 0)
+     
+CapacityLim(trans,t2)..  - Capacity(trans,t1) + Capacity(trans,t2) - ExtraProd(trans,t2) =E= 0 ; (LHS = 0)
+     
+CapacityLim(trans,t3)..  - Capacity(trans,t2) + Capacity(trans,t3) - ExtraProd(trans,t3) =E= 0 ; (LHS = 0)
+     
+CapacityLim(trans,t4)..  - Capacity(trans,t3) + Capacity(trans,t4) - ExtraProd(trans,t4) =E= 0 ; (LHS = 0)
+     
+CapacityLim(trans,t5)..  - Capacity(trans,t4) + Capacity(trans,t5) - ExtraProd(trans,t5) =E= 0 ; (LHS = 0)
+     
+CapacityLim(trans,t6)..  - Capacity(trans,t5) + Capacity(trans,t6) - ExtraProd(trans,t6) =E= 0 ; (LHS = 0)
+     
+CapacityLim(trans,t7)..  - Capacity(trans,t6) + Capacity(trans,t7) - ExtraProd(trans,t7) =E= 0 ; (LHS = 0)
+     
+
+---- ObjMaxMan  =E=  Objective function max Manpower requirement
+
+ObjMaxMan..  - Mpow(t1) - Mpow(t2) - Mpow(t3) - Mpow(t4) - Mpow(t5) + MaxMan =E= 0 ; (LHS = -1854.45733632013, INFES = 1854.45733632013 ****)
+     
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/06/18 12:11:18 Page 11
+Economic Planning , Dynamic Input-Ouput Leontief Model, LP (Leontief, SEQ =xx)
+Column Listing      SOLVE Plan3 Using LP From line 130
+
+
+---- Store  Quantity of good i in storage at begining of time t, [m£]
+
+Store(coal,t1)
+                (.LO, .L, .UP, .M = 150, 150, 150, 0.712758374910905)
+        1       StockBal(coal,t1)
+
+Store(coal,t2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, -1.11022302462516E-16)
+       -1       StockBal(coal,t1)
+        1       StockBal(coal,t2)
+
+Store(coal,t3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, -0.364524997454434)
+       -1       StockBal(coal,t2)
+        1       StockBal(coal,t3)
+
+REMAINING 18 ENTRIES SKIPPED
+
+---- Output  Quantity of output of good i in time t for future use, [m£]
+
+Output(coal,t1)
+                (.LO, .L, .UP, .M = 0, 300, +INF, 0)
+        1       StockBal(coal,t1)
+        1       OutputLim(coal,t1)
+
+Output(coal,t2)
+                (.LO, .L, .UP, .M = 0, 300, +INF, 0)
+        1       StockBal(coal,t2)
+       -0.1     Endogenous(coal,t1)
+       -0.1     Endogenous(steel,t1)
+       -0.2     Endogenous(trans,t1)
+       -0.6     Manpower(t1)
+        1       OutputLim(coal,t2)
+
+Output(coal,t3)
+                (.LO, .L, .UP, .M = 0, 700.15782506873, +INF, 0)
+        1       StockBal(coal,t3)
+       -0.1     Endogenous(coal,t2)
+       -0.1     Endogenous(steel,t2)
+       -0.2     Endogenous(trans,t2)
+       -0.6     Manpower(t2)
+        1       OutputLim(coal,t3)
+
+REMAINING 18 ENTRIES SKIPPED
+
+---- Endo  Endogenous Consumption of good i each year,[m£]
+
+Endo(coal,t1)
+                (.LO, .L, .UP, .M = 0, 450, +INF, 0)
+       -1       StockBal(coal,t1)
+        1       Endogenous(coal,t1)
+
+Endo(coal,t2)
+                (.LO, .L, .UP, .M = 0, 300, +INF, 0)
+       -1       StockBal(coal,t2)
+        1       Endogenous(coal,t2)
+
+Endo(coal,t3)
+                (.LO, .L, .UP, .M = 0, 523.491752367376, +INF, 0)
+       -1       StockBal(coal,t3)
+        1       Endogenous(coal,t3)
+
+REMAINING 18 ENTRIES SKIPPED
+
+---- Exog  Exogenous Consumption of good i each year,[m£]
+
+Exog(coal,t1)
+                (.LO, .L, .UP, .M = 60, 60, 60, -0.712758374910905)
+       -1       StockBal(coal,t1)
+
+Exog(coal,t2)
+                (.LO, .L, .UP, .M = 60, 60, 60, -0.712758374910905)
+       -1       StockBal(coal,t2)
+
+Exog(coal,t3)
+                (.LO, .L, .UP, .M = 60, 60, 60, -0.348233377456471)
+       -1       StockBal(coal,t3)
+
+REMAINING 18 ENTRIES SKIPPED
+
+---- Capacity  Production Capacity of good i each year, [m£]
+
+Capacity(coal,t1)
+                (.LO, .L, .UP, .M = 300, 300, 300, 1.35424091233072)
+       -1       OutputLim(coal,t1)
+       -1       CapacityLim(coal,t2)
+
+Capacity(coal,t2)
+                (.LO, .L, .UP, .M = 0, 300, +INF, 0)
+       -1       OutputLim(coal,t2)
+        1       CapacityLim(coal,t2)
+       -1       CapacityLim(coal,t3)
+
+Capacity(coal,t3)
+                (.LO, .L, .UP, .M = 0, 700.15782506873, +INF, 0)
+       -1       OutputLim(coal,t3)
+        1       CapacityLim(coal,t3)
+       -1       CapacityLim(coal,t4)
+
+REMAINING 18 ENTRIES SKIPPED
+
+---- ExtraProd  Quantity of extra production capacity desired, [m£]
+
+ExtraProd(coal,t2)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0.641482537419815)
+       -1       CapacityLim(coal,t2)
+
+ExtraProd(coal,t3)
+                (.LO, .L, .UP, .M = 0, 400.15782506873, +INF, 0)
+       -0.1     Endogenous(steel,t1)
+       -0.2     Endogenous(trans,t1)
+       -0.4     Manpower(t1)
+       -1       CapacityLim(coal,t3)
+
+ExtraProd(coal,t4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, -0.13847876998269)
+       -0.1     Endogenous(steel,t2)
+       -0.2     Endogenous(trans,t2)
+       -0.4     Manpower(t2)
+       -1       CapacityLim(coal,t4)
+
+REMAINING 15 ENTRIES SKIPPED
+
+---- Mpow  Quantity of manpower, [m£]
+
+Mpow(t1)
+                (.LO, .L, .UP, .M = 0, 459.083053321115, +INF, 0)
+        1       Manpower(t1)
+       -1       ObjMaxMan
+
+Mpow(t2)
+                (.LO, .L, .UP, .M = 0, 455.374282999016, +INF, 0)
+        1       Manpower(t2)
+       -1       ObjMaxMan
+
+Mpow(t3)
+                (.LO, .L, .UP, .M = 0, 470, +INF, 0)
+        1       Manpower(t3)
+       -1       ObjMaxMan
+
+REMAINING 4 ENTRIES SKIPPED
+
+---- fstock  Slack Variable for final year goods balance equation, [m£]
+
+fstock(coal,t7)
+                (.LO, .L, .UP, .M = 0, 346.825679666022, +INF, 0)
+       -1       StockBal(coal,t7)
+
+fstock(steel,t7)
+                (.LO, .L, .UP, .M = 0, 473.412839833011, +INF, 0)
+       -1       StockBal(steel,t7)
+
+fstock(trans,t7)
+                (.LO, .L, .UP, .M = 0, 1307.77619387028, +INF, 0)
+       -1       StockBal(trans,t7)
+
+
+---- MaxMan  Objective, Maximize Manpower Requirement
+
+MaxMan
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       ObjMaxMan
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/06/18 12:11:18 Page 12
+Economic Planning , Dynamic Input-Ouput Leontief Model, LP (Leontief, SEQ =xx)
+Model Statistics    SOLVE Plan3 Using LP From line 130
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           6     SINGLE EQUATIONS           89
+BLOCKS OF VARIABLES           9     SINGLE VARIABLES          134
+NON ZERO ELEMENTS           362
+
+
+GENERATION TIME      =        0.063 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.063 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/06/18 12:11:18 Page 13
+Economic Planning , Dynamic Input-Ouput Leontief Model, LP (Leontief, SEQ =xx)
+Solution Report     SOLVE Plan3 Using LP From line 130
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Plan3               OBJECTIVE  MaxMan
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  130
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE             4161.1697
+
+ RESOURCE USAGE, LIMIT          0.031      1000.000
+ ITERATION COUNT, LIMIT        52    2000000000
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+Cplex 12.8.0.0
+
+Space for names approximately 0.01 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.02sec (det. 0.44 ticks)
+Optimal solution found.
+Objective :        4161.169672
+
+
+---- EQU StockBal  Balance of good in each time perios
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1          .              .              .            -3.1101      
+coal .t2          .              .              .            -3.1101      
+coal .t3          .              .              .            -0.4678      
+coal .t4          .              .              .            -0.1246      
+coal .t5          .              .              .            -0.0113      
+coal .t6          .              .              .             EPS         
+coal .t7          .              .              .             EPS         
+steel.t1          .              .              .            -1.6779      
+steel.t2          .              .              .            -1.6779      
+steel.t3          .              .              .            -1.6779      
+steel.t4          .              .              .            -0.8882      
+steel.t5          .              .              .            -0.5917      
+steel.t6          .              .              .             EPS         
+steel.t7          .              .              .             EPS         
+trans.t1          .              .              .            -2.5502      
+trans.t2          .              .              .            -2.5502      
+trans.t3          .              .              .            -2.5502      
+trans.t4          .              .              .            -2.5502      
+trans.t5          .              .              .            -1.7042      
+trans.t6          .              .              .            -0.2637      
+trans.t7          .              .              .             EPS         
+
+---- EQU Endogenous  Endogenous consumption for production and capacity rise
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1          .              .              .            -3.1101      
+coal .t2          .              .              .            -3.1101      
+coal .t3          .              .              .            -0.4678      
+coal .t4          .              .              .            -0.1246      
+coal .t5          .              .              .            -0.0113      
+coal .t6          .              .              .             EPS         
+coal .t7          .              .              .              .          
+steel.t1          .              .              .            -1.6779      
+steel.t2          .              .              .            -1.6779      
+steel.t3          .              .              .            -1.6779      
+steel.t4          .              .              .            -0.8882      
+steel.t5          .              .              .            -0.5917      
+steel.t6          .              .              .             EPS         
+steel.t7          .              .              .              .          
+trans.t1          .              .              .            -2.5502      
+trans.t2          .              .              .            -2.5502      
+trans.t3          .              .              .            -2.5502      
+trans.t4          .              .              .            -2.5502      
+trans.t5          .              .              .            -1.7042      
+trans.t6          .              .              .            -0.2637      
+trans.t7          .              .              .              .          
+
+---- EQU Manpower  Manpower consumption each year
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+t1          .              .              .             1.0000      
+t2          .              .              .             1.0000      
+t3          .              .              .             1.0000      
+t4          .              .              .             1.0000      
+t5          .              .              .             1.0000      
+t6          .              .              .             EPS         
+t7          .              .              .             EPS         
+
+---- EQU OutputLim  Max limit on Output
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1        -INF             .              .             3.1101      
+coal .t2        -INF             .              .             2.7212      
+coal .t3        -INF             .              .             0.0790      
+coal .t4        -INF         -235.4374          .              .          
+coal .t5        -INF         -313.6887          .              .          
+coal .t6        -INF             .              .             0.1989      
+coal .t7        -INF        -2871.6180          .              .          
+steel.t1        -INF             .              .             1.6779      
+steel.t2        -INF         -300.5768          .              .          
+steel.t3        -INF          -23.9358          .              .          
+steel.t4        -INF             .              .             0.5315      
+steel.t5        -INF             .              .             0.4855      
+steel.t6        -INF             .              .             0.0648      
+steel.t7        -INF         -481.2909          .              .          
+trans.t1        -INF             .              .             2.5502      
+trans.t2        -INF             .              .             0.6606      
+trans.t3        -INF             .              .             0.6606      
+trans.t4        -INF             .              .             1.7175      
+trans.t5        -INF             .              .             1.1666      
+trans.t6        -INF         -728.4527          .              .          
+trans.t7        -INF         -758.4527          .              .          
+
+---- EQU CapacityLim  Calculate new production limits
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t2          .              .              .             2.9991      
+coal .t3          .              .              .             0.2778      
+coal .t4          .              .              .             0.1989      
+coal .t5          .              .              .             0.1989      
+coal .t6          .              .              .             0.1989      
+coal .t7          .              .              .             EPS         
+steel.t2          .              .              .             1.0818      
+steel.t3          .              .              .             1.0818      
+steel.t4          .              .              .             1.0818      
+steel.t5          .              .              .             0.5503      
+steel.t6          .              .              .             0.0648      
+steel.t7          .              .              .             EPS         
+trans.t2          .              .              .             4.2053      
+trans.t3          .              .              .             3.5447      
+trans.t4          .              .              .             2.8841      
+trans.t5          .              .              .             1.1666      
+trans.t6          .              .              .             EPS         
+trans.t7          .              .              .             EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU ObjMaxMan           .              .              .             1.0000      
+
+  ObjMaxMan  Objective function max Manpower requirement
+
+---- VAR Store  Quantity of good i in storage at begining of time t, [m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1       150.0000       150.0000       150.0000         3.1101      
+coal .t2          .           155.1183        +INF             .          
+coal .t3          .              .            +INF           -2.6423      
+coal .t4          .              .            +INF           -0.3432      
+coal .t5          .              .            +INF           -0.1133      
+coal .t6       150.0000       150.0000        +INF           -0.0113      
+coal .t7       150.0000      1305.4924        +INF             .          
+steel.t1        80.0000        80.0000        80.0000         1.6779      
+steel.t2          .           204.1204        +INF             .          
+steel.t3          .              .            +INF            EPS         
+steel.t4          .              .            +INF           -0.7896      
+steel.t5          .              .            +INF           -0.2966      
+steel.t6        80.0000        80.0000        +INF           -0.5917      
+steel.t7        80.0000       501.2909        +INF             .          
+trans.t1       100.0000       100.0000       100.0000         2.5502      
+trans.t2          .            94.3321        +INF             .          
+trans.t3          .            61.0001        +INF             .          
+trans.t4          .            54.4358        +INF             .          
+trans.t5          .              .            +INF           -0.8461      
+trans.t6       100.0000       100.0000        +INF           -1.4405      
+trans.t7       100.0000       100.0000        +INF           -0.2637      
+
+---- VAR Output  Quantity of output of good i in time t for future use, [m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1          .           300.0000        +INF             .          
+coal .t2          .           300.0000        +INF             .          
+coal .t3          .           897.8834        +INF             .          
+coal .t4          .           662.4460        +INF             .          
+coal .t5          .           584.1947        +INF             .          
+coal .t6          .          1215.4924        +INF             .          
+coal .t7          .              .            +INF           -0.0527      
+steel.t1          .           350.0000        +INF             .          
+steel.t2          .            49.4232        +INF             .          
+steel.t3          .           326.0642        +INF             .          
+steel.t4          .           350.0000        +INF             .          
+steel.t5          .           481.2909        +INF             .          
+steel.t6          .           481.2909        +INF             .          
+steel.t7          .              .            +INF           -0.0264      
+trans.t1          .           280.0000        +INF             .          
+trans.t2          .           280.0000        +INF             .          
+trans.t3          .           355.7446        +INF             .          
+trans.t4          .           355.7446        +INF             .          
+trans.t5          .           758.4527        +INF             .          
+trans.t6          .            30.0000        +INF             .          
+trans.t7          .              .            +INF           -0.0527      
+
+---- VAR Endo  Endogenous Consumption of good i each year,[m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1          .           234.8817        +INF             .          
+coal .t2          .           395.1183        +INF             .          
+coal .t3          .           837.8834        +INF             .          
+coal .t4          .           602.4460        +INF             .          
+coal .t5          .           374.1947        +INF             .          
+coal .t6          .              .            +INF             .          
+coal .t7          .              .            +INF            EPS         
+steel.t1          .           165.8796        +INF             .          
+steel.t2          .           193.5437        +INF             .          
+steel.t3          .           266.0642        +INF             .          
+steel.t4          .           290.0000        +INF             .          
+steel.t5          .           341.2909        +INF             .          
+steel.t6          .              .            +INF             .          
+steel.t7          .              .            +INF            EPS         
+trans.t1          .           255.6679        +INF             .          
+trans.t2          .           283.3320        +INF             .          
+trans.t3          .           332.3088        +INF             .          
+trans.t4          .           380.1804        +INF             .          
+trans.t5          .           628.4527        +INF             .          
+trans.t6          .              .            +INF             .          
+trans.t7          .              .            +INF            EPS         
+
+---- VAR Exog  Exogenous Consumption of good i each year,[m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1        60.0000        60.0000        60.0000        -3.1101      
+coal .t2        60.0000        60.0000        60.0000        -3.1101      
+coal .t3        60.0000        60.0000        60.0000        -0.4678      
+coal .t4        60.0000        60.0000        60.0000        -0.1246      
+coal .t5        60.0000        60.0000        60.0000        -0.0113      
+coal .t6        60.0000        60.0000        60.0000         EPS         
+coal .t7        60.0000        60.0000        60.0000         EPS         
+steel.t1        60.0000        60.0000        60.0000        -1.6779      
+steel.t2        60.0000        60.0000        60.0000        -1.6779      
+steel.t3        60.0000        60.0000        60.0000        -1.6779      
+steel.t4        60.0000        60.0000        60.0000        -0.8882      
+steel.t5        60.0000        60.0000        60.0000        -0.5917      
+steel.t6        60.0000        60.0000        60.0000         EPS         
+steel.t7        60.0000        60.0000        60.0000         EPS         
+trans.t1        30.0000        30.0000        30.0000        -2.5502      
+trans.t2        30.0000        30.0000        30.0000        -2.5502      
+trans.t3        30.0000        30.0000        30.0000        -2.5502      
+trans.t4        30.0000        30.0000        30.0000        -2.5502      
+trans.t5        30.0000        30.0000        30.0000        -1.7042      
+trans.t6        30.0000        30.0000        30.0000        -0.2637      
+trans.t7        30.0000        30.0000        30.0000         EPS         
+
+---- VAR Capacity  Production Capacity of good i each year, [m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t1       300.0000       300.0000       300.0000         6.1092      
+coal .t2          .           300.0000        +INF             .          
+coal .t3          .           897.8834        +INF             .          
+coal .t4          .           897.8834        +INF             .          
+coal .t5          .           897.8834        +INF             .          
+coal .t6          .          1215.4924        +INF             .          
+coal .t7          .          2871.6180        +INF             .          
+steel.t1       350.0000       350.0000       350.0000         2.7596      
+steel.t2          .           350.0000        +INF             .          
+steel.t3          .           350.0000        +INF             .          
+steel.t4          .           350.0000        +INF             .          
+steel.t5          .           481.2909        +INF             .          
+steel.t6          .           481.2909        +INF             .          
+steel.t7          .           481.2909        +INF             .          
+trans.t1       280.0000       280.0000       280.0000         6.7555      
+trans.t2          .           280.0000        +INF             .          
+trans.t3          .           355.7446        +INF             .          
+trans.t4          .           355.7446        +INF             .          
+trans.t5          .           758.4527        +INF             .          
+trans.t6          .           758.4527        +INF             .          
+trans.t7          .           758.4527        +INF             .          
+
+---- VAR ExtraProd  Quantity of extra production capacity desired, [m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t2          .              .              .             2.9991      
+coal .t3          .           597.8834        +INF             .          
+coal .t4          .              .            +INF           -0.0790      
+coal .t5          .              .            +INF           -0.0790      
+coal .t6          .           317.6090        +INF             .          
+coal .t7          .          1656.1256        +INF             .          
+steel.t2          .              .              .             1.0818      
+steel.t3          .              .            +INF           -1.3181      
+steel.t4          .              .            +INF           -1.3181      
+steel.t5          .           131.2909        +INF             .          
+steel.t6          .              .            +INF           -0.1663      
+steel.t7          .              .            +INF           -0.0375      
+trans.t2          .              .              .             4.2053      
+trans.t3          .            75.7446        +INF             .          
+trans.t4          .              .            +INF           -0.6606      
+trans.t5          .           402.7081        +INF             .          
+trans.t6          .              .            +INF           -0.6998      
+trans.t7          .              .            +INF           -0.3694      
+
+---- VAR Mpow  Quantity of manpower, [m£]
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+t1          .           497.5548        +INF             .          
+t2          .           707.6982        +INF             .          
+t3          .           640.1455        +INF             .          
+t4          .           773.6382        +INF             .          
+t5          .          1542.1330        +INF             .          
+t6          .              .            +INF             .          
+t7          .              .            +INF             .          
+
+---- VAR fstock  Slack Variable for final year goods balance equation, [m£]
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+coal .t7          .          1245.4924        +INF             .          
+steel.t7          .           441.2909        +INF             .          
+trans.t7          .            70.0000        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR MaxMan            -INF         4161.1697        +INF             .          
+
+  MaxMan  Objective, Maximize Manpower Requirement
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+
+
+EXECUTION TIME       =        0.015 SECONDS      2 MB  25.1.2 r67455 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\ecoplan\economic_plan.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\ecoplan\economic_plan.lst

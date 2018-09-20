@@ -1,0 +1,37 @@
+B 2 C o m p i l a t i o n
+B 171 Equation Listing    SOLVE ref Using LP From line 163
+D 172 massbal
+D 204 mixing
+D 215 reactions
+D 238 obj
+D 243 RegOctane
+D 248 PreOctane
+D 253 JetPress
+D 258 DistilCap
+D 263 ReformCap
+D 268 CrckrCap
+D 273 Petrol
+D 278 FuelMix
+B 285 Column Listing      SOLVE ref Using LP From line 163
+E 286 Zmade
+E 306 Zuse
+E 336 Zsell
+E 352 Profit
+B 361 Model Statistics    SOLVE ref Using LP From line 163
+B 377 Solution Report     SOLVE ref Using LP From line 163
+F 408 massbal
+F 427 mixing
+F 436 reactions
+F 449 obj
+F 450 RegOctane
+F 451 PreOctane
+F 452 JetPress
+F 453 DistilCap
+F 454 ReformCap
+F 455 CrckrCap
+F 456 Petrol
+F 457 FuelMix
+G 458 Zmade
+G 477 Zuse
+G 508 Zsell
+G 527 Profit

@@ -1,0 +1,107 @@
+B 2 C o m p i l a t i o n
+B 170 Equation Listing    SOLVE manpowerplan Using MIP From line 156
+D 171 total
+D 193 Overmanning
+D 204 Extraman
+D 231 retrainlim
+D 242 retraincosts
+D 253 overmancosts
+D 264 redundancycosts
+D 275 shorttimecosts
+D 286 totalcosts
+D 293 objfunc
+B 300 Column Listing      SOLVE manpowerplan Using MIP From line 156
+E 301 Wrecruit
+E 341 Wretrain
+E 443 Wredund
+E 515 Wshortt
+E 578 Wextra
+E 653 Wtotal
+E 734 CostRetrain
+E 757 CostRedund
+E 780 CostExtra
+E 803 CostStime
+E 826 TotCTC
+E 833 TotRed
+B 842 Model Statistics    SOLVE manpowerplan Using MIP From line 156
+B 858 Solution Report     SOLVE manpowerplan Using MIP From line 156
+F 899 total
+F 913 Overmanning
+F 922 Extraman
+F 939 retrainlim
+F 948 retraincosts
+F 957 overmancosts
+F 966 redundancycosts
+F 975 shorttimecosts
+F 982 totalcosts
+F 983 objfunc
+G 987 Wrecruit
+G 1001 Wretrain
+G 1026 Wredund
+G 1043 Wshortt
+G 1060 Wextra
+G 1077 Wtotal
+G 1094 CostRetrain
+G 1103 CostRedund
+G 1112 CostExtra
+G 1121 CostStime
+G 1130 TotCTC
+G 1134 TotRed
+B 1150 E x e c u t i o n
+I 1151 Wredund
+I 1161 Wrecruit
+I 1170 Wdowngrad
+I 1175 Wshortt
+B 1186 Equation Listing    SOLVE manpowerplan Using RMIP From line 160
+D 1187 total
+D 1209 Overmanning
+D 1220 Extraman
+D 1247 retrainlim
+D 1258 retraincosts
+D 1269 overmancosts
+D 1280 redundancycosts
+D 1291 shorttimecosts
+D 1302 totalcosts
+D 1309 objfunc
+B 1316 Column Listing      SOLVE manpowerplan Using RMIP From line 160
+E 1317 Wrecruit
+E 1357 Wretrain
+E 1459 Wredund
+E 1531 Wshortt
+E 1594 Wextra
+E 1669 Wtotal
+E 1742 CostRetrain
+E 1765 CostRedund
+E 1788 CostExtra
+E 1811 CostStime
+E 1834 TotCTC
+E 1841 TotRed
+B 1850 Model Statistics    SOLVE manpowerplan Using RMIP From line 160
+B 1866 Solution Report     SOLVE manpowerplan Using RMIP From line 160
+F 1897 total
+F 1911 Overmanning
+F 1920 Extraman
+F 1937 retrainlim
+F 1946 retraincosts
+F 1955 overmancosts
+F 1964 redundancycosts
+F 1973 shorttimecosts
+F 1980 totalcosts
+F 1981 objfunc
+G 1985 Wrecruit
+G 1999 Wretrain
+G 2024 Wredund
+G 2041 Wshortt
+G 2058 Wextra
+G 2075 Wtotal
+G 2092 CostRetrain
+G 2101 CostRedund
+G 2110 CostExtra
+G 2119 CostStime
+G 2128 TotCTC
+G 2132 TotRed
+B 2147 E x e c u t i o n
+I 2148 Wredund
+I 2158 Wrecruit
+I 2167 Wdowngrad
+I 2172 Wshortt

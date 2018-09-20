@@ -1,0 +1,630 @@
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/07/18 17:26:51 Page 1
+Refinery Optimization (REFINERY, SEQ =xx)
+C o m p i l a t i o n
+
+
+   2   
+      This LP problem optimizes a refinery model to decide operation strategy for producing
+      Petrol, Jet Fuel, Fuel Oil and Lube Oil using two different variety of Crudes.
+      Some produts like petrol and jet fuel have an associated property which must be
+      within certain bounds in the product. The model consists of mass balances across
+      the units, and the process streams. 
+       
+      Model Building in Mathematical Programming, Fifth Edition,
+      H. Paul Williams, Model 12.6 : Refinery
+      Wiley Publication, 2013
+  14   
+  15  Sets
+  16      fluids      'all process fluids in the refinery'
+  17                   /CRD1,CRD2, LN,MN,HN,LO,HO,RES, RGAS, COIL,CGAS,LOIL
+  18                    REG, PRE, JET, FUEL/
+  19   
+  20      crude(fluids)   /CRD1, CRD2/
+  21   
+  22      inter(fluids)   'intermediate fluids' /LN,MN,HN,LO,HO,RES, RGAS, COIL,CGAS,LOIL/
+  23   
+  24      products(fluids)        'final products'    /REG, PRE, JET, FUEL, LOIL/
+  25   
+  26      process         'processes in the refinery'     / Dist, Refmr, Crckr, Rblnd, Pblnd, Jblnd, Fblnd/
+  27   
+  28      rxn(process)    /Dist, Refmr, Crckr/
+  29   
+  30      mix(process)    /Rblnd, Pblnd, Jblnd, Fblnd/
+  31   
+  32      property        /octane, vpress/
+  33   
+  34      ;
+  35   
+  36  Alias (fluids, f,g,f1), (crude,cr), (process,p), (products,prd) ;
+  37   
+  38  *Set fmap(f,p,g) /(CRD1,CRD2).Dist.(LN,MN,HN,LO,HO,RES), (LN,MN,HN).Refmr.(RGAS) ,
+  39  *                          (LO,HO,RES).Crckr.(COIL,CGAS,LOIL) , (LN,MN,HN).(Rblnd,Pblnd).(REG,PRE),
+  40  *                           (LO,HO,RES,COIL).Jblnd.(JET), (LO,COIL,HO,RES).Fblnd.FUEL /
+  41  ;
+  42  Set fmap(f,mix,g) /(LN,MN,HN).Rblnd.(REG),(LN,MN,HN).(Pblnd).(PRE)
+  43                             (LO,HO,RES,COIL).Jblnd.(JET), (LO,COIL,HO,RES).Fblnd.FUEL /
+  44  ;
+  45  Table convert(f,rxn,g)
+  46              LN     MN      HN      LO      HO      RES     RGAS    COIL    CGAS    LOIL
+  47  CRD1.Dist   0.1    0.2     0.2     0.12    0.2     0.13
+  48  CRD2.Dist   0.15   0.25    0.18    0.08    0.19    0.12
+  49  LN.Refmr                                                    0.6
+  50  MN.Refmr                                                    0.52
+  51  HN.Refmr                                                    0.45
+  52  LO.Crckr                                                           0.68    0.28
+  53  HO.Crckr                                                           0.75    0.2
+  54  RES.Crckr                                                                           0.5
+  55  ;
+  56   
+  57  Parameter SellPr(prd)
+  58              /PRE 700, REG 600, JET 400, FUEL 350, LOIL 150/
+  59         ;
+  60   
+  61  Table quality(property,f)
+  62              LN      MN  HN  LO   HO  COIL    RES    REG     PRE     JET
+  63  octane      90      80  70                           84     94
+  64  vpress                      1   0.6   1.5   0.05                     1.0
+  65  ;
+  66  Positive Variables
+  67      Zmade(f,p)      'Quantity generated from process'
+  68      Zuse(f,p)       'Quantity going into Process'
+  69          ;
+  70  Variable Profit
+  71      ;
+  72  Zuse.up(cr,p) = 100;
+  73  Zmade.fx(cr,p) = 0;
+  74   
+  75  *Zmade.up(f,p) = 100;
+  76  *Zuse.up(f,p) = 100;
+  77  *Zmade.up(prd,mix)$[not sum(inter,fmap(inter,mix,prd))] =0;
+  78  *Zmade.up(inter,mix)$[not sum(g,fmap(g,rxn,prd))] =0;
+  79  *
+  80  *Zuse.up(inter,mix)$[not sum(prd,fmap(inter,mix,prd))] =0;
+  81  *Zuse.up(inter,rxn)$[not sum(g,convert(inter,rxn,g))] =0;
+  82   
+  83   
+  84  Equation
+  85      conversions(g,p)        'Amount of intermediate (inter(g)) produced by process p , rxn(p)'
+  86      splitbalance(f)
+  87   
+  88      mixingbal(f,p)
+  89      Qgasoline(property,f)
+  90  *    Qjet(property,f)
+  91      obj
+  92      ;
+  93   
+  94   
+  95  *Zmade.fx(f,p)$(not fmap(,p,f)) =0;
+  96   
+  97  *conversions(inter,rxn(p)).. Zmade(inter,p) =E= sum(f,convert(f,rxn,inter) * Zuse(f,rxn)) ;
+  98   
+  99  conversions(inter(g),rxn(p)).. Zmade(g,rxn) =E= sum(f,convert(f,rxn,g) * Zuse(f,rxn)) ;
+ 100   
+ 101  splitbalance(inter)..  sum(p, Zmade(inter,p)) =E= sum(p, Zuse(inter,p));
+ 102   
+ 103  mixingbal(prd,mix(p))$[sum(f,fmap(f,mix,prd))]..   sum(f$fmap(f,mix,prd), Zuse(f,mix) ) =E= Zmade(prd,mix) ;
+ 104   
+ 105  Qgasoline(property,prd(f))$quality(property,prd)..   sum(mix,Zmade(prd,mix) * quality(property,prd)) =E=
+ 106                                                              sum((inter,mix)$[fmap(inter,mix,prd)], Zuse(inter,mix)*quality(property,inter));
+ 107   
+ 108   
+ 109   
+ 110   
+ 111   
+ 112  *mixingbal(prd,mix(p))..   sum(f$fmap(f,mix,prd), Zuse(f,mix) ) =E= Zmade(prd,mix) ;
+ 113   
+ 114  *Qgasoline(property,prd(f))$quality(property,prd)..   sum((inter,mix)$[fmap(inter,mix,prd)],Zmade(prd,mix) * quality(property,prd)) =E=
+ 115  *                                                            sum((inter,mix)$[fmap(inter,mix,prd)], Zuse(inter,mix)*quality(property,inter));
+ 116   
+ 117   
+ 118   
+ 119  *Qjet(property,prd(f))$quality(property,prd)..   sum(mix,Zmade(prd,mix) * quality(property,prd)) =G=
+ 120  *                                                            sum((inter,mix)$[fmap(inter,mix,prd)], Zuse(inter,mix)*quality(property,inter));
+ 121   
+ 122   
+ 123  obj.. Profit =e= sum((prd,mix)$[sum(f,fmap(f,mix,prd))], Zmade(prd,mix) *SellPr(prd)) + Zmade('LOIL','Crckr')* SellPr('LOIL');
+ 124   
+ 125  model ref /all/;
+ 126  solve ref using LP max Profit;
+ 127   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/07/18 17:26:51 Page 2
+Refinery Optimization (REFINERY, SEQ =xx)
+Equation Listing    SOLVE ref Using LP From line 126
+
+
+---- conversions  =E=  Amount of intermediate (inter(g)) produced by process p , rxn(p)
+
+conversions(LN,Dist)..  Zmade(LN,Dist) - 0.1*Zuse(CRD1,Dist) - 0.15*Zuse(CRD2,Dist) =E= 0 ; (LHS = 0)
+     
+conversions(LN,Refmr)..  Zmade(LN,Refmr) =E= 0 ; (LHS = 0)
+     
+conversions(LN,Crckr)..  Zmade(LN,Crckr) =E= 0 ; (LHS = 0)
+     
+conversions(MN,Dist)..  Zmade(MN,Dist) - 0.2*Zuse(CRD1,Dist) - 0.25*Zuse(CRD2,Dist) =E= 0 ; (LHS = 0)
+     
+conversions(MN,Refmr)..  Zmade(MN,Refmr) =E= 0 ; (LHS = 0)
+     
+conversions(MN,Crckr)..  Zmade(MN,Crckr) =E= 0 ; (LHS = 0)
+     
+conversions(HN,Dist)..  Zmade(HN,Dist) - 0.2*Zuse(CRD1,Dist) - 0.18*Zuse(CRD2,Dist) =E= 0 ; (LHS = 0)
+     
+conversions(HN,Refmr)..  Zmade(HN,Refmr) =E= 0 ; (LHS = 0)
+     
+conversions(HN,Crckr)..  Zmade(HN,Crckr) =E= 0 ; (LHS = 0)
+     
+conversions(LO,Dist)..  Zmade(LO,Dist) - 0.12*Zuse(CRD1,Dist) - 0.08*Zuse(CRD2,Dist) =E= 0 ; (LHS = 0)
+     
+conversions(LO,Refmr)..  Zmade(LO,Refmr) =E= 0 ; (LHS = 0)
+     
+conversions(LO,Crckr)..  Zmade(LO,Crckr) =E= 0 ; (LHS = 0)
+     
+conversions(HO,Dist)..  Zmade(HO,Dist) - 0.2*Zuse(CRD1,Dist) - 0.19*Zuse(CRD2,Dist) =E= 0 ; (LHS = 0)
+     
+conversions(HO,Refmr)..  Zmade(HO,Refmr) =E= 0 ; (LHS = 0)
+     
+conversions(HO,Crckr)..  Zmade(HO,Crckr) =E= 0 ; (LHS = 0)
+     
+conversions(RES,Dist)..  Zmade(RES,Dist) - 0.13*Zuse(CRD1,Dist) - 0.12*Zuse(CRD2,Dist) =E= 0 ; (LHS = 0)
+     
+conversions(RES,Refmr)..  Zmade(RES,Refmr) =E= 0 ; (LHS = 0)
+     
+conversions(RES,Crckr)..  Zmade(RES,Crckr) =E= 0 ; (LHS = 0)
+     
+conversions(RGAS,Dist)..  Zmade(RGAS,Dist) =E= 0 ; (LHS = 0)
+     
+conversions(RGAS,Refmr)..  Zmade(RGAS,Refmr) - 0.6*Zuse(LN,Refmr) - 0.52*Zuse(MN,Refmr) - 0.45*Zuse(HN,Refmr) =E= 0 ; (LHS = 0)
+     
+conversions(RGAS,Crckr)..  Zmade(RGAS,Crckr) =E= 0 ; (LHS = 0)
+     
+conversions(COIL,Dist)..  Zmade(COIL,Dist) =E= 0 ; (LHS = 0)
+     
+conversions(COIL,Refmr)..  Zmade(COIL,Refmr) =E= 0 ; (LHS = 0)
+     
+conversions(COIL,Crckr)..  Zmade(COIL,Crckr) - 0.68*Zuse(LO,Crckr) - 0.75*Zuse(HO,Crckr) =E= 0 ; (LHS = 0)
+     
+conversions(CGAS,Dist)..  Zmade(CGAS,Dist) =E= 0 ; (LHS = 0)
+     
+conversions(CGAS,Refmr)..  Zmade(CGAS,Refmr) =E= 0 ; (LHS = 0)
+     
+conversions(CGAS,Crckr)..  Zmade(CGAS,Crckr) - 0.28*Zuse(LO,Crckr) - 0.2*Zuse(HO,Crckr) =E= 0 ; (LHS = 0)
+     
+conversions(LOIL,Dist)..  Zmade(LOIL,Dist) =E= 0 ; (LHS = 0)
+     
+conversions(LOIL,Refmr)..  Zmade(LOIL,Refmr) =E= 0 ; (LHS = 0)
+     
+conversions(LOIL,Crckr)..  Zmade(LOIL,Crckr) - 0.5*Zuse(RES,Crckr) =E= 0 ; (LHS = 0)
+     
+
+---- splitbalance  =E=  
+
+splitbalance(LN)..  Zmade(LN,Dist) + Zmade(LN,Refmr) + Zmade(LN,Crckr) + Zmade(LN,Rblnd) + Zmade(LN,Pblnd) + Zmade(LN,Jblnd) + Zmade(LN,Fblnd) - Zuse(LN,Dist) - Zuse(LN,Refmr) - Zuse(LN,Crckr) - Zuse(LN,Rblnd) - Zuse(LN,Pblnd) - Zuse(LN,Jblnd)
+     
+      - Zuse(LN,Fblnd) =E= 0 ; (LHS = 0)
+     
+splitbalance(MN)..  Zmade(MN,Dist) + Zmade(MN,Refmr) + Zmade(MN,Crckr) + Zmade(MN,Rblnd) + Zmade(MN,Pblnd) + Zmade(MN,Jblnd) + Zmade(MN,Fblnd) - Zuse(MN,Dist) - Zuse(MN,Refmr) - Zuse(MN,Crckr) - Zuse(MN,Rblnd) - Zuse(MN,Pblnd) - Zuse(MN,Jblnd)
+     
+      - Zuse(MN,Fblnd) =E= 0 ; (LHS = 0)
+     
+splitbalance(HN)..  Zmade(HN,Dist) + Zmade(HN,Refmr) + Zmade(HN,Crckr) + Zmade(HN,Rblnd) + Zmade(HN,Pblnd) + Zmade(HN,Jblnd) + Zmade(HN,Fblnd) - Zuse(HN,Dist) - Zuse(HN,Refmr) - Zuse(HN,Crckr) - Zuse(HN,Rblnd) - Zuse(HN,Pblnd) - Zuse(HN,Jblnd)
+     
+      - Zuse(HN,Fblnd) =E= 0 ; (LHS = 0)
+     
+splitbalance(LO)..  Zmade(LO,Dist) + Zmade(LO,Refmr) + Zmade(LO,Crckr) + Zmade(LO,Rblnd) + Zmade(LO,Pblnd) + Zmade(LO,Jblnd) + Zmade(LO,Fblnd) - Zuse(LO,Dist) - Zuse(LO,Refmr) - Zuse(LO,Crckr) - Zuse(LO,Rblnd) - Zuse(LO,Pblnd) - Zuse(LO,Jblnd)
+     
+      - Zuse(LO,Fblnd) =E= 0 ; (LHS = 0)
+     
+splitbalance(HO)..  Zmade(HO,Dist) + Zmade(HO,Refmr) + Zmade(HO,Crckr) + Zmade(HO,Rblnd) + Zmade(HO,Pblnd) + Zmade(HO,Jblnd) + Zmade(HO,Fblnd) - Zuse(HO,Dist) - Zuse(HO,Refmr) - Zuse(HO,Crckr) - Zuse(HO,Rblnd) - Zuse(HO,Pblnd) - Zuse(HO,Jblnd)
+     
+      - Zuse(HO,Fblnd) =E= 0 ; (LHS = 0)
+     
+splitbalance(RES)..  Zmade(RES,Dist) + Zmade(RES,Refmr) + Zmade(RES,Crckr) + Zmade(RES,Rblnd) + Zmade(RES,Pblnd) + Zmade(RES,Jblnd) + Zmade(RES,Fblnd) - Zuse(RES,Dist) - Zuse(RES,Refmr) - Zuse(RES,Crckr) - Zuse(RES,Rblnd) - Zuse(RES,Pblnd)
+     
+      - Zuse(RES,Jblnd) - Zuse(RES,Fblnd) =E= 0 ; (LHS = 0)
+     
+splitbalance(RGAS)..  Zmade(RGAS,Dist) + Zmade(RGAS,Refmr) + Zmade(RGAS,Crckr) + Zmade(RGAS,Rblnd) + Zmade(RGAS,Pblnd) + Zmade(RGAS,Jblnd) + Zmade(RGAS,Fblnd) - Zuse(RGAS,Dist) - Zuse(RGAS,Refmr) - Zuse(RGAS,Crckr) - Zuse(RGAS,Rblnd) - Zuse(RGAS,Pblnd)
+     
+      - Zuse(RGAS,Jblnd) - Zuse(RGAS,Fblnd) =E= 0 ; (LHS = 0)
+     
+splitbalance(COIL)..  Zmade(COIL,Dist) + Zmade(COIL,Refmr) + Zmade(COIL,Crckr) + Zmade(COIL,Rblnd) + Zmade(COIL,Pblnd) + Zmade(COIL,Jblnd) + Zmade(COIL,Fblnd) - Zuse(COIL,Dist) - Zuse(COIL,Refmr) - Zuse(COIL,Crckr) - Zuse(COIL,Rblnd) - Zuse(COIL,Pblnd)
+     
+      - Zuse(COIL,Jblnd) - Zuse(COIL,Fblnd) =E= 0 ; (LHS = 0)
+     
+splitbalance(CGAS)..  Zmade(CGAS,Dist) + Zmade(CGAS,Refmr) + Zmade(CGAS,Crckr) + Zmade(CGAS,Rblnd) + Zmade(CGAS,Pblnd) + Zmade(CGAS,Jblnd) + Zmade(CGAS,Fblnd) - Zuse(CGAS,Dist) - Zuse(CGAS,Refmr) - Zuse(CGAS,Crckr) - Zuse(CGAS,Rblnd) - Zuse(CGAS,Pblnd)
+     
+      - Zuse(CGAS,Jblnd) - Zuse(CGAS,Fblnd) =E= 0 ; (LHS = 0)
+     
+splitbalance(LOIL)..  Zmade(LOIL,Dist) + Zmade(LOIL,Refmr) + Zmade(LOIL,Crckr) + Zmade(LOIL,Rblnd) + Zmade(LOIL,Pblnd) + Zmade(LOIL,Jblnd) + Zmade(LOIL,Fblnd) - Zuse(LOIL,Dist) - Zuse(LOIL,Refmr) - Zuse(LOIL,Crckr) - Zuse(LOIL,Rblnd) - Zuse(LOIL,Pblnd)
+     
+      - Zuse(LOIL,Jblnd) - Zuse(LOIL,Fblnd) =E= 0 ; (LHS = 0)
+     
+
+---- mixingbal  =E=  
+
+mixingbal(REG,Rblnd)..  - Zmade(REG,Rblnd) + Zuse(LN,Rblnd) + Zuse(MN,Rblnd) + Zuse(HN,Rblnd) =E= 0 ; (LHS = 0)
+     
+mixingbal(PRE,Pblnd)..  - Zmade(PRE,Pblnd) + Zuse(LN,Pblnd) + Zuse(MN,Pblnd) + Zuse(HN,Pblnd) =E= 0 ; (LHS = 0)
+     
+mixingbal(JET,Jblnd)..  - Zmade(JET,Jblnd) + Zuse(LO,Jblnd) + Zuse(HO,Jblnd) + Zuse(RES,Jblnd) + Zuse(COIL,Jblnd) =E= 0 ; (LHS = 0)
+     
+mixingbal(FUEL,Fblnd)..  - Zmade(FUEL,Fblnd) + Zuse(LO,Fblnd) + Zuse(HO,Fblnd) + Zuse(RES,Fblnd) + Zuse(COIL,Fblnd) =E= 0 ; (LHS = 0)
+     
+
+---- Qgasoline  =E=  
+
+Qgasoline(octane,REG)..  84*Zmade(REG,Rblnd) + 84*Zmade(REG,Pblnd) + 84*Zmade(REG,Jblnd) + 84*Zmade(REG,Fblnd) - 90*Zuse(LN,Rblnd) - 80*Zuse(MN,Rblnd) - 70*Zuse(HN,Rblnd) =E= 0 ; (LHS = 0)
+     
+Qgasoline(octane,PRE)..  94*Zmade(PRE,Rblnd) + 94*Zmade(PRE,Pblnd) + 94*Zmade(PRE,Jblnd) + 94*Zmade(PRE,Fblnd) - 90*Zuse(LN,Pblnd) - 80*Zuse(MN,Pblnd) - 70*Zuse(HN,Pblnd) =E= 0 ; (LHS = 0)
+     
+Qgasoline(vpress,JET)..  Zmade(JET,Rblnd) + Zmade(JET,Pblnd) + Zmade(JET,Jblnd) + Zmade(JET,Fblnd) - Zuse(LO,Jblnd) - 0.6*Zuse(HO,Jblnd) - 0.05*Zuse(RES,Jblnd) - 1.5*Zuse(COIL,Jblnd) =E= 0 ; (LHS = 0)
+     
+
+---- obj  =E=  
+
+obj..  - 150*Zmade(LOIL,Crckr) - 600*Zmade(REG,Rblnd) - 700*Zmade(PRE,Pblnd) - 400*Zmade(JET,Jblnd) - 350*Zmade(FUEL,Fblnd) + Profit =E= 0 ; (LHS = 0)
+     
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/07/18 17:26:51 Page 3
+Refinery Optimization (REFINERY, SEQ =xx)
+Column Listing      SOLVE ref Using LP From line 126
+
+
+---- Zmade  Quantity generated from process
+
+Zmade(LN,Dist)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       conversions(LN,Dist)
+        1       splitbalance(LN)
+
+Zmade(LN,Refmr)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       conversions(LN,Refmr)
+        1       splitbalance(LN)
+
+Zmade(LN,Crckr)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       conversions(LN,Crckr)
+        1       splitbalance(LN)
+
+REMAINING 80 ENTRIES SKIPPED
+
+---- Zuse  Quantity going into Process
+
+Zuse(CRD1,Dist)
+                (.LO, .L, .UP, .M = 0, 0, 100, 0)
+       -0.1     conversions(LN,Dist)
+       -0.2     conversions(MN,Dist)
+       -0.2     conversions(HN,Dist)
+       -0.12    conversions(LO,Dist)
+       -0.2     conversions(HO,Dist)
+       -0.13    conversions(RES,Dist)
+
+Zuse(CRD2,Dist)
+                (.LO, .L, .UP, .M = 0, 0, 100, 0)
+       -0.15    conversions(LN,Dist)
+       -0.25    conversions(MN,Dist)
+       -0.18    conversions(HN,Dist)
+       -0.08    conversions(LO,Dist)
+       -0.19    conversions(HO,Dist)
+       -0.12    conversions(RES,Dist)
+
+Zuse(LN,Dist)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       splitbalance(LN)
+
+REMAINING 69 ENTRIES SKIPPED
+
+---- Profit  
+
+Profit
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/07/18 17:26:51 Page 4
+Refinery Optimization (REFINERY, SEQ =xx)
+Model Statistics    SOLVE ref Using LP From line 126
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS           48
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES          156
+NON ZERO ELEMENTS           236
+
+
+GENERATION TIME      =        0.031 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.031 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/07/18 17:26:51 Page 5
+Refinery Optimization (REFINERY, SEQ =xx)
+Solution Report     SOLVE ref Using LP From line 126
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   ref                 OBJECTIVE  Profit
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  126
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      3 Unbounded                 
+**** OBJECTIVE VALUE                0.0000
+
+ RESOURCE USAGE, LIMIT          0.015      1000.000
+ ITERATION COUNT, LIMIT         2    2000000000
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(4): unbounded or infeasible
+Cplex Time: 0.00sec (det. 0.02 ticks)
+Presolve found the problem infeasible or unbounded.
+Rerunning with presolve turned off and solving with LPMETHOD=0
+LP status(2): unbounded
+Cplex Time: 0.00sec (det. 0.04 ticks)
+Model has an unbounded ray.
+
+**** ERRORS/WARNINGS IN VARIABLE Zuse(MN,Rblnd)
+     1 error(s): Unbounded variable
+
+---- EQU conversions  Amount of intermediate (inter(g)) produced by process p , rxn(p)
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+LN  .Dist           .              .              .             EPS         
+LN  .Refmr          .              .              .             EPS         
+LN  .Crckr          .              .              .             EPS         
+MN  .Dist           .              .              .             EPS         
+MN  .Refmr          .              .              .             EPS         
+MN  .Crckr          .              .              .             EPS         
+HN  .Dist           .              .              .             EPS         
+HN  .Refmr          .              .              .             EPS         
+HN  .Crckr          .              .              .             EPS         
+LO  .Dist           .              .              .             EPS         
+LO  .Refmr          .              .              .             EPS         
+LO  .Crckr          .              .              .             EPS         
+HO  .Dist           .              .              .             EPS         
+HO  .Refmr          .              .              .             EPS         
+HO  .Crckr          .              .              .             EPS         
+RES .Dist           .              .              .             EPS         
+RES .Refmr          .              .              .             EPS         
+RES .Crckr          .              .              .             EPS         
+RGAS.Dist           .              .              .             EPS         
+RGAS.Refmr          .              .              .             EPS         
+RGAS.Crckr          .              .              .             EPS         
+COIL.Dist           .              .              .             EPS         
+COIL.Refmr          .              .              .             EPS         
+COIL.Crckr          .              .              .             EPS         
+CGAS.Dist           .              .              .             EPS         
+CGAS.Refmr          .              .              .             EPS         
+CGAS.Crckr          .              .              .             EPS         
+LOIL.Dist           .              .              .             EPS         
+LOIL.Refmr          .              .              .             EPS         
+LOIL.Crckr          .              .              .           150.0000      
+
+---- EQU splitbalance  
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+LN            .              .              .             EPS         
+MN            .              .              .             EPS         
+HN            .              .              .             EPS         
+LO            .              .              .             EPS         
+HO            .              .              .             EPS         
+RES           .              .              .             EPS         
+RGAS          .              .              .             EPS         
+COIL          .              .              .             EPS         
+CGAS          .              .              .             EPS         
+LOIL          .              .              .             EPS         
+
+---- EQU mixingbal  
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+REG .Rblnd          .              .              .         -9000.0000      
+PRE .Pblnd          .              .              .         15750.0000      
+JET .Jblnd          .              .              .          -400.0000      
+FUEL.Fblnd          .              .              .          -350.0000      
+
+---- EQU Qgasoline  
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+octane.REG          .              .              .          -100.0000      
+octane.PRE          .              .              .           175.0000      
+vpress.JET          .              .              .             EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+---- VAR Zmade  Quantity generated from process
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+LN  .Dist           .              .            +INF             .          
+LN  .Refmr          .              .            +INF             .          
+LN  .Crckr          .              .            +INF             .          
+LN  .Rblnd          .              .            +INF             .          
+LN  .Pblnd          .              .            +INF            EPS         
+LN  .Jblnd          .              .            +INF            EPS         
+LN  .Fblnd          .              .            +INF            EPS         
+MN  .Dist           .              .            +INF             .          
+MN  .Refmr          .              .            +INF             .          
+MN  .Crckr          .              .            +INF             .          
+MN  .Rblnd          .              .            +INF             .          
+MN  .Pblnd          .              .            +INF            EPS         
+MN  .Jblnd          .              .            +INF            EPS         
+MN  .Fblnd          .              .            +INF            EPS         
+HN  .Dist           .              .            +INF             .          
+HN  .Refmr          .              .            +INF             .          
+HN  .Crckr          .              .            +INF             .          
+HN  .Rblnd          .              .            +INF             .          
+HN  .Pblnd          .              .            +INF            EPS         
+HN  .Jblnd          .              .            +INF            EPS         
+HN  .Fblnd          .              .            +INF            EPS         
+LO  .Dist           .              .            +INF             .          
+LO  .Refmr          .              .            +INF             .          
+LO  .Crckr          .              .            +INF             .          
+LO  .Rblnd          .              .            +INF             .          
+LO  .Pblnd          .              .            +INF            EPS         
+LO  .Jblnd          .              .            +INF            EPS         
+LO  .Fblnd          .              .            +INF            EPS         
+HO  .Dist           .              .            +INF             .          
+HO  .Refmr          .              .            +INF             .          
+HO  .Crckr          .              .            +INF             .          
+HO  .Rblnd          .              .            +INF             .          
+HO  .Pblnd          .              .            +INF            EPS         
+HO  .Jblnd          .              .            +INF            EPS         
+HO  .Fblnd          .              .            +INF            EPS         
+RES .Dist           .              .            +INF             .          
+RES .Refmr          .              .            +INF             .          
+RES .Crckr          .              .            +INF             .          
+RES .Rblnd          .              .            +INF             .          
+RES .Pblnd          .              .            +INF            EPS         
+RES .Jblnd          .              .            +INF            EPS         
+RES .Fblnd          .              .            +INF            EPS         
+RGAS.Dist           .              .            +INF             .          
+RGAS.Refmr          .              .            +INF             .          
+RGAS.Crckr          .              .            +INF             .          
+RGAS.Rblnd          .              .            +INF             .          
+RGAS.Pblnd          .              .            +INF            EPS         
+RGAS.Jblnd          .              .            +INF            EPS         
+RGAS.Fblnd          .              .            +INF            EPS         
+COIL.Dist           .              .            +INF             .          
+COIL.Refmr          .              .            +INF             .          
+COIL.Crckr          .              .            +INF             .          
+COIL.Rblnd          .              .            +INF             .          
+COIL.Pblnd          .              .            +INF            EPS         
+COIL.Jblnd          .              .            +INF            EPS         
+COIL.Fblnd          .              .            +INF            EPS         
+CGAS.Dist           .              .            +INF             .          
+CGAS.Refmr          .              .            +INF             .          
+CGAS.Crckr          .              .            +INF             .          
+CGAS.Rblnd          .              .            +INF             .          
+CGAS.Pblnd          .              .            +INF            EPS         
+CGAS.Jblnd          .              .            +INF            EPS         
+CGAS.Fblnd          .              .            +INF            EPS         
+LOIL.Dist           .              .            +INF             .          
+LOIL.Refmr          .              .            +INF             .          
+LOIL.Crckr          .              .            +INF             .          
+LOIL.Rblnd          .              .            +INF             .          
+LOIL.Pblnd          .              .            +INF            EPS         
+LOIL.Jblnd          .              .            +INF            EPS         
+LOIL.Fblnd          .              .            +INF            EPS         
+REG .Rblnd          .              .            +INF             .          
+REG .Pblnd          .              .            +INF         8400.0000  NOPT
+REG .Jblnd          .              .            +INF         8400.0000  NOPT
+REG .Fblnd          .              .            +INF         8400.0000  NOPT
+PRE .Rblnd          .              .            +INF       -16450.0000      
+PRE .Pblnd          .              .            +INF             .          
+PRE .Jblnd          .              .            +INF       -16450.0000      
+PRE .Fblnd          .              .            +INF       -16450.0000      
+JET .Rblnd          .              .            +INF             .          
+JET .Pblnd          .              .            +INF            EPS         
+JET .Jblnd          .              .            +INF             .          
+JET .Fblnd          .              .            +INF            EPS         
+FUEL.Fblnd          .              .            +INF             .          
+
+---- VAR Zuse  Quantity going into Process
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+CRD1.Dist           .              .           100.0000         EPS         
+CRD2.Dist           .              .           100.0000         EPS         
+LN  .Dist           .              .            +INF            EPS         
+LN  .Refmr          .              .            +INF            EPS         
+LN  .Crckr          .              .            +INF            EPS         
+LN  .Rblnd          .              .            +INF             .          
+LN  .Pblnd          .              .            +INF             .          
+LN  .Jblnd          .              .            +INF            EPS         
+LN  .Fblnd          .              .            +INF            EPS         
+MN  .Dist           .              .            +INF            EPS         
+MN  .Refmr          .              .            +INF            EPS         
+MN  .Crckr          .              .            +INF            EPS         
+MN  .Rblnd          .              .            +INF         1000.0000 UNBND
+MN  .Pblnd          .              .            +INF        -1750.0000      
+MN  .Jblnd          .              .            +INF            EPS         
+MN  .Fblnd          .              .            +INF            EPS         
+HN  .Dist           .              .            +INF            EPS         
+HN  .Refmr          .              .            +INF            EPS         
+HN  .Crckr          .              .            +INF            EPS         
+HN  .Rblnd          .              .            +INF         2000.0000  NOPT
+HN  .Pblnd          .              .            +INF        -3500.0000      
+HN  .Jblnd          .              .            +INF            EPS         
+HN  .Fblnd          .              .            +INF            EPS         
+LO  .Dist           .              .            +INF            EPS         
+LO  .Refmr          .              .            +INF            EPS         
+LO  .Crckr          .              .            +INF            EPS         
+LO  .Rblnd          .              .            +INF            EPS         
+LO  .Pblnd          .              .            +INF            EPS         
+LO  .Jblnd          .              .            +INF          400.0000  NOPT
+LO  .Fblnd          .              .            +INF          350.0000  NOPT
+HO  .Dist           .              .            +INF            EPS         
+HO  .Refmr          .              .            +INF            EPS         
+HO  .Crckr          .              .            +INF            EPS         
+HO  .Rblnd          .              .            +INF            EPS         
+HO  .Pblnd          .              .            +INF            EPS         
+HO  .Jblnd          .              .            +INF          400.0000  NOPT
+HO  .Fblnd          .              .            +INF          350.0000  NOPT
+RES .Dist           .              .            +INF            EPS         
+RES .Refmr          .              .            +INF            EPS         
+RES .Crckr          .              .            +INF           75.0000  NOPT
+RES .Rblnd          .              .            +INF            EPS         
+RES .Pblnd          .              .            +INF            EPS         
+RES .Jblnd          .              .            +INF          400.0000  NOPT
+RES .Fblnd          .              .            +INF          350.0000  NOPT
+RGAS.Dist           .              .            +INF            EPS         
+RGAS.Refmr          .              .            +INF            EPS         
+RGAS.Crckr          .              .            +INF            EPS         
+RGAS.Rblnd          .              .            +INF            EPS         
+RGAS.Pblnd          .              .            +INF            EPS         
+RGAS.Jblnd          .              .            +INF            EPS         
+RGAS.Fblnd          .              .            +INF            EPS         
+COIL.Dist           .              .            +INF            EPS         
+COIL.Refmr          .              .            +INF            EPS         
+COIL.Crckr          .              .            +INF            EPS         
+COIL.Rblnd          .              .            +INF            EPS         
+COIL.Pblnd          .              .            +INF            EPS         
+COIL.Jblnd          .              .            +INF          400.0000  NOPT
+COIL.Fblnd          .              .            +INF          350.0000  NOPT
+CGAS.Dist           .              .            +INF            EPS         
+CGAS.Refmr          .              .            +INF            EPS         
+CGAS.Crckr          .              .            +INF            EPS         
+CGAS.Rblnd          .              .            +INF            EPS         
+CGAS.Pblnd          .              .            +INF            EPS         
+CGAS.Jblnd          .              .            +INF            EPS         
+CGAS.Fblnd          .              .            +INF            EPS         
+LOIL.Dist           .              .            +INF            EPS         
+LOIL.Refmr          .              .            +INF            EPS         
+LOIL.Crckr          .              .            +INF            EPS         
+LOIL.Rblnd          .              .            +INF            EPS         
+LOIL.Pblnd          .              .            +INF            EPS         
+LOIL.Jblnd          .              .            +INF            EPS         
+LOIL.Fblnd          .              .            +INF            EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR Profit            -INF             .            +INF             .          
+
+
+**** REPORT SUMMARY :       13     NONOPT ( NOPT)
+                             0 INFEASIBLE
+                             1  UNBOUNDED (UNBND)
+
+
+EXECUTION TIME       =        0.000 SECONDS      2 MB  25.1.2 r67455 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\refinery\RefGAMSway.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\refinery\RefGAMSway.lst

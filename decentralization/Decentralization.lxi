@@ -1,0 +1,31 @@
+B 2 C o m p i l a t i o n
+B 130 Equation Listing    SOLVE Decentre Using MINLP From line 77
+D 131 Benefits
+D 138 Communication
+D 157 BinaryCon
+D 168 MaxDept
+D 177 MaxCity
+D 188 Savings
+B 195 Column Listing      SOLVE Decentre Using MINLP From line 77
+E 196 Locate
+E 254 ComOpen
+E 270 MovCost
+E 278 ComCost
+E 286 NetCost
+B 295 Model Statistics    SOLVE Decentre Using MINLP From line 77
+B 313 Solution Report     SOLVE Decentre Using MINLP From line 77
+F 377 Benefits
+F 378 Communication
+F 387 BinaryCon
+F 482 MaxDept
+F 490 MaxCity
+F 498 Savings
+G 501 Locate
+G 521 ComOpen
+G 616 MovCost
+G 620 ComCost
+G 621 NetCost
+B 635 E x e c u t i o n
+I 636 Locate
+I 649 MovCost
+I 650 ComCost

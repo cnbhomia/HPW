@@ -1,0 +1,38 @@
+B 2 C o m p i l a t i o n
+B 166 Equation Listing    SOLVE ecoplan Using LP From line 147
+D 167 GoodsBalanceYr0
+D 177 GoodsBalance
+D 188 horizonstore1
+D 197 horizonstore2
+D 206 LimCapCalc
+D 217 LimOutput
+D 228 ManpowerCap
+D 239 objFunc1
+B 246 Column Listing      SOLVE ecoplan Using LP From line 147
+E 247 Output
+E 267 x
+E 291 y
+E 321 store
+E 340 capacity
+E 359 Target
+B 368 Model Statistics    SOLVE ecoplan Using LP From line 147
+B 384 Solution Report     SOLVE ecoplan Using LP From line 147
+F 415 GoodsBalanceYr0
+F 423 GoodsBalance
+F 443 horizonstore1
+F 451 horizonstore2
+F 459 LimCapCalc
+F 479 LimOutput
+F 499 ManpowerCap
+F 508 objFunc1
+G 511 Output
+G 531 x
+G 557 y
+G 583 store
+G 609 capacity
+G 629 Target
+B 642 E x e c u t i o n
+I 643 Output
+I 653 x
+I 661 y
+I 668 store

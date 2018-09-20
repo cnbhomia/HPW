@@ -1,0 +1,17 @@
+B 2 C o m p i l a t i o n
+B 30 Equation Listing    SOLVE l Using LP From line 20
+D 31 balance
+D 43 quant
+D 54 total
+B 61 Column Listing      SOLVE l Using LP From line 20
+E 62 share
+E 82 out
+E 110 tot
+B 119 Model Statistics    SOLVE l Using LP From line 20
+B 135 Solution Report     SOLVE l Using LP From line 20
+F 171 balance
+F 194 quant
+F 251 total
+G 252 share
+G 311 out
+G 334 tot

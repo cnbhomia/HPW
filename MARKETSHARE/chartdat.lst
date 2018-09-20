@@ -1,0 +1,209 @@
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows 09/17/18 14:45:22 Page 1
+Create an Example GDX file for the IDE Charting Facility (CHARTDAT,SEQ=313)
+C o m p i l a t i o n
+
+
+   2   
+      Create gdx file for charting demo.
+      The generated gdx file can be used to follow the charting examples in the 
+      GAMSIDE.
+       
+       
+      GAMS Development Corporation, Formulation and Language Examples.
+       
+      Keywords: GAMS language features, Gantt graph
+  12   
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows 09/17/18 14:45:22 Page 2
+Create an Example GDX file for the IDE Charting Facility (CHARTDAT,SEQ=313)
+Data for single Lines, Bars, Pie
+
+
+  14  Set years / y1998*y2005 /;
+  15   
+  16  Parameter YearDataA(years), YearDataB(years), YearDataC(years);
+  17  YearDataA(years) = uniform(100, 200);
+  18  YearDataB(years) = uniform(100, 200);
+  19  YearDataC(years) = uniform( 75, 125);
+  20   
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows 09/17/18 14:45:22 Page 3
+Create an Example GDX file for the IDE Charting Facility (CHARTDAT,SEQ=313)
+Data for Functions
+
+
+  22  Set p / p1*p100 /;
+  23   
+  24  Parameter Points(p,*);
+  25   
+  26  Scalar x / 0.0 /, delta;
+  27   
+  28  delta = 2.0*pi/(card(p) - 1);
+  29  loop(p,
+  30     Points(p, 'x') = eps + sin(x);
+  31     Points(p, 'y') = eps + cos(3*x);
+  32     x = x + delta;
+  33  );
+  34   
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows 09/17/18 14:45:22 Page 4
+Create an Example GDX file for the IDE Charting Facility (CHARTDAT,SEQ=313)
+Data Vector 3D
+
+
+  36  Set
+  37     d         / d1*d20 /
+  38     xyz       / x0, y0, z0, x1, y1, z1 /
+  39     xy(xyz)   / x0, y0, x1, y1 /
+  40     xy1(xy)   / x1, y1 /
+  41     xyz0(xyz) / x0, y0, z0 /
+  42     xy0(xy)   / x0, y0 /;
+  43   
+  44  Parameter
+  45     Vector3D(d, xyz)
+  46     Vector2D(d, xy)
+  47     Vector2Db(d, xy)
+  48     Scatter3D(d, xyz0)
+  49     Scatter2D(d, xy0);
+  50   
+  51  vector3D(d, xyz)   = uniform(1, 10);
+  52  vector2D(d, xy)    = vector3D(d, xy);
+  53  Vector2Db(d, xy)   = Vector2D(d, xy);
+  54  Vector2Db(d, xy1)  = uniform(1, 10);
+  55  scatter3D(d, xyz0) = vector3D(d, xyz0);
+  56  scatter2D(d, xy0)  = vector2D(d, xy0);
+  57   
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows 09/17/18 14:45:22 Page 5
+Create an Example GDX file for the IDE Charting Facility (CHARTDAT,SEQ=313)
+Data for Gantt Graph
+
+
+  59  Set
+  60     task     / task1*task3 /
+  61     resource / resource1*resource3 /
+  62     sl       / start, length /;
+  63   
+  64  Table GanttData(task, resource, sl)
+  65                       start  length
+  66     task1.resource1       1       8
+  67     task1.resource3      12       2
+  68     task2.resource2       2       4
+  69     task2.resource3       7       3
+  70     task3.resource1      10       1
+  71     task3.resource2       8       3
+  72     task3.resource3       4       2;
+  73   
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows 09/17/18 14:45:22 Page 6
+Create an Example GDX file for the IDE Charting Facility (CHARTDAT,SEQ=313)
+Data for Surface Graph
+
+
+  75  Set s / s1*s50 /;
+  76   
+  77  Alias (s, ss);
+  78   
+  79  Parameter Surface(s, ss);
+  80   
+  81  Scalar x, y;
+  82   
+  83  loop((s, ss),
+  84     x = (ord(s)  - 1)/(card(s)  - 1)*30 - 15;
+  85     y = (ord(ss) - 1)/(card(ss) - 1)*30 - 15;
+  86     surface(s, ss) = sin(sqrt(sqr(x) + sqr(y)))/sqrt(sqr(x) + sqr(y))
+  87  );
+  88   
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows 09/17/18 14:45:22 Page 7
+Create an Example GDX file for the IDE Charting Facility (CHARTDAT,SEQ=313)
+Data for multi Line Graph
+
+
+  90  Set
+  91     time0       / t0*t100 /
+  92     time(time0) / t1*t100 /
+  93     stock       / IBM, DELL, HP, SUN /;
+  94   
+  95  Parameter StockData(time, stock, xy0);
+  96   
+  97  option seed = 12345;
+  98   
+  99  StockData(time, stock, 'x0') = jstart - card(time) + ord(time);
+ 100  StockData('t1', stock, 'y0') = 100;
+ 101   
+ 102  loop(time,
+ 103     StockData(time+1, stock, 'y0') = StockData(time, stock, 'y0') + uniform
+      (-1, 1);
+ 104  );
+ 105   
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows 09/17/18 14:45:22 Page 8
+Create an Example GDX file for the IDE Charting Facility (CHARTDAT,SEQ=313)
+Data for Fan Graph
+
+
+ 107  Set
+ 108     scenario / scen1*scen1000 /
+ 109     timex    / t0*t135 /;
+ 110   
+ 111  Parameter ScenarioData(timex, scenario);
+ 112   
+ 113  Scalar scale, x, dx, v;
+ 114   
+ 115  ScenarioData('t0', scenario) = abs(1 + normal(2, 2));
+ 116  scale = sum(scenario, ScenarioData( 't0', scenario));
+ 117  ScenarioData('t0', scenario) = ScenarioData('t0', scenario)/scale;
+ 118  ScenarioData('t1', scenario) = 100;
+ 119  loop((timex, scenario)$(ord(timex) > 1),
+ 120     x  = ScenarioData(timex, scenario);
+ 121     v  = mod(uniformInt(1, 4), 3);
+ 122     dx = 0;
+ 123     if(V = 0, dx =  0;);
+ 124     if(V = 1, dx =  1$(ord(timex) > card(timex)/2););
+ 125     if(V = 2, dx = -2$(ord(timex) > card(timex)/1.5););
+ 126     dx = dx + uniform(-2, 2);
+ 127     dx$(abs(x + dx - 100) > 25) = 0;
+ 128     ScenarioData(timex+1, scenario) = x + dx;
+ 129  );
+ 130   
+ 131  * Export the data to a GDX file
+ 132  execute_unload 'chartdata.gdx',
+ 133     YearDataA, YearDataB, YearDataC,
+ 134     Points,
+ 135     Vector2D, Vector2dB, Vector3D,
+ 136     Scatter2D, Scatter3D,
+ 137     GanttData,
+ 138     Surface,
+ 139     StockData,
+ 140     ScenarioData;
+ 141   
+ 142  * generate a chart file
+ 143  * open the file in the GAMSIDE to view the chart
+ 144  File f / testchart.gch /;
+ 145  put  f;
+ 146  $onPut
+ 147  [CHART]
+ 148  GDXFILE=chartdata.gdx
+ 149  TITLE=StockData
+ 150  [SERIES1]
+ 151  SYMBOL=StockData
+ 152  TYPE=multi-linex
+ 153  $offPut
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows 09/17/18 14:45:22 Page 9
+Create an Example GDX file for the IDE Charting Facility (CHARTDAT,SEQ=313)
+E x e c u t i o n
+
+
+**** REPORT FILE SUMMARY
+
+f C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\testchart.gch
+
+
+EXECUTION TIME       =        0.468 SECONDS      8 MB  25.1.2 r67455 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\chartdat.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\chartdat.lst

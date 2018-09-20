@@ -1,0 +1,664 @@
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/04/18 18:21:47 Page 1
+Decentralization MINLP (DCENTRALIZATN, SEQ =xx)
+C o m p i l a t i o n
+
+
+   2  *         *         *         *         *         *         *         *         *
+      This problem is a simple decision making problem for a company relocating it's five
+      departments from London to two other cities subject to constraint of maximum
+      number of offices in a city. The objective is to maximize the benefits of relocation
+      against increased communication costs.
+       
+      Model Building in Mathematical Programming, Fifth Edition,
+      H. Paul Williams, Model 12.10 : Decentralization
+      Wiley Publication, 2013
+  13   
+  14  Sets
+  15      Dept    'Departments in the company'    /A*E/
+  16      City    'Cities Available'              /'Bristol', 'Brighton' , 'London'/
+  17      ;
+  18   
+  19  Table B(City,Dept)      'Benefits from relocation, [1000 £/yr]'
+  20               A      B       C       D       E
+  21  Bristol     10     15      10      20       5
+  22  Brighton    10     20      15      15      15
+  23      ;
+  24   
+  25  Table C(Dept,Dept)      'Quantity of communication between departments [1000 units] '
+  26      A      B       C       D       E
+  27  A                 1.0     1.5
+  28  B                 1.4     1.2
+  29  C                                 2.0
+  30  D                                 0.7
+  31      ;
+  32   
+  33  Table D(City, City)     'Cost of Communication between cities [£/unit] '
+  34              Bristol     Brighton    London
+  35  Bristol           5           14        13
+  36  Brighton         14            5         9
+  37  London           13            9        10
+  38      ;
+  39   
+  40  Alias(Dept,i,k),(City,j,l);
+  41   
+  42  Variables
+  43      Locate(Dept,City)   'Moving Decision Variable'
+  44      ComOpen(i,j,k,l)    'Communication between Dept i at City j to Dept k at City l'
+  45      MovCost             'Cost Benefit from Moving, [1000£]'
+  46      ComCost             'Cost from comunication, [1000£] '
+  47      NetCost             'Net cost, [1000£]'
+  48      ;
+  49   
+  50  Binary Variable Locate(Dept,City),ComOpen(i,j,k,l);
+  51   
+  52   
+  53  Equations
+  54      Benefits                'Benefit Evaluation'
+  55      Communication           'Communication Cost Evaluation'
+  56      BinaryCon(i,j,k,l)      'Logical Condition ComOpen(i,j,k,l) --> Locate(i,j)'
+  57      MaxDept(City)           'Maximum Departments allowed in each city'
+  58      MaxCity(Dept)           'Maximum City for each Department'
+  59      Savings                 'Net cost'
+  60      ;
+  61   
+  62  Benefits..                  MovCost =E= sum ((i,j), Locate(i,j)* B(j,i)) ;
+  63   
+  64  Communication..             ComCost =E= sum((i,j,k,l), C(i,k)*D(j,l)* ComOpen(i,j,k,l));
+  65   
+  66  BinaryCon(i,j,k,l) $[(ord(i)<ord(k))]..
+  67                              Locate(i,j) * Locate(k,l) =E= ComOpen(i,j,k,l);
+  68   
+  69  MaxDept(City)..             sum(Dept,Locate(Dept,City)) =L= 3;
+  70   
+  71  MaxCity(Dept)..             sum(City,Locate(Dept,City)) =E= 1;
+  72   
+  73  Savings..                   NetCost =E=  - MovCost + ComCost ;
+  74   
+  75  Model Decentre /all/;
+  76   
+  77  Solve Decentre using MINLP minimizing NetCost;
+  78   
+  79  Display Locate.l, MovCost.l, ComCost.l;
+  80   
+  81   
+  82   
+  83   
+  84   
+  85  *
+  86  *Equations
+  87  *    Benefits                 'Benefit Evaluation'
+  88  *    Communicate              'Communication Cost Evaluation'
+  89  *
+  90  *    Location2(i,j,k,l)       'Locate(i,j) and Locate(k,l) --> ComOpen(i,j,k,l)'
+  91  *    MaxDept(City)            'Maximum Departments allowed in each city'
+  92  *    MaxCity(Dept)            'Maximum City for each Department'
+  93  *    Savings                  'Net Savings'
+  94  *    ;
+  95  *
+  96  *Benefits..              MovBen =E= sum ((i,j), Locate(i,j)* B(j,i)) ;
+  97  *
+  98  *Communicate..           ComCost =E= sum((i,j,k,l)$[(ord(i)<ord(k))],C(i,k) * D(j,l) * ComOpen(i,j,k,l));
+  99  *
+ 100  *
+ 101  *
+ 102  *Location2(i,j,k,l)$[(ord(i)<ord(k))]..    Locate(i,j) * Locate(k,l) =E= ComOpen(i,j,k,l) ;
+ 103  *
+ 104  *MaxDept(City)..         sum(Dept,Locate(Dept,City)) =L= 3;
+ 105  *
+ 106  *MaxCity(Dept)..         sum(City,Locate(Dept,City)) =E= 1;
+ 107  *
+ 108  *Savings..               save =E= MovBen - ComCost ;
+ 109  *
+ 110  *
+ 111  *Model Decenter /all/;
+ 112  *
+ 113  *Solve Decenter using MINLP maximizing Save;
+ 114  *
+ 115  *Display Locate.l,ComOpen.l,MovBen.l,ComCost.l;
+ 116  *
+ 117  *
+ 118  *
+ 119   
+ 120   
+ 121   
+ 122   
+ 123   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/04/18 18:21:47 Page 2
+Decentralization MINLP (DCENTRALIZATN, SEQ =xx)
+Equation Listing    SOLVE Decentre Using MINLP From line 77
+
+
+---- Benefits  =E=  Benefit Evaluation
+
+Benefits..  - 10*Locate(A,Bristol) - 10*Locate(A,Brighton) - 15*Locate(B,Bristol) - 20*Locate(B,Brighton) - 10*Locate(C,Bristol) - 15*Locate(C,Brighton) - 20*Locate(D,Bristol) - 15*Locate(D,Brighton) - 5*Locate(E,Bristol) - 15*Locate(E,Brighton) + MovCost
+      =E= 0 ; (LHS = 0)
+     
+
+---- Communication  =E=  Communication Cost Evaluation
+
+Communication..  - 5*ComOpen(A,Bristol,C,Bristol) - 14*ComOpen(A,Bristol,C,Brighton) - 13*ComOpen(A,Bristol,C,London) - 7.5*ComOpen(A,Bristol,D,Bristol) - 21*ComOpen(A,Bristol,D,Brighton) - 19.5*ComOpen(A,Bristol,D,London)
+     
+      - 14*ComOpen(A,Brighton,C,Bristol) - 5*ComOpen(A,Brighton,C,Brighton) - 9*ComOpen(A,Brighton,C,London) - 21*ComOpen(A,Brighton,D,Bristol) - 7.5*ComOpen(A,Brighton,D,Brighton) - 13.5*ComOpen(A,Brighton,D,London) - 13*ComOpen(A,London,C,Bristol)
+     
+      - 9*ComOpen(A,London,C,Brighton) - 10*ComOpen(A,London,C,London) - 19.5*ComOpen(A,London,D,Bristol) - 13.5*ComOpen(A,London,D,Brighton) - 15*ComOpen(A,London,D,London) - 7*ComOpen(B,Bristol,C,Bristol) - 19.6*ComOpen(B,Bristol,C,Brighton)
+     
+      - 18.2*ComOpen(B,Bristol,C,London) - 6*ComOpen(B,Bristol,D,Bristol) - 16.8*ComOpen(B,Bristol,D,Brighton) - 15.6*ComOpen(B,Bristol,D,London) - 19.6*ComOpen(B,Brighton,C,Bristol) - 7*ComOpen(B,Brighton,C,Brighton) - 12.6*ComOpen(B,Brighton,C,London)
+     
+      - 16.8*ComOpen(B,Brighton,D,Bristol) - 6*ComOpen(B,Brighton,D,Brighton) - 10.8*ComOpen(B,Brighton,D,London) - 18.2*ComOpen(B,London,C,Bristol) - 12.6*ComOpen(B,London,C,Brighton) - 14*ComOpen(B,London,C,London) - 15.6*ComOpen(B,London,D,Bristol)
+     
+      - 10.8*ComOpen(B,London,D,Brighton) - 12*ComOpen(B,London,D,London) - 10*ComOpen(C,Bristol,E,Bristol) - 28*ComOpen(C,Bristol,E,Brighton) - 26*ComOpen(C,Bristol,E,London) - 28*ComOpen(C,Brighton,E,Bristol) - 10*ComOpen(C,Brighton,E,Brighton)
+     
+      - 18*ComOpen(C,Brighton,E,London) - 26*ComOpen(C,London,E,Bristol) - 18*ComOpen(C,London,E,Brighton) - 20*ComOpen(C,London,E,London) - 3.5*ComOpen(D,Bristol,E,Bristol) - 9.8*ComOpen(D,Bristol,E,Brighton) - 9.1*ComOpen(D,Bristol,E,London)
+     
+      - 9.8*ComOpen(D,Brighton,E,Bristol) - 3.5*ComOpen(D,Brighton,E,Brighton) - 6.3*ComOpen(D,Brighton,E,London) - 9.1*ComOpen(D,London,E,Bristol) - 6.3*ComOpen(D,London,E,Brighton) - 7*ComOpen(D,London,E,London) + ComCost =E= 0 ; (LHS = 0)
+     
+
+---- BinaryCon  =E=  Logical Condition ComOpen(i,j,k,l) --> Locate(i,j)
+
+BinaryCon(A,Bristol,B,Bristol)..  (0)*Locate(A,Bristol) + (0)*Locate(B,Bristol) - ComOpen(A,Bristol,B,Bristol) =E= 0 ; (LHS = 0)
+     
+BinaryCon(A,Bristol,B,Brighton)..  (0)*Locate(A,Bristol) + (0)*Locate(B,Brighton) - ComOpen(A,Bristol,B,Brighton) =E= 0 ; (LHS = 0)
+     
+BinaryCon(A,Bristol,B,London)..  (0)*Locate(A,Bristol) + (0)*Locate(B,London) - ComOpen(A,Bristol,B,London) =E= 0 ; (LHS = 0)
+     
+REMAINING 87 ENTRIES SKIPPED
+
+
+---- MaxDept  =L=  Maximum Departments allowed in each city
+
+MaxDept(Bristol)..  Locate(A,Bristol) + Locate(B,Bristol) + Locate(C,Bristol) + Locate(D,Bristol) + Locate(E,Bristol) =L= 3 ; (LHS = 0)
+     
+MaxDept(Brighton)..  Locate(A,Brighton) + Locate(B,Brighton) + Locate(C,Brighton) + Locate(D,Brighton) + Locate(E,Brighton) =L= 3 ; (LHS = 0)
+     
+MaxDept(London)..  Locate(A,London) + Locate(B,London) + Locate(C,London) + Locate(D,London) + Locate(E,London) =L= 3 ; (LHS = 0)
+     
+
+---- MaxCity  =E=  Maximum City for each Department
+
+MaxCity(A)..  Locate(A,Bristol) + Locate(A,Brighton) + Locate(A,London) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+MaxCity(B)..  Locate(B,Bristol) + Locate(B,Brighton) + Locate(B,London) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+MaxCity(C)..  Locate(C,Bristol) + Locate(C,Brighton) + Locate(C,London) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 2 ENTRIES SKIPPED
+
+
+---- Savings  =E=  Net cost
+
+Savings..  MovCost - ComCost + NetCost =E= 0 ; (LHS = 0)
+     
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/04/18 18:21:47 Page 3
+Decentralization MINLP (DCENTRALIZATN, SEQ =xx)
+Column Listing      SOLVE Decentre Using MINLP From line 77
+
+
+---- Locate  Moving Decision Variable
+
+Locate(A,Bristol)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+      -10       Benefits
+       (0)      BinaryCon(A,Bristol,B,Bristol)
+       (0)      BinaryCon(A,Bristol,B,Brighton)
+       (0)      BinaryCon(A,Bristol,B,London)
+       (0)      BinaryCon(A,Bristol,C,Bristol)
+       (0)      BinaryCon(A,Bristol,C,Brighton)
+       (0)      BinaryCon(A,Bristol,C,London)
+       (0)      BinaryCon(A,Bristol,D,Bristol)
+       (0)      BinaryCon(A,Bristol,D,Brighton)
+       (0)      BinaryCon(A,Bristol,D,London)
+       (0)      BinaryCon(A,Bristol,E,Bristol)
+       (0)      BinaryCon(A,Bristol,E,Brighton)
+       (0)      BinaryCon(A,Bristol,E,London)
+        1       MaxDept(Bristol)
+        1       MaxCity(A)
+
+Locate(A,Brighton)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+      -10       Benefits
+       (0)      BinaryCon(A,Brighton,B,Bristol)
+       (0)      BinaryCon(A,Brighton,B,Brighton)
+       (0)      BinaryCon(A,Brighton,B,London)
+       (0)      BinaryCon(A,Brighton,C,Bristol)
+       (0)      BinaryCon(A,Brighton,C,Brighton)
+       (0)      BinaryCon(A,Brighton,C,London)
+       (0)      BinaryCon(A,Brighton,D,Bristol)
+       (0)      BinaryCon(A,Brighton,D,Brighton)
+       (0)      BinaryCon(A,Brighton,D,London)
+       (0)      BinaryCon(A,Brighton,E,Bristol)
+       (0)      BinaryCon(A,Brighton,E,Brighton)
+       (0)      BinaryCon(A,Brighton,E,London)
+        1       MaxDept(Brighton)
+        1       MaxCity(A)
+
+Locate(A,London)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       (0)      BinaryCon(A,London,B,Bristol)
+       (0)      BinaryCon(A,London,B,Brighton)
+       (0)      BinaryCon(A,London,B,London)
+       (0)      BinaryCon(A,London,C,Bristol)
+       (0)      BinaryCon(A,London,C,Brighton)
+       (0)      BinaryCon(A,London,C,London)
+       (0)      BinaryCon(A,London,D,Bristol)
+       (0)      BinaryCon(A,London,D,Brighton)
+       (0)      BinaryCon(A,London,D,London)
+       (0)      BinaryCon(A,London,E,Bristol)
+       (0)      BinaryCon(A,London,E,Brighton)
+       (0)      BinaryCon(A,London,E,London)
+        1       MaxDept(London)
+        1       MaxCity(A)
+
+REMAINING 12 ENTRIES SKIPPED
+
+---- ComOpen  Communication between Dept i at City j to Dept k at City l
+
+ComOpen(A,Bristol,B,Bristol)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       BinaryCon(A,Bristol,B,Bristol)
+
+ComOpen(A,Bristol,B,Brighton)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       BinaryCon(A,Bristol,B,Brighton)
+
+ComOpen(A,Bristol,B,London)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       BinaryCon(A,Bristol,B,London)
+
+REMAINING 87 ENTRIES SKIPPED
+
+---- MovCost  Cost Benefit from Moving, [1000£]
+
+MovCost
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       Benefits
+        1       Savings
+
+
+---- ComCost  Cost from comunication, [1000£] 
+
+ComCost
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       Communication
+       -1       Savings
+
+
+---- NetCost  Net cost, [1000£]
+
+NetCost
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       Savings
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/04/18 18:21:47 Page 4
+Decentralization MINLP (DCENTRALIZATN, SEQ =xx)
+Model Statistics    SOLVE Decentre Using MINLP From line 77
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           6     SINGLE EQUATIONS          101
+BLOCKS OF VARIABLES           5     SINGLE VARIABLES          108
+NON ZERO ELEMENTS           369     NON LINEAR N-Z            180
+DERIVATIVE POOL              20     CONSTANT POOL              16
+CODE LENGTH                 360     DISCRETE VARIABLES        105
+
+
+GENERATION TIME      =        0.031 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.031 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/04/18 18:21:47 Page 5
+Decentralization MINLP (DCENTRALIZATN, SEQ =xx)
+Solution Report     SOLVE Decentre Using MINLP From line 77
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Decentre            OBJECTIVE  NetCost
+     TYPE    MINLP               DIRECTION  MINIMIZE
+     SOLVER  DICOPT              FROM LINE  77
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      2 Locally Optimal           
+**** OBJECTIVE VALUE              -14.9000
+
+ RESOURCE USAGE, LIMIT          0.016      1000.000
+ ITERATION COUNT, LIMIT         5    2000000000
+ EVALUATION ERRORS              0             0
+-------------------------------------------------------------------------------
+Dicopt 2         25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+-------------------------------------------------------------------------------
+by Aldo Vecchietti, Director del Instituto INGAR,
+   CONICET, UTN, Santa Fe, Argentina
+by Ignacio E. Grossmann, Chemical Engineering Faculty,
+   Carnegie Mellon University, Pittsburgh, PA, USA
+-------------------------------------------------------------------------------
+CONOPT 3         25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+ 
+ 
+    C O N O P T 3   version 3.17I
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+    The model has 108 variables and 101 constraints
+    with 369 Jacobian elements, 180 of which are nonlinear.
+    The Hessian of the Lagrangian has 0 elements on the diagonal,
+    90 elements below the diagonal, and 15 nonlinear variables.
+ 
+ ** Warning **  The number of nonlinear derivatives equal to zero
+                in the initial point is large (= 48 percent).
+                A better initial point will probably help the
+                optimization.
+ 
+ 
+                   Pre-triangular equations:   0
+                   Post-triangular equations:  93
+ 
+ 
+ ** Optimal solution. There are no superbasic variables.
+ 
+ 
+ CONOPT time Total                            0.001 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+ 
+--- DICOPT: Relaxed NLP gives integer solution
+
+      The Relaxed NLP gave a solution where all the integer
+      variables have integral values. There is no need to
+      to continue the search.
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU Benefits            .              .              .            -1.0000      
+---- EQU Communica~          .              .              .             1.0000      
+
+  Benefits  Benefit Evaluation
+  Communication  Communication Cost Evaluation
+
+---- EQU BinaryCon  Logical Condition ComOpen(i,j,k,l) --> Locate(i,j)
+
+                             LOWER          LEVEL          UPPER         MARGINAL
+
+A.Bristol .B.Bristol           .              .              .             EPS         
+A.Bristol .B.Brighton          .              .              .             EPS         
+A.Bristol .B.London            .              .              .             EPS         
+A.Bristol .C.Bristol           .              .              .            -5.0000      
+A.Bristol .C.Brighton          .              .              .           -14.0000      
+A.Bristol .C.London            .              .              .           -13.0000      
+A.Bristol .D.Bristol           .              .              .            -7.5000      
+A.Bristol .D.Brighton          .              .              .           -21.0000      
+A.Bristol .D.London            .              .              .           -19.5000      
+A.Bristol .E.Bristol           .              .              .             EPS         
+A.Bristol .E.Brighton          .              .              .             EPS         
+A.Bristol .E.London            .              .              .             EPS         
+A.Brighton.B.Bristol           .              .              .             EPS         
+A.Brighton.B.Brighton          .              .              .             EPS         
+A.Brighton.B.London            .              .              .             EPS         
+A.Brighton.C.Bristol           .              .              .           -14.0000      
+A.Brighton.C.Brighton          .              .              .            -5.0000      
+A.Brighton.C.London            .              .              .            -9.0000      
+A.Brighton.D.Bristol           .              .              .           -21.0000      
+A.Brighton.D.Brighton          .              .              .            -7.5000      
+A.Brighton.D.London            .              .              .           -13.5000      
+A.Brighton.E.Bristol           .              .              .             EPS         
+A.Brighton.E.Brighton          .              .              .             EPS         
+A.Brighton.E.London            .              .              .             EPS         
+A.London  .B.Bristol           .              .              .             EPS         
+A.London  .B.Brighton          .              .              .             EPS         
+A.London  .B.London            .              .              .             EPS         
+A.London  .C.Bristol           .              .              .           -13.0000      
+A.London  .C.Brighton          .              .              .            -9.0000      
+A.London  .C.London            .              .              .           -10.0000      
+A.London  .D.Bristol           .              .              .           -19.5000      
+A.London  .D.Brighton          .              .              .           -13.5000      
+A.London  .D.London            .              .              .           -15.0000      
+A.London  .E.Bristol           .              .              .             EPS         
+A.London  .E.Brighton          .              .              .             EPS         
+A.London  .E.London            .              .              .             EPS         
+B.Bristol .C.Bristol           .              .              .            -7.0000      
+B.Bristol .C.Brighton          .              .              .           -19.6000      
+B.Bristol .C.London            .              .              .           -18.2000      
+B.Bristol .D.Bristol           .              .              .            -6.0000      
+B.Bristol .D.Brighton          .              .              .           -16.8000      
+B.Bristol .D.London            .              .              .           -15.6000      
+B.Bristol .E.Bristol           .              .              .             EPS         
+B.Bristol .E.Brighton          .              .              .             EPS         
+B.Bristol .E.London            .              .              .             EPS         
+B.Brighton.C.Bristol           .              .              .           -19.6000      
+B.Brighton.C.Brighton          .              .              .            -7.0000      
+B.Brighton.C.London            .              .              .           -12.6000      
+B.Brighton.D.Bristol           .              .              .           -16.8000      
+B.Brighton.D.Brighton          .              .              .            -6.0000      
+B.Brighton.D.London            .              .              .           -10.8000      
+B.Brighton.E.Bristol           .              .              .             EPS         
+B.Brighton.E.Brighton          .              .              .             EPS         
+B.Brighton.E.London            .              .              .             EPS         
+B.London  .C.Bristol           .              .              .           -18.2000      
+B.London  .C.Brighton          .              .              .           -12.6000      
+B.London  .C.London            .              .              .           -14.0000      
+B.London  .D.Bristol           .              .              .           -15.6000      
+B.London  .D.Brighton          .              .              .           -10.8000      
+B.London  .D.London            .              .              .           -12.0000      
+B.London  .E.Bristol           .              .              .             EPS         
+B.London  .E.Brighton          .              .              .             EPS         
+B.London  .E.London            .              .              .             EPS         
+C.Bristol .D.Bristol           .              .              .             EPS         
+C.Bristol .D.Brighton          .              .              .             EPS         
+C.Bristol .D.London            .              .              .             EPS         
+C.Bristol .E.Bristol           .              .              .           -10.0000      
+C.Bristol .E.Brighton          .              .              .           -28.0000      
+C.Bristol .E.London            .              .              .           -26.0000      
+C.Brighton.D.Bristol           .              .              .             EPS         
+C.Brighton.D.Brighton          .              .              .             EPS         
+C.Brighton.D.London            .              .              .             EPS         
+C.Brighton.E.Bristol           .              .              .           -28.0000      
+C.Brighton.E.Brighton          .              .              .           -10.0000      
+C.Brighton.E.London            .              .              .           -18.0000      
+C.London  .D.Bristol           .              .              .             EPS         
+C.London  .D.Brighton          .              .              .             EPS         
+C.London  .D.London            .              .              .             EPS         
+C.London  .E.Bristol           .              .              .           -26.0000      
+C.London  .E.Brighton          .              .              .           -18.0000      
+C.London  .E.London            .              .              .           -20.0000      
+D.Bristol .E.Bristol           .              .              .            -3.5000      
+D.Bristol .E.Brighton          .              .              .            -9.8000      
+D.Bristol .E.London            .              .              .            -9.1000      
+D.Brighton.E.Bristol           .              .              .            -9.8000      
+D.Brighton.E.Brighton          .              .              .            -3.5000      
+D.Brighton.E.London            .              .              .            -6.3000      
+D.London  .E.Bristol           .              .              .            -9.1000      
+D.London  .E.Brighton          .              .              .            -6.3000      
+D.London  .E.London            .              .              .            -7.0000      
+
+---- EQU MaxDept  Maximum Departments allowed in each city
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+Bristol         -INF            2.0000         3.0000          .          
+Brighton        -INF            3.0000         3.0000          .          
+London          -INF             .             3.0000          .          
+
+---- EQU MaxCity  Maximum City for each Department
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+A         1.0000         1.0000         1.0000        11.5000      
+B         1.0000         1.0000         1.0000        10.6000      
+C         1.0000         1.0000         1.0000        42.6000      
+D         1.0000         1.0000         1.0000        14.1000      
+E         1.0000         1.0000         1.0000        26.5000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU Savings             .              .              .             1.0000      
+
+  Savings  Net cost
+
+---- VAR Locate  Moving Decision Variable
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+A.Bristol           .             1.0000         1.0000         EPS         
+A.Brighton          .              .             1.0000         4.5000      
+A.London            .              .             1.0000        17.0000      
+B.Bristol           .              .             1.0000         EPS         
+B.Brighton          .             1.0000         1.0000        -6.8000      
+B.London            .              .             1.0000        17.6000      
+C.Bristol           .              .             1.0000         EPS         
+C.Brighton          .             1.0000         1.0000       -26.6000      
+C.London            .              .             1.0000         1.0000      
+D.Bristol           .             1.0000         1.0000         EPS         
+D.Brighton          .              .             1.0000         1.4000      
+D.London            .              .             1.0000        22.5000      
+E.Bristol           .              .             1.0000         EPS         
+E.Brighton          .             1.0000         1.0000       -21.7000      
+E.London            .              .             1.0000         0.6000      
+
+---- VAR ComOpen  Communication between Dept i at City j to Dept k at City l
+
+                             LOWER          LEVEL          UPPER         MARGINAL
+
+A.Bristol .B.Bristol           .              .             1.0000         EPS         
+A.Bristol .B.Brighton          .             1.0000         1.0000         EPS         
+A.Bristol .B.London            .              .             1.0000         EPS         
+A.Bristol .C.Bristol           .              .             1.0000         EPS         
+A.Bristol .C.Brighton          .             1.0000         1.0000         EPS         
+A.Bristol .C.London            .              .             1.0000         EPS         
+A.Bristol .D.Bristol           .             1.0000         1.0000         EPS         
+A.Bristol .D.Brighton          .              .             1.0000         EPS         
+A.Bristol .D.London            .              .             1.0000         EPS         
+A.Bristol .E.Bristol           .              .             1.0000         EPS         
+A.Bristol .E.Brighton          .             1.0000         1.0000         EPS         
+A.Bristol .E.London            .              .             1.0000         EPS         
+A.Brighton.B.Bristol           .              .             1.0000         EPS         
+A.Brighton.B.Brighton          .              .             1.0000         EPS         
+A.Brighton.B.London            .              .             1.0000         EPS         
+A.Brighton.C.Bristol           .              .             1.0000         EPS         
+A.Brighton.C.Brighton          .              .             1.0000         EPS         
+A.Brighton.C.London            .              .             1.0000         EPS         
+A.Brighton.D.Bristol           .              .             1.0000         EPS         
+A.Brighton.D.Brighton          .              .             1.0000         EPS         
+A.Brighton.D.London            .              .             1.0000         EPS         
+A.Brighton.E.Bristol           .              .             1.0000         EPS         
+A.Brighton.E.Brighton          .              .             1.0000         EPS         
+A.Brighton.E.London            .              .             1.0000         EPS         
+A.London  .B.Bristol           .              .             1.0000         EPS         
+A.London  .B.Brighton          .              .             1.0000         EPS         
+A.London  .B.London            .              .             1.0000         EPS         
+A.London  .C.Bristol           .              .             1.0000         EPS         
+A.London  .C.Brighton          .              .             1.0000         EPS         
+A.London  .C.London            .              .             1.0000         EPS         
+A.London  .D.Bristol           .              .             1.0000         EPS         
+A.London  .D.Brighton          .              .             1.0000         EPS         
+A.London  .D.London            .              .             1.0000         EPS         
+A.London  .E.Bristol           .              .             1.0000         EPS         
+A.London  .E.Brighton          .              .             1.0000         EPS         
+A.London  .E.London            .              .             1.0000         EPS         
+B.Bristol .C.Bristol           .              .             1.0000         EPS         
+B.Bristol .C.Brighton          .              .             1.0000         EPS         
+B.Bristol .C.London            .              .             1.0000         EPS         
+B.Bristol .D.Bristol           .              .             1.0000         EPS         
+B.Bristol .D.Brighton          .              .             1.0000         EPS         
+B.Bristol .D.London            .              .             1.0000         EPS         
+B.Bristol .E.Bristol           .              .             1.0000         EPS         
+B.Bristol .E.Brighton          .              .             1.0000         EPS         
+B.Bristol .E.London            .              .             1.0000         EPS         
+B.Brighton.C.Bristol           .              .             1.0000         EPS         
+B.Brighton.C.Brighton          .             1.0000         1.0000         EPS         
+B.Brighton.C.London            .              .             1.0000         EPS         
+B.Brighton.D.Bristol           .             1.0000         1.0000         EPS         
+B.Brighton.D.Brighton          .              .             1.0000         EPS         
+B.Brighton.D.London            .              .             1.0000         EPS         
+B.Brighton.E.Bristol           .              .             1.0000         EPS         
+B.Brighton.E.Brighton          .             1.0000         1.0000         EPS         
+B.Brighton.E.London            .              .             1.0000         EPS         
+B.London  .C.Bristol           .              .             1.0000         EPS         
+B.London  .C.Brighton          .              .             1.0000         EPS         
+B.London  .C.London            .              .             1.0000         EPS         
+B.London  .D.Bristol           .              .             1.0000         EPS         
+B.London  .D.Brighton          .              .             1.0000         EPS         
+B.London  .D.London            .              .             1.0000         EPS         
+B.London  .E.Bristol           .              .             1.0000         EPS         
+B.London  .E.Brighton          .              .             1.0000         EPS         
+B.London  .E.London            .              .             1.0000         EPS         
+C.Bristol .D.Bristol           .              .             1.0000         EPS         
+C.Bristol .D.Brighton          .              .             1.0000         EPS         
+C.Bristol .D.London            .              .             1.0000         EPS         
+C.Bristol .E.Bristol           .              .             1.0000         EPS         
+C.Bristol .E.Brighton          .              .             1.0000         EPS         
+C.Bristol .E.London            .              .             1.0000         EPS         
+C.Brighton.D.Bristol           .             1.0000         1.0000         EPS         
+C.Brighton.D.Brighton          .              .             1.0000         EPS         
+C.Brighton.D.London            .              .             1.0000         EPS         
+C.Brighton.E.Bristol           .              .             1.0000         EPS         
+C.Brighton.E.Brighton          .             1.0000         1.0000         EPS         
+C.Brighton.E.London            .              .             1.0000         EPS         
+C.London  .D.Bristol           .              .             1.0000         EPS         
+C.London  .D.Brighton          .              .             1.0000         EPS         
+C.London  .D.London            .              .             1.0000         EPS         
+C.London  .E.Bristol           .              .             1.0000         EPS         
+C.London  .E.Brighton          .              .             1.0000         EPS         
+C.London  .E.London            .              .             1.0000         EPS         
+D.Bristol .E.Bristol           .              .             1.0000         EPS         
+D.Bristol .E.Brighton          .             1.0000         1.0000         EPS         
+D.Bristol .E.London            .              .             1.0000         EPS         
+D.Brighton.E.Bristol           .              .             1.0000         EPS         
+D.Brighton.E.Brighton          .              .             1.0000         EPS         
+D.Brighton.E.London            .              .             1.0000         EPS         
+D.London  .E.Bristol           .              .             1.0000         EPS         
+D.London  .E.Brighton          .              .             1.0000         EPS         
+D.London  .E.London            .              .             1.0000         EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR MovCost           -INF           80.0000        +INF             .          
+---- VAR ComCost           -INF           65.1000        +INF             .          
+---- VAR NetCost           -INF          -14.9000        +INF             .          
+
+  MovCost  Cost Benefit from Moving, [1000£]
+  ComCost  Cost from comunication, [1000£] 
+  NetCost  Net cost, [1000£]
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+                            10  PROJECTED
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/04/18 18:21:47 Page 6
+Decentralization MINLP (DCENTRALIZATN, SEQ =xx)
+E x e c u t i o n
+
+
+----     79 VARIABLE Locate.L  Moving Decision Variable
+
+      Bristol    Brighton
+
+A       1.000
+B                   1.000
+C                   1.000
+D       1.000
+E                   1.000
+
+
+----     79 VARIABLE MovCost.L             =       80.000  Cost Benefit from Moving, [1000£]
+            VARIABLE ComCost.L             =       65.100  Cost from comunication, [1000£] 
+
+
+EXECUTION TIME       =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\decentralization\Decentralization.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\decentralization\Decentralization.lst

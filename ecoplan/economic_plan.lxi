@@ -1,0 +1,107 @@
+B 2 C o m p i l a t i o n
+B 137 Equation Listing    SOLVE Plan1 Using LP From line 120
+D 138 StockBal
+D 184 Endogenous
+D 229 Manpower
+D 246 OutputLim
+D 291 CapacityLim
+D 330 ManPowLim
+D 347 ObjMaxCap
+B 354 Column Listing      SOLVE Plan1 Using LP From line 120
+E 355 Store
+E 374 Output
+E 401 Endo
+E 420 Exog
+E 436 Capacity
+E 457 ExtraProd
+E 479 Mpow
+E 498 fstock
+E 513 MaxCap
+B 522 Model Statistics    SOLVE Plan1 Using LP From line 120
+B 538 Solution Report     SOLVE Plan1 Using LP From line 120
+F 569 StockBal
+F 595 Endogenous
+F 621 Manpower
+F 633 OutputLim
+F 659 CapacityLim
+F 682 ManPowLim
+F 692 ObjMaxCap
+G 695 Store
+G 721 Output
+G 747 Endo
+G 773 Exog
+G 799 Capacity
+G 825 ExtraProd
+G 848 Mpow
+G 860 fstock
+G 868 MaxCap
+B 881 Equation Listing    SOLVE Plan2 Using LP From line 125
+D 882 StockBal
+D 928 Endogenous
+D 975 Manpower
+D 992 OutputLim
+D 1037 CapacityLim
+D 1076 ManPowLim
+D 1093 ObjMaxProd
+B 1100 Column Listing      SOLVE Plan2 Using LP From line 125
+E 1101 Store
+E 1120 Output
+E 1147 Endo
+E 1166 Exog
+E 1182 Capacity
+E 1203 ExtraProd
+E 1225 Mpow
+E 1244 fstock
+E 1259 MaxProd
+B 1268 Model Statistics    SOLVE Plan2 Using LP From line 125
+B 1284 Solution Report     SOLVE Plan2 Using LP From line 125
+F 1315 StockBal
+F 1341 Endogenous
+F 1367 Manpower
+F 1379 OutputLim
+F 1405 CapacityLim
+F 1428 ManPowLim
+F 1438 ObjMaxProd
+G 1441 Store
+G 1467 Output
+G 1493 Endo
+G 1519 Exog
+G 1545 Capacity
+G 1571 ExtraProd
+G 1594 Mpow
+G 1606 fstock
+G 1614 MaxProd
+B 1627 Equation Listing    SOLVE Plan3 Using LP From line 130
+D 1628 StockBal
+D 1674 Endogenous
+D 1719 Manpower
+D 1736 OutputLim
+D 1781 CapacityLim
+D 1820 ObjMaxMan
+B 1827 Column Listing      SOLVE Plan3 Using LP From line 130
+E 1828 Store
+E 1847 Output
+E 1874 Endo
+E 1893 Exog
+E 1909 Capacity
+E 1930 ExtraProd
+E 1952 Mpow
+E 1971 fstock
+E 1986 MaxMan
+B 1995 Model Statistics    SOLVE Plan3 Using LP From line 130
+B 2011 Solution Report     SOLVE Plan3 Using LP From line 130
+F 2042 StockBal
+F 2068 Endogenous
+F 2094 Manpower
+F 2106 OutputLim
+F 2132 CapacityLim
+F 2153 ObjMaxMan
+G 2156 Store
+G 2182 Output
+G 2208 Endo
+G 2234 Exog
+G 2260 Capacity
+G 2286 ExtraProd
+G 2309 Mpow
+G 2321 fstock
+G 2329 MaxMan

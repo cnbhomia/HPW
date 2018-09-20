@@ -1,0 +1,65 @@
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/18/18 15:54:38 Page 1
+Curve Fitting (CURVE, SEQ =xxx)
+C o m p i l a t i o n
+
+
+   2   
+      This problem helps decide the buying and manufacturing policy for an oil
+      blending production line over 6 monthth period. The objective is to maximize
+      profit under the capacity and storage constraints.
+       
+      Model Building in Mathematical Programming,Fifth Edition, H. Paul Williams,
+      Model 12.1 : Food Planning I
+      Wiley Publication, 2013
+       
+  13   
+  14  Sets
+  15      i       'number of observation points'
+  16      ;
+  17   
+  18  Parameters
+  19      x(i)    'input in each observation'
+  20      y1(i,*)
+  21      y(i)    'output in each observation'
+  22      ;
+  28   
+  30   
+  31   
+GDXIN   C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\curve.gdx
+--- LOAD  i = 1:i
+--- LOAD  x = 2:x
+--- LOAD  y1 = 3:y1
+  37   
+  38  y = y1;
+****    $148$148
+**** 148  Dimension different - The symbol is referenced with more/less
+****         indices as declared
+  39   
+  40  *$call gdxxrw i=data_read.xlsm o=data2.gdx dset=i6 Rng=A3:A5 rdim=1
+
+**** 2 ERROR(S)   0 WARNING(S)
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/18/18 15:54:38 Page 2
+Curve Fitting (CURVE, SEQ =xxx)
+Include File Summary
+
+
+   SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
+
+     1        1 INPUT          0       0  C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\CurveFitting.gms
+     2       29 CALL           1      29  gdxxrw curvefit.xlsm o=curve.gdx @slices.txt
+     3       32 GDXIN          1      32  C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\curve.gdx
+
+
+COMPILATION TIME     =        1.094 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\CurveFitting.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\CurveFitting.lst
+
+**** USER ERROR(S) ENCOUNTERED

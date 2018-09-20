@@ -1,0 +1,6 @@
+[CHART]
+GDXFILE=chartdata.gdx
+TITLE=StockData
+[SERIES1]
+SYMBOL=StockData
+TYPE=multi-linex

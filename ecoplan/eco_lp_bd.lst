@@ -1,0 +1,356 @@
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/30/18 15:12:03 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   1  set s sector /1,2,3/
+   2      t time /1*6/
+   3      ;
+   4  alias (s,ss);
+   5   
+   6  variable share(s,s,t), out(s,t),tot ;
+   7  positive variable share, out;
+   8  parameter demand(s) / 1 100, 2 100, 3 100/
+   9  ;
+  10  equations balance(s,t),quant(s,ss,t),total;
+  11   
+  12   
+  13  balance(s,t).. out(s,t) =E= sum(ss,share(s,ss,t)) + demand(s);
+  14  quant(s,ss,t)..   share(s,ss,t) =L= out(s,t) ;
+  15  total.. tot =e= sum((s,t),out(s,t));
+  16   
+  17   
+  18  model l /all/;
+  19   
+  20  solve l using lp maximizing tot;
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/30/18 15:12:03 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE l Using LP From line 20
+
+
+---- balance  =E=  
+
+balance(1,1)..  - share(1,1,1) - share(1,2,1) - share(1,3,1) + out(1,1) =E= 100 ; (LHS = 0, INFES = 100 ****)
+     
+balance(1,2)..  - share(1,1,2) - share(1,2,2) - share(1,3,2) + out(1,2) =E= 100 ; (LHS = 0, INFES = 100 ****)
+     
+balance(1,3)..  - share(1,1,3) - share(1,2,3) - share(1,3,3) + out(1,3) =E= 100 ; (LHS = 0, INFES = 100 ****)
+     
+REMAINING 15 ENTRIES SKIPPED
+
+
+---- quant  =L=  
+
+quant(1,1,1)..  share(1,1,1) - out(1,1) =L= 0 ; (LHS = 0)
+     
+quant(1,1,2)..  share(1,1,2) - out(1,2) =L= 0 ; (LHS = 0)
+     
+quant(1,1,3)..  share(1,1,3) - out(1,3) =L= 0 ; (LHS = 0)
+     
+REMAINING 51 ENTRIES SKIPPED
+
+
+---- total  =E=  
+
+total..  - out(1,1) - out(1,2) - out(1,3) - out(1,4) - out(1,5) - out(1,6) - out(2,1) - out(2,2) - out(2,3) - out(2,4) - out(2,5) - out(2,6) - out(3,1) - out(3,2) - out(3,3) - out(3,4) - out(3,5) - out(3,6) + tot =E= 0 ; (LHS = 0)
+     
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/30/18 15:12:03 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE l Using LP From line 20
+
+
+---- share  
+
+share(1,1,1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       balance(1,1)
+        1       quant(1,1,1)
+
+share(1,1,2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       balance(1,2)
+        1       quant(1,1,2)
+
+share(1,1,3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       balance(1,3)
+        1       quant(1,1,3)
+
+REMAINING 51 ENTRIES SKIPPED
+
+---- out  
+
+out(1,1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       balance(1,1)
+       -1       quant(1,1,1)
+       -1       quant(1,2,1)
+       -1       quant(1,3,1)
+       -1       total
+
+out(1,2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       balance(1,2)
+       -1       quant(1,1,2)
+       -1       quant(1,2,2)
+       -1       quant(1,3,2)
+       -1       total
+
+out(1,3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       balance(1,3)
+       -1       quant(1,1,3)
+       -1       quant(1,2,3)
+       -1       quant(1,3,3)
+       -1       total
+
+REMAINING 15 ENTRIES SKIPPED
+
+---- tot  
+
+tot
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       total
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/30/18 15:12:03 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE l Using LP From line 20
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           73
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           73
+NON ZERO ELEMENTS           199
+
+
+GENERATION TIME      =        0.031 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.031 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 08/30/18 15:12:03 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE l Using LP From line 20
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   l                   OBJECTIVE  tot
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  20
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      3 Unbounded                 
+**** OBJECTIVE VALUE             1800.0000
+
+ RESOURCE USAGE, LIMIT          0.015      1000.000
+ ITERATION COUNT, LIMIT         0    2000000000
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(4): unbounded or infeasible
+Cplex Time: 0.00sec (det. 0.04 ticks)
+Presolve found the problem infeasible or unbounded.
+Rerunning with presolve turned off and solving with LPMETHOD=0
+LP status(2): unbounded
+Cplex Time: 0.00sec (det. 0.03 ticks)
+Model has an unbounded ray.
+
+**** ERRORS/WARNINGS IN VARIABLE share(1,1,1)
+     1 error(s): Unbounded variable
+
+---- EQU balance  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+1.1       100.0000       100.0000       100.0000         1.0000      
+1.2       100.0000       100.0000       100.0000         1.0000      
+1.3       100.0000       100.0000       100.0000         1.0000      
+1.4       100.0000       100.0000       100.0000         1.0000      
+1.5       100.0000       100.0000       100.0000         1.0000      
+1.6       100.0000       100.0000       100.0000         1.0000      
+2.1       100.0000       100.0000       100.0000         1.0000      
+2.2       100.0000       100.0000       100.0000         1.0000      
+2.3       100.0000       100.0000       100.0000         1.0000      
+2.4       100.0000       100.0000       100.0000         1.0000      
+2.5       100.0000       100.0000       100.0000         1.0000      
+2.6       100.0000       100.0000       100.0000         1.0000      
+3.1       100.0000       100.0000       100.0000         1.0000      
+3.2       100.0000       100.0000       100.0000         1.0000      
+3.3       100.0000       100.0000       100.0000         1.0000      
+3.4       100.0000       100.0000       100.0000         1.0000      
+3.5       100.0000       100.0000       100.0000         1.0000      
+3.6       100.0000       100.0000       100.0000         1.0000      
+
+---- EQU quant  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+1.1.1        -INF         -100.0000          .              .          
+1.1.2        -INF         -100.0000          .              .          
+1.1.3        -INF         -100.0000          .              .          
+1.1.4        -INF         -100.0000          .              .          
+1.1.5        -INF         -100.0000          .              .          
+1.1.6        -INF         -100.0000          .              .          
+1.2.1        -INF         -100.0000          .              .          
+1.2.2        -INF         -100.0000          .              .          
+1.2.3        -INF         -100.0000          .              .          
+1.2.4        -INF         -100.0000          .              .          
+1.2.5        -INF         -100.0000          .              .          
+1.2.6        -INF         -100.0000          .              .          
+1.3.1        -INF         -100.0000          .              .          
+1.3.2        -INF         -100.0000          .              .          
+1.3.3        -INF         -100.0000          .              .          
+1.3.4        -INF         -100.0000          .              .          
+1.3.5        -INF         -100.0000          .              .          
+1.3.6        -INF         -100.0000          .              .          
+2.1.1        -INF         -100.0000          .              .          
+2.1.2        -INF         -100.0000          .              .          
+2.1.3        -INF         -100.0000          .              .          
+2.1.4        -INF         -100.0000          .              .          
+2.1.5        -INF         -100.0000          .              .          
+2.1.6        -INF         -100.0000          .              .          
+2.2.1        -INF         -100.0000          .              .          
+2.2.2        -INF         -100.0000          .              .          
+2.2.3        -INF         -100.0000          .              .          
+2.2.4        -INF         -100.0000          .              .          
+2.2.5        -INF         -100.0000          .              .          
+2.2.6        -INF         -100.0000          .              .          
+2.3.1        -INF         -100.0000          .              .          
+2.3.2        -INF         -100.0000          .              .          
+2.3.3        -INF         -100.0000          .              .          
+2.3.4        -INF         -100.0000          .              .          
+2.3.5        -INF         -100.0000          .              .          
+2.3.6        -INF         -100.0000          .              .          
+3.1.1        -INF         -100.0000          .              .          
+3.1.2        -INF         -100.0000          .              .          
+3.1.3        -INF         -100.0000          .              .          
+3.1.4        -INF         -100.0000          .              .          
+3.1.5        -INF         -100.0000          .              .          
+3.1.6        -INF         -100.0000          .              .          
+3.2.1        -INF         -100.0000          .              .          
+3.2.2        -INF         -100.0000          .              .          
+3.2.3        -INF         -100.0000          .              .          
+3.2.4        -INF         -100.0000          .              .          
+3.2.5        -INF         -100.0000          .              .          
+3.2.6        -INF         -100.0000          .              .          
+3.3.1        -INF         -100.0000          .              .          
+3.3.2        -INF         -100.0000          .              .          
+3.3.3        -INF         -100.0000          .              .          
+3.3.4        -INF         -100.0000          .              .          
+3.3.5        -INF         -100.0000          .              .          
+3.3.6        -INF         -100.0000          .              .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU total               .              .              .             1.0000      
+
+---- VAR share  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+1.1.1          .              .            +INF            1.0000 UNBND
+1.1.2          .              .            +INF            1.0000  NOPT
+1.1.3          .              .            +INF            1.0000  NOPT
+1.1.4          .              .            +INF            1.0000  NOPT
+1.1.5          .              .            +INF            1.0000  NOPT
+1.1.6          .              .            +INF            1.0000  NOPT
+1.2.1          .              .            +INF            1.0000  NOPT
+1.2.2          .              .            +INF            1.0000  NOPT
+1.2.3          .              .            +INF            1.0000  NOPT
+1.2.4          .              .            +INF            1.0000  NOPT
+1.2.5          .              .            +INF            1.0000  NOPT
+1.2.6          .              .            +INF            1.0000  NOPT
+1.3.1          .              .            +INF            1.0000  NOPT
+1.3.2          .              .            +INF            1.0000  NOPT
+1.3.3          .              .            +INF            1.0000  NOPT
+1.3.4          .              .            +INF            1.0000  NOPT
+1.3.5          .              .            +INF            1.0000  NOPT
+1.3.6          .              .            +INF            1.0000  NOPT
+2.1.1          .              .            +INF            1.0000  NOPT
+2.1.2          .              .            +INF            1.0000  NOPT
+2.1.3          .              .            +INF            1.0000  NOPT
+2.1.4          .              .            +INF            1.0000  NOPT
+2.1.5          .              .            +INF            1.0000  NOPT
+2.1.6          .              .            +INF            1.0000  NOPT
+2.2.1          .              .            +INF            1.0000  NOPT
+2.2.2          .              .            +INF            1.0000  NOPT
+2.2.3          .              .            +INF            1.0000  NOPT
+2.2.4          .              .            +INF            1.0000  NOPT
+2.2.5          .              .            +INF            1.0000  NOPT
+2.2.6          .              .            +INF            1.0000  NOPT
+2.3.1          .              .            +INF            1.0000  NOPT
+2.3.2          .              .            +INF            1.0000  NOPT
+2.3.3          .              .            +INF            1.0000  NOPT
+2.3.4          .              .            +INF            1.0000  NOPT
+2.3.5          .              .            +INF            1.0000  NOPT
+2.3.6          .              .            +INF            1.0000  NOPT
+3.1.1          .              .            +INF            1.0000  NOPT
+3.1.2          .              .            +INF            1.0000  NOPT
+3.1.3          .              .            +INF            1.0000  NOPT
+3.1.4          .              .            +INF            1.0000  NOPT
+3.1.5          .              .            +INF            1.0000  NOPT
+3.1.6          .              .            +INF            1.0000  NOPT
+3.2.1          .              .            +INF            1.0000  NOPT
+3.2.2          .              .            +INF            1.0000  NOPT
+3.2.3          .              .            +INF            1.0000  NOPT
+3.2.4          .              .            +INF            1.0000  NOPT
+3.2.5          .              .            +INF            1.0000  NOPT
+3.2.6          .              .            +INF            1.0000  NOPT
+3.3.1          .              .            +INF            1.0000  NOPT
+3.3.2          .              .            +INF            1.0000  NOPT
+3.3.3          .              .            +INF            1.0000  NOPT
+3.3.4          .              .            +INF            1.0000  NOPT
+3.3.5          .              .            +INF            1.0000  NOPT
+3.3.6          .              .            +INF            1.0000  NOPT
+
+---- VAR out  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+1.1          .           100.0000        +INF             .          
+1.2          .           100.0000        +INF             .          
+1.3          .           100.0000        +INF             .          
+1.4          .           100.0000        +INF             .          
+1.5          .           100.0000        +INF             .          
+1.6          .           100.0000        +INF             .          
+2.1          .           100.0000        +INF             .          
+2.2          .           100.0000        +INF             .          
+2.3          .           100.0000        +INF             .          
+2.4          .           100.0000        +INF             .          
+2.5          .           100.0000        +INF             .          
+2.6          .           100.0000        +INF             .          
+3.1          .           100.0000        +INF             .          
+3.2          .           100.0000        +INF             .          
+3.3          .           100.0000        +INF             .          
+3.4          .           100.0000        +INF             .          
+3.5          .           100.0000        +INF             .          
+3.6          .           100.0000        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR tot               -INF         1800.0000        +INF             .          
+
+
+**** REPORT SUMMARY :       53     NONOPT ( NOPT)
+                             0 INFEASIBLE
+                             1  UNBOUNDED (UNBND)
+
+
+EXECUTION TIME       =        0.000 SECONDS      2 MB  25.1.2 r67455 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\ecoplan\eco_lp_bd.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\ecoplan\eco_lp_bd.lst

@@ -1,0 +1,15 @@
+
+--- Job chartdat.gms Start 09/17/18 14:45:22 25.1.2 r67455 WEX-WEI x86 64bit/MS Windows
+GAMS 25.1.2   Copyright (C) 1987-2018 GAMS Development. All rights reserved
+Licensee: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+          GAMS Development, Fairfax                                 DC14199
+          cbhomia@gams.com                                                 
+--- Starting compilation
+--- chartdat.gms(153) 3 Mb
+--- Starting execution: elapsed 0:00:00.003
+--- chartdat.gms(132) 8 Mb
+--- GDX File C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\chartdata.gdx
+--- chartdat.gms(146) 8 Mb
+--- Putfile f C:\Users\cnbho\Documents\GitHub\HPW\MARKETSHARE\testchart.gch
+*** Status: Normal completion
+--- Job chartdat.gms Stop 09/17/18 14:45:23 elapsed 0:00:00.485

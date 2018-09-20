@@ -1,0 +1,1382 @@
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/04/18 18:05:23 Page 1
+Decentralization , MIP (DCENTRALIZATN, SEQ =xx)
+C o m p i l a t i o n
+
+
+   2  *         *         *         *         *         *         *         *         *
+      This problem is a simple decision making problem for a company relocating it's five
+      departments from London to two other cities subject to constraint of maximum
+      number of offices in a city. The objective is to maximize the benefits of relocation
+      against increased communication costs. 
+       
+      Model Building in Mathematical Programming, Fifth Edition,
+      H. Paul Williams, Model 12.10 : Decentralization
+      Wiley Publication, 2013
+  13   
+  14  Sets
+  15      Dept    'Departments in the company'    /A*E/
+  16      City    'Cities Available'              /'Bristol', 'Brighton' , 'London'/
+  17      ;
+  18   
+  19  Table B(City,Dept)      'Benefits from relocation, [1000 £/yr]'
+  20               A      B       C       D       E
+  21  Bristol     10     15      10      20       5
+  22  Brighton    10     20      15      15      15
+  23      ;
+  24   
+  25  Table C(Dept,Dept)      'Quantity of communication between departments [1000 units] '
+  26      A      B       C       D       E
+  27  A                 1.0     1.5
+  28  B                 1.4     1.2
+  29  C                                 2.0
+  30  D                                 0.7
+  31      ;
+  32   
+  33  Table D(City, City)     'Cost of Communication between cities [£/unit] '
+  34              Bristol     Brighton    London
+  35  Bristol           5           14        13
+  36  Brighton         14            5         9
+  37  London           13            9        10
+  38      ;
+  39   
+  40  Alias(Dept,i,k),(City,j,l);
+  41   
+  42  Variables
+  43      Locate(Dept,City)   'Moving Decision Variable'
+  44      ComOpen(i,j,k,l)    'Communication between Dept i at City j to Dept k at City l'
+  45      MovCost             'Cost Benefit from Moving, [1000£]'
+  46      ComCost             'Cost from comunication, [1000£] '
+  47      NetCost             'Net cost, [1000£]'
+  48      ;
+  49   
+  50  Binary Variable Locate(Dept,City),ComOpen(i,j,k,l);
+  51   
+  52  Equations
+  53      Benefits                 'Benefit Evaluation'
+  54      Communication            'Communication Cost Evaluation'
+  55      BinaryCon1(i,j,k,l)      'Logical Condition ComOpen(i,j,k,l) --> Locate(i,j)'
+  56      BinaryCon2(i,j,k,l)      'Logical Condition ComOpen(i,j,k,l) --> Locate(k,l)'
+  57      BinaryCon3(i,j,k,l)      'Logical Condition Locate(i,j) and Locate(k,l) --> ComOpen(i,j,k,l)'
+  58      MaxDept(City)            'Maximum Departments allowed in each city'
+  59      MaxCity(Dept)            'Maximum City for each Department'
+  60      Savings                  'Net cost'
+  61      ;
+  62   
+  63  Benefits..                  MovCost =E= sum ((i,j), Locate(i,j)* B(j,i)) ;
+  64   
+  65  Communication..             ComCost =E= sum((i,j,k,l), C(i,k)*D(j,l)* ComOpen(i,j,k,l));
+  66   
+  67  BinaryCon1(i,j,k,l) $[(ord(i)<ord(k))]..
+  68                              ComOpen(i,j,k,l) - Locate(i,j) =L= 0;
+  69   
+  70  BinaryCon2(i,j,k,l) $[(ord(i)<ord(k))]..
+  71                              ComOpen(i,j,k,l) - Locate(k,l) =L= 0;
+  72   
+  73  BinaryCon3(i,j,k,l) $[(ord(i)<ord(k))]..
+  74                              Locate(i,j) + Locate(k,l) -  ComOpen(i,j,k,l) =L= 1;
+  75   
+  76  MaxDept(City)..             sum(Dept,Locate(Dept,City)) =L= 3;
+  77   
+  78  MaxCity(Dept)..             sum(City,Locate(Dept,City)) =E= 1;
+  79   
+  80  Savings..                   NetCost =E=  - MovCost + ComCost ;
+  81   
+  82  Model Decentre /all/;
+  83   
+  84  Solve Decentre using MIP minimizing NetCost;
+  85   
+  86  Display Locate.l, MovCost.l, ComCost.l;
+  87   
+  88   
+      notes: the table D is a full martix, instead of the upper traingular matric as provided and used in the book.
+      Use of D as a lower matrix renders some ComOpen(i,j,k,l) useless, and the HP William Model Solution does not work.
+       
+      Constraint over summation of Cost has some sort of typographical error. 
+       
+  96   
+  97   
+  98   
+  99   
+ 100   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/04/18 18:05:23 Page 2
+Decentralization , MIP (DCENTRALIZATN, SEQ =xx)
+Equation Listing    SOLVE Decentre Using MIP From line 84
+
+
+---- Benefits  =E=  Benefit Evaluation
+
+Benefits..  - 10*Locate(A,Bristol) - 10*Locate(A,Brighton) - 15*Locate(B,Bristol) - 20*Locate(B,Brighton) - 10*Locate(C,Bristol) - 15*Locate(C,Brighton) - 20*Locate(D,Bristol) - 15*Locate(D,Brighton) - 5*Locate(E,Bristol) - 15*Locate(E,Brighton) + MovCost
+      =E= 0 ; (LHS = 0)
+     
+
+---- Communication  =E=  Communication Cost Evaluation
+
+Communication..  - 5*ComOpen(A,Bristol,C,Bristol) - 14*ComOpen(A,Bristol,C,Brighton) - 13*ComOpen(A,Bristol,C,London) - 7.5*ComOpen(A,Bristol,D,Bristol) - 21*ComOpen(A,Bristol,D,Brighton) - 19.5*ComOpen(A,Bristol,D,London)
+     
+      - 14*ComOpen(A,Brighton,C,Bristol) - 5*ComOpen(A,Brighton,C,Brighton) - 9*ComOpen(A,Brighton,C,London) - 21*ComOpen(A,Brighton,D,Bristol) - 7.5*ComOpen(A,Brighton,D,Brighton) - 13.5*ComOpen(A,Brighton,D,London) - 13*ComOpen(A,London,C,Bristol)
+     
+      - 9*ComOpen(A,London,C,Brighton) - 10*ComOpen(A,London,C,London) - 19.5*ComOpen(A,London,D,Bristol) - 13.5*ComOpen(A,London,D,Brighton) - 15*ComOpen(A,London,D,London) - 7*ComOpen(B,Bristol,C,Bristol) - 19.6*ComOpen(B,Bristol,C,Brighton)
+     
+      - 18.2*ComOpen(B,Bristol,C,London) - 6*ComOpen(B,Bristol,D,Bristol) - 16.8*ComOpen(B,Bristol,D,Brighton) - 15.6*ComOpen(B,Bristol,D,London) - 19.6*ComOpen(B,Brighton,C,Bristol) - 7*ComOpen(B,Brighton,C,Brighton) - 12.6*ComOpen(B,Brighton,C,London)
+     
+      - 16.8*ComOpen(B,Brighton,D,Bristol) - 6*ComOpen(B,Brighton,D,Brighton) - 10.8*ComOpen(B,Brighton,D,London) - 18.2*ComOpen(B,London,C,Bristol) - 12.6*ComOpen(B,London,C,Brighton) - 14*ComOpen(B,London,C,London) - 15.6*ComOpen(B,London,D,Bristol)
+     
+      - 10.8*ComOpen(B,London,D,Brighton) - 12*ComOpen(B,London,D,London) - 10*ComOpen(C,Bristol,E,Bristol) - 28*ComOpen(C,Bristol,E,Brighton) - 26*ComOpen(C,Bristol,E,London) - 28*ComOpen(C,Brighton,E,Bristol) - 10*ComOpen(C,Brighton,E,Brighton)
+     
+      - 18*ComOpen(C,Brighton,E,London) - 26*ComOpen(C,London,E,Bristol) - 18*ComOpen(C,London,E,Brighton) - 20*ComOpen(C,London,E,London) - 3.5*ComOpen(D,Bristol,E,Bristol) - 9.8*ComOpen(D,Bristol,E,Brighton) - 9.1*ComOpen(D,Bristol,E,London)
+     
+      - 9.8*ComOpen(D,Brighton,E,Bristol) - 3.5*ComOpen(D,Brighton,E,Brighton) - 6.3*ComOpen(D,Brighton,E,London) - 9.1*ComOpen(D,London,E,Bristol) - 6.3*ComOpen(D,London,E,Brighton) - 7*ComOpen(D,London,E,London) + ComCost =E= 0 ; (LHS = 0)
+     
+
+---- BinaryCon1  =L=  Logical Condition ComOpen(i,j,k,l) --> Locate(i,j)
+
+BinaryCon1(A,Bristol,B,Bristol)..  - Locate(A,Bristol) + ComOpen(A,Bristol,B,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Bristol,B,Brighton)..  - Locate(A,Bristol) + ComOpen(A,Bristol,B,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Bristol,B,London)..  - Locate(A,Bristol) + ComOpen(A,Bristol,B,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Bristol,C,Bristol)..  - Locate(A,Bristol) + ComOpen(A,Bristol,C,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Bristol,C,Brighton)..  - Locate(A,Bristol) + ComOpen(A,Bristol,C,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Bristol,C,London)..  - Locate(A,Bristol) + ComOpen(A,Bristol,C,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Bristol,D,Bristol)..  - Locate(A,Bristol) + ComOpen(A,Bristol,D,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Bristol,D,Brighton)..  - Locate(A,Bristol) + ComOpen(A,Bristol,D,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Bristol,D,London)..  - Locate(A,Bristol) + ComOpen(A,Bristol,D,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Bristol,E,Bristol)..  - Locate(A,Bristol) + ComOpen(A,Bristol,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Bristol,E,Brighton)..  - Locate(A,Bristol) + ComOpen(A,Bristol,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Bristol,E,London)..  - Locate(A,Bristol) + ComOpen(A,Bristol,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Brighton,B,Bristol)..  - Locate(A,Brighton) + ComOpen(A,Brighton,B,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Brighton,B,Brighton)..  - Locate(A,Brighton) + ComOpen(A,Brighton,B,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Brighton,B,London)..  - Locate(A,Brighton) + ComOpen(A,Brighton,B,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Brighton,C,Bristol)..  - Locate(A,Brighton) + ComOpen(A,Brighton,C,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Brighton,C,Brighton)..  - Locate(A,Brighton) + ComOpen(A,Brighton,C,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Brighton,C,London)..  - Locate(A,Brighton) + ComOpen(A,Brighton,C,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Brighton,D,Bristol)..  - Locate(A,Brighton) + ComOpen(A,Brighton,D,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Brighton,D,Brighton)..  - Locate(A,Brighton) + ComOpen(A,Brighton,D,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Brighton,D,London)..  - Locate(A,Brighton) + ComOpen(A,Brighton,D,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Brighton,E,Bristol)..  - Locate(A,Brighton) + ComOpen(A,Brighton,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Brighton,E,Brighton)..  - Locate(A,Brighton) + ComOpen(A,Brighton,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,Brighton,E,London)..  - Locate(A,Brighton) + ComOpen(A,Brighton,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,London,B,Bristol)..  - Locate(A,London) + ComOpen(A,London,B,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,London,B,Brighton)..  - Locate(A,London) + ComOpen(A,London,B,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,London,B,London)..  - Locate(A,London) + ComOpen(A,London,B,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,London,C,Bristol)..  - Locate(A,London) + ComOpen(A,London,C,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,London,C,Brighton)..  - Locate(A,London) + ComOpen(A,London,C,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,London,C,London)..  - Locate(A,London) + ComOpen(A,London,C,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,London,D,Bristol)..  - Locate(A,London) + ComOpen(A,London,D,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,London,D,Brighton)..  - Locate(A,London) + ComOpen(A,London,D,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,London,D,London)..  - Locate(A,London) + ComOpen(A,London,D,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,London,E,Bristol)..  - Locate(A,London) + ComOpen(A,London,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,London,E,Brighton)..  - Locate(A,London) + ComOpen(A,London,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(A,London,E,London)..  - Locate(A,London) + ComOpen(A,London,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,Bristol,C,Bristol)..  - Locate(B,Bristol) + ComOpen(B,Bristol,C,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,Bristol,C,Brighton)..  - Locate(B,Bristol) + ComOpen(B,Bristol,C,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,Bristol,C,London)..  - Locate(B,Bristol) + ComOpen(B,Bristol,C,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,Bristol,D,Bristol)..  - Locate(B,Bristol) + ComOpen(B,Bristol,D,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,Bristol,D,Brighton)..  - Locate(B,Bristol) + ComOpen(B,Bristol,D,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,Bristol,D,London)..  - Locate(B,Bristol) + ComOpen(B,Bristol,D,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,Bristol,E,Bristol)..  - Locate(B,Bristol) + ComOpen(B,Bristol,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,Bristol,E,Brighton)..  - Locate(B,Bristol) + ComOpen(B,Bristol,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,Bristol,E,London)..  - Locate(B,Bristol) + ComOpen(B,Bristol,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,Brighton,C,Bristol)..  - Locate(B,Brighton) + ComOpen(B,Brighton,C,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,Brighton,C,Brighton)..  - Locate(B,Brighton) + ComOpen(B,Brighton,C,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,Brighton,C,London)..  - Locate(B,Brighton) + ComOpen(B,Brighton,C,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,Brighton,D,Bristol)..  - Locate(B,Brighton) + ComOpen(B,Brighton,D,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,Brighton,D,Brighton)..  - Locate(B,Brighton) + ComOpen(B,Brighton,D,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,Brighton,D,London)..  - Locate(B,Brighton) + ComOpen(B,Brighton,D,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,Brighton,E,Bristol)..  - Locate(B,Brighton) + ComOpen(B,Brighton,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,Brighton,E,Brighton)..  - Locate(B,Brighton) + ComOpen(B,Brighton,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,Brighton,E,London)..  - Locate(B,Brighton) + ComOpen(B,Brighton,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,London,C,Bristol)..  - Locate(B,London) + ComOpen(B,London,C,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,London,C,Brighton)..  - Locate(B,London) + ComOpen(B,London,C,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,London,C,London)..  - Locate(B,London) + ComOpen(B,London,C,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,London,D,Bristol)..  - Locate(B,London) + ComOpen(B,London,D,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,London,D,Brighton)..  - Locate(B,London) + ComOpen(B,London,D,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,London,D,London)..  - Locate(B,London) + ComOpen(B,London,D,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,London,E,Bristol)..  - Locate(B,London) + ComOpen(B,London,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,London,E,Brighton)..  - Locate(B,London) + ComOpen(B,London,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(B,London,E,London)..  - Locate(B,London) + ComOpen(B,London,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(C,Bristol,D,Bristol)..  - Locate(C,Bristol) + ComOpen(C,Bristol,D,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(C,Bristol,D,Brighton)..  - Locate(C,Bristol) + ComOpen(C,Bristol,D,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(C,Bristol,D,London)..  - Locate(C,Bristol) + ComOpen(C,Bristol,D,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(C,Bristol,E,Bristol)..  - Locate(C,Bristol) + ComOpen(C,Bristol,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(C,Bristol,E,Brighton)..  - Locate(C,Bristol) + ComOpen(C,Bristol,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(C,Bristol,E,London)..  - Locate(C,Bristol) + ComOpen(C,Bristol,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(C,Brighton,D,Bristol)..  - Locate(C,Brighton) + ComOpen(C,Brighton,D,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(C,Brighton,D,Brighton)..  - Locate(C,Brighton) + ComOpen(C,Brighton,D,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(C,Brighton,D,London)..  - Locate(C,Brighton) + ComOpen(C,Brighton,D,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(C,Brighton,E,Bristol)..  - Locate(C,Brighton) + ComOpen(C,Brighton,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(C,Brighton,E,Brighton)..  - Locate(C,Brighton) + ComOpen(C,Brighton,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(C,Brighton,E,London)..  - Locate(C,Brighton) + ComOpen(C,Brighton,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(C,London,D,Bristol)..  - Locate(C,London) + ComOpen(C,London,D,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(C,London,D,Brighton)..  - Locate(C,London) + ComOpen(C,London,D,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(C,London,D,London)..  - Locate(C,London) + ComOpen(C,London,D,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(C,London,E,Bristol)..  - Locate(C,London) + ComOpen(C,London,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(C,London,E,Brighton)..  - Locate(C,London) + ComOpen(C,London,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(C,London,E,London)..  - Locate(C,London) + ComOpen(C,London,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(D,Bristol,E,Bristol)..  - Locate(D,Bristol) + ComOpen(D,Bristol,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(D,Bristol,E,Brighton)..  - Locate(D,Bristol) + ComOpen(D,Bristol,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(D,Bristol,E,London)..  - Locate(D,Bristol) + ComOpen(D,Bristol,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(D,Brighton,E,Bristol)..  - Locate(D,Brighton) + ComOpen(D,Brighton,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(D,Brighton,E,Brighton)..  - Locate(D,Brighton) + ComOpen(D,Brighton,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(D,Brighton,E,London)..  - Locate(D,Brighton) + ComOpen(D,Brighton,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(D,London,E,Bristol)..  - Locate(D,London) + ComOpen(D,London,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(D,London,E,Brighton)..  - Locate(D,London) + ComOpen(D,London,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon1(D,London,E,London)..  - Locate(D,London) + ComOpen(D,London,E,London) =L= 0 ; (LHS = 0)
+     
+
+---- BinaryCon2  =L=  Logical Condition ComOpen(i,j,k,l) --> Locate(k,l)
+
+BinaryCon2(A,Bristol,B,Bristol)..  - Locate(B,Bristol) + ComOpen(A,Bristol,B,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Bristol,B,Brighton)..  - Locate(B,Brighton) + ComOpen(A,Bristol,B,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Bristol,B,London)..  - Locate(B,London) + ComOpen(A,Bristol,B,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Bristol,C,Bristol)..  - Locate(C,Bristol) + ComOpen(A,Bristol,C,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Bristol,C,Brighton)..  - Locate(C,Brighton) + ComOpen(A,Bristol,C,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Bristol,C,London)..  - Locate(C,London) + ComOpen(A,Bristol,C,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Bristol,D,Bristol)..  - Locate(D,Bristol) + ComOpen(A,Bristol,D,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Bristol,D,Brighton)..  - Locate(D,Brighton) + ComOpen(A,Bristol,D,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Bristol,D,London)..  - Locate(D,London) + ComOpen(A,Bristol,D,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Bristol,E,Bristol)..  - Locate(E,Bristol) + ComOpen(A,Bristol,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Bristol,E,Brighton)..  - Locate(E,Brighton) + ComOpen(A,Bristol,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Bristol,E,London)..  - Locate(E,London) + ComOpen(A,Bristol,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Brighton,B,Bristol)..  - Locate(B,Bristol) + ComOpen(A,Brighton,B,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Brighton,B,Brighton)..  - Locate(B,Brighton) + ComOpen(A,Brighton,B,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Brighton,B,London)..  - Locate(B,London) + ComOpen(A,Brighton,B,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Brighton,C,Bristol)..  - Locate(C,Bristol) + ComOpen(A,Brighton,C,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Brighton,C,Brighton)..  - Locate(C,Brighton) + ComOpen(A,Brighton,C,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Brighton,C,London)..  - Locate(C,London) + ComOpen(A,Brighton,C,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Brighton,D,Bristol)..  - Locate(D,Bristol) + ComOpen(A,Brighton,D,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Brighton,D,Brighton)..  - Locate(D,Brighton) + ComOpen(A,Brighton,D,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Brighton,D,London)..  - Locate(D,London) + ComOpen(A,Brighton,D,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Brighton,E,Bristol)..  - Locate(E,Bristol) + ComOpen(A,Brighton,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Brighton,E,Brighton)..  - Locate(E,Brighton) + ComOpen(A,Brighton,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,Brighton,E,London)..  - Locate(E,London) + ComOpen(A,Brighton,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,London,B,Bristol)..  - Locate(B,Bristol) + ComOpen(A,London,B,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,London,B,Brighton)..  - Locate(B,Brighton) + ComOpen(A,London,B,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,London,B,London)..  - Locate(B,London) + ComOpen(A,London,B,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,London,C,Bristol)..  - Locate(C,Bristol) + ComOpen(A,London,C,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,London,C,Brighton)..  - Locate(C,Brighton) + ComOpen(A,London,C,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,London,C,London)..  - Locate(C,London) + ComOpen(A,London,C,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,London,D,Bristol)..  - Locate(D,Bristol) + ComOpen(A,London,D,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,London,D,Brighton)..  - Locate(D,Brighton) + ComOpen(A,London,D,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,London,D,London)..  - Locate(D,London) + ComOpen(A,London,D,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,London,E,Bristol)..  - Locate(E,Bristol) + ComOpen(A,London,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,London,E,Brighton)..  - Locate(E,Brighton) + ComOpen(A,London,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(A,London,E,London)..  - Locate(E,London) + ComOpen(A,London,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,Bristol,C,Bristol)..  - Locate(C,Bristol) + ComOpen(B,Bristol,C,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,Bristol,C,Brighton)..  - Locate(C,Brighton) + ComOpen(B,Bristol,C,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,Bristol,C,London)..  - Locate(C,London) + ComOpen(B,Bristol,C,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,Bristol,D,Bristol)..  - Locate(D,Bristol) + ComOpen(B,Bristol,D,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,Bristol,D,Brighton)..  - Locate(D,Brighton) + ComOpen(B,Bristol,D,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,Bristol,D,London)..  - Locate(D,London) + ComOpen(B,Bristol,D,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,Bristol,E,Bristol)..  - Locate(E,Bristol) + ComOpen(B,Bristol,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,Bristol,E,Brighton)..  - Locate(E,Brighton) + ComOpen(B,Bristol,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,Bristol,E,London)..  - Locate(E,London) + ComOpen(B,Bristol,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,Brighton,C,Bristol)..  - Locate(C,Bristol) + ComOpen(B,Brighton,C,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,Brighton,C,Brighton)..  - Locate(C,Brighton) + ComOpen(B,Brighton,C,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,Brighton,C,London)..  - Locate(C,London) + ComOpen(B,Brighton,C,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,Brighton,D,Bristol)..  - Locate(D,Bristol) + ComOpen(B,Brighton,D,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,Brighton,D,Brighton)..  - Locate(D,Brighton) + ComOpen(B,Brighton,D,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,Brighton,D,London)..  - Locate(D,London) + ComOpen(B,Brighton,D,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,Brighton,E,Bristol)..  - Locate(E,Bristol) + ComOpen(B,Brighton,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,Brighton,E,Brighton)..  - Locate(E,Brighton) + ComOpen(B,Brighton,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,Brighton,E,London)..  - Locate(E,London) + ComOpen(B,Brighton,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,London,C,Bristol)..  - Locate(C,Bristol) + ComOpen(B,London,C,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,London,C,Brighton)..  - Locate(C,Brighton) + ComOpen(B,London,C,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,London,C,London)..  - Locate(C,London) + ComOpen(B,London,C,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,London,D,Bristol)..  - Locate(D,Bristol) + ComOpen(B,London,D,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,London,D,Brighton)..  - Locate(D,Brighton) + ComOpen(B,London,D,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,London,D,London)..  - Locate(D,London) + ComOpen(B,London,D,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,London,E,Bristol)..  - Locate(E,Bristol) + ComOpen(B,London,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,London,E,Brighton)..  - Locate(E,Brighton) + ComOpen(B,London,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(B,London,E,London)..  - Locate(E,London) + ComOpen(B,London,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(C,Bristol,D,Bristol)..  - Locate(D,Bristol) + ComOpen(C,Bristol,D,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(C,Bristol,D,Brighton)..  - Locate(D,Brighton) + ComOpen(C,Bristol,D,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(C,Bristol,D,London)..  - Locate(D,London) + ComOpen(C,Bristol,D,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(C,Bristol,E,Bristol)..  - Locate(E,Bristol) + ComOpen(C,Bristol,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(C,Bristol,E,Brighton)..  - Locate(E,Brighton) + ComOpen(C,Bristol,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(C,Bristol,E,London)..  - Locate(E,London) + ComOpen(C,Bristol,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(C,Brighton,D,Bristol)..  - Locate(D,Bristol) + ComOpen(C,Brighton,D,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(C,Brighton,D,Brighton)..  - Locate(D,Brighton) + ComOpen(C,Brighton,D,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(C,Brighton,D,London)..  - Locate(D,London) + ComOpen(C,Brighton,D,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(C,Brighton,E,Bristol)..  - Locate(E,Bristol) + ComOpen(C,Brighton,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(C,Brighton,E,Brighton)..  - Locate(E,Brighton) + ComOpen(C,Brighton,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(C,Brighton,E,London)..  - Locate(E,London) + ComOpen(C,Brighton,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(C,London,D,Bristol)..  - Locate(D,Bristol) + ComOpen(C,London,D,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(C,London,D,Brighton)..  - Locate(D,Brighton) + ComOpen(C,London,D,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(C,London,D,London)..  - Locate(D,London) + ComOpen(C,London,D,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(C,London,E,Bristol)..  - Locate(E,Bristol) + ComOpen(C,London,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(C,London,E,Brighton)..  - Locate(E,Brighton) + ComOpen(C,London,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(C,London,E,London)..  - Locate(E,London) + ComOpen(C,London,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(D,Bristol,E,Bristol)..  - Locate(E,Bristol) + ComOpen(D,Bristol,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(D,Bristol,E,Brighton)..  - Locate(E,Brighton) + ComOpen(D,Bristol,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(D,Bristol,E,London)..  - Locate(E,London) + ComOpen(D,Bristol,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(D,Brighton,E,Bristol)..  - Locate(E,Bristol) + ComOpen(D,Brighton,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(D,Brighton,E,Brighton)..  - Locate(E,Brighton) + ComOpen(D,Brighton,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(D,Brighton,E,London)..  - Locate(E,London) + ComOpen(D,Brighton,E,London) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(D,London,E,Bristol)..  - Locate(E,Bristol) + ComOpen(D,London,E,Bristol) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(D,London,E,Brighton)..  - Locate(E,Brighton) + ComOpen(D,London,E,Brighton) =L= 0 ; (LHS = 0)
+     
+BinaryCon2(D,London,E,London)..  - Locate(E,London) + ComOpen(D,London,E,London) =L= 0 ; (LHS = 0)
+     
+
+---- BinaryCon3  =L=  Logical Condition Locate(i,j) and Locate(k,l) --> ComOpen(i,j,k,l)
+
+BinaryCon3(A,Bristol,B,Bristol)..  Locate(A,Bristol) + Locate(B,Bristol) - ComOpen(A,Bristol,B,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Bristol,B,Brighton)..  Locate(A,Bristol) + Locate(B,Brighton) - ComOpen(A,Bristol,B,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Bristol,B,London)..  Locate(A,Bristol) + Locate(B,London) - ComOpen(A,Bristol,B,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Bristol,C,Bristol)..  Locate(A,Bristol) + Locate(C,Bristol) - ComOpen(A,Bristol,C,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Bristol,C,Brighton)..  Locate(A,Bristol) + Locate(C,Brighton) - ComOpen(A,Bristol,C,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Bristol,C,London)..  Locate(A,Bristol) + Locate(C,London) - ComOpen(A,Bristol,C,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Bristol,D,Bristol)..  Locate(A,Bristol) + Locate(D,Bristol) - ComOpen(A,Bristol,D,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Bristol,D,Brighton)..  Locate(A,Bristol) + Locate(D,Brighton) - ComOpen(A,Bristol,D,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Bristol,D,London)..  Locate(A,Bristol) + Locate(D,London) - ComOpen(A,Bristol,D,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Bristol,E,Bristol)..  Locate(A,Bristol) + Locate(E,Bristol) - ComOpen(A,Bristol,E,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Bristol,E,Brighton)..  Locate(A,Bristol) + Locate(E,Brighton) - ComOpen(A,Bristol,E,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Bristol,E,London)..  Locate(A,Bristol) + Locate(E,London) - ComOpen(A,Bristol,E,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Brighton,B,Bristol)..  Locate(A,Brighton) + Locate(B,Bristol) - ComOpen(A,Brighton,B,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Brighton,B,Brighton)..  Locate(A,Brighton) + Locate(B,Brighton) - ComOpen(A,Brighton,B,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Brighton,B,London)..  Locate(A,Brighton) + Locate(B,London) - ComOpen(A,Brighton,B,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Brighton,C,Bristol)..  Locate(A,Brighton) + Locate(C,Bristol) - ComOpen(A,Brighton,C,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Brighton,C,Brighton)..  Locate(A,Brighton) + Locate(C,Brighton) - ComOpen(A,Brighton,C,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Brighton,C,London)..  Locate(A,Brighton) + Locate(C,London) - ComOpen(A,Brighton,C,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Brighton,D,Bristol)..  Locate(A,Brighton) + Locate(D,Bristol) - ComOpen(A,Brighton,D,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Brighton,D,Brighton)..  Locate(A,Brighton) + Locate(D,Brighton) - ComOpen(A,Brighton,D,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Brighton,D,London)..  Locate(A,Brighton) + Locate(D,London) - ComOpen(A,Brighton,D,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Brighton,E,Bristol)..  Locate(A,Brighton) + Locate(E,Bristol) - ComOpen(A,Brighton,E,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Brighton,E,Brighton)..  Locate(A,Brighton) + Locate(E,Brighton) - ComOpen(A,Brighton,E,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,Brighton,E,London)..  Locate(A,Brighton) + Locate(E,London) - ComOpen(A,Brighton,E,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,London,B,Bristol)..  Locate(A,London) + Locate(B,Bristol) - ComOpen(A,London,B,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,London,B,Brighton)..  Locate(A,London) + Locate(B,Brighton) - ComOpen(A,London,B,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,London,B,London)..  Locate(A,London) + Locate(B,London) - ComOpen(A,London,B,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,London,C,Bristol)..  Locate(A,London) + Locate(C,Bristol) - ComOpen(A,London,C,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,London,C,Brighton)..  Locate(A,London) + Locate(C,Brighton) - ComOpen(A,London,C,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,London,C,London)..  Locate(A,London) + Locate(C,London) - ComOpen(A,London,C,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,London,D,Bristol)..  Locate(A,London) + Locate(D,Bristol) - ComOpen(A,London,D,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,London,D,Brighton)..  Locate(A,London) + Locate(D,Brighton) - ComOpen(A,London,D,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,London,D,London)..  Locate(A,London) + Locate(D,London) - ComOpen(A,London,D,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,London,E,Bristol)..  Locate(A,London) + Locate(E,Bristol) - ComOpen(A,London,E,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,London,E,Brighton)..  Locate(A,London) + Locate(E,Brighton) - ComOpen(A,London,E,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(A,London,E,London)..  Locate(A,London) + Locate(E,London) - ComOpen(A,London,E,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,Bristol,C,Bristol)..  Locate(B,Bristol) + Locate(C,Bristol) - ComOpen(B,Bristol,C,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,Bristol,C,Brighton)..  Locate(B,Bristol) + Locate(C,Brighton) - ComOpen(B,Bristol,C,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,Bristol,C,London)..  Locate(B,Bristol) + Locate(C,London) - ComOpen(B,Bristol,C,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,Bristol,D,Bristol)..  Locate(B,Bristol) + Locate(D,Bristol) - ComOpen(B,Bristol,D,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,Bristol,D,Brighton)..  Locate(B,Bristol) + Locate(D,Brighton) - ComOpen(B,Bristol,D,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,Bristol,D,London)..  Locate(B,Bristol) + Locate(D,London) - ComOpen(B,Bristol,D,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,Bristol,E,Bristol)..  Locate(B,Bristol) + Locate(E,Bristol) - ComOpen(B,Bristol,E,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,Bristol,E,Brighton)..  Locate(B,Bristol) + Locate(E,Brighton) - ComOpen(B,Bristol,E,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,Bristol,E,London)..  Locate(B,Bristol) + Locate(E,London) - ComOpen(B,Bristol,E,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,Brighton,C,Bristol)..  Locate(B,Brighton) + Locate(C,Bristol) - ComOpen(B,Brighton,C,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,Brighton,C,Brighton)..  Locate(B,Brighton) + Locate(C,Brighton) - ComOpen(B,Brighton,C,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,Brighton,C,London)..  Locate(B,Brighton) + Locate(C,London) - ComOpen(B,Brighton,C,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,Brighton,D,Bristol)..  Locate(B,Brighton) + Locate(D,Bristol) - ComOpen(B,Brighton,D,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,Brighton,D,Brighton)..  Locate(B,Brighton) + Locate(D,Brighton) - ComOpen(B,Brighton,D,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,Brighton,D,London)..  Locate(B,Brighton) + Locate(D,London) - ComOpen(B,Brighton,D,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,Brighton,E,Bristol)..  Locate(B,Brighton) + Locate(E,Bristol) - ComOpen(B,Brighton,E,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,Brighton,E,Brighton)..  Locate(B,Brighton) + Locate(E,Brighton) - ComOpen(B,Brighton,E,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,Brighton,E,London)..  Locate(B,Brighton) + Locate(E,London) - ComOpen(B,Brighton,E,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,London,C,Bristol)..  Locate(B,London) + Locate(C,Bristol) - ComOpen(B,London,C,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,London,C,Brighton)..  Locate(B,London) + Locate(C,Brighton) - ComOpen(B,London,C,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,London,C,London)..  Locate(B,London) + Locate(C,London) - ComOpen(B,London,C,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,London,D,Bristol)..  Locate(B,London) + Locate(D,Bristol) - ComOpen(B,London,D,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,London,D,Brighton)..  Locate(B,London) + Locate(D,Brighton) - ComOpen(B,London,D,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,London,D,London)..  Locate(B,London) + Locate(D,London) - ComOpen(B,London,D,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,London,E,Bristol)..  Locate(B,London) + Locate(E,Bristol) - ComOpen(B,London,E,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,London,E,Brighton)..  Locate(B,London) + Locate(E,Brighton) - ComOpen(B,London,E,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(B,London,E,London)..  Locate(B,London) + Locate(E,London) - ComOpen(B,London,E,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(C,Bristol,D,Bristol)..  Locate(C,Bristol) + Locate(D,Bristol) - ComOpen(C,Bristol,D,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(C,Bristol,D,Brighton)..  Locate(C,Bristol) + Locate(D,Brighton) - ComOpen(C,Bristol,D,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(C,Bristol,D,London)..  Locate(C,Bristol) + Locate(D,London) - ComOpen(C,Bristol,D,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(C,Bristol,E,Bristol)..  Locate(C,Bristol) + Locate(E,Bristol) - ComOpen(C,Bristol,E,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(C,Bristol,E,Brighton)..  Locate(C,Bristol) + Locate(E,Brighton) - ComOpen(C,Bristol,E,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(C,Bristol,E,London)..  Locate(C,Bristol) + Locate(E,London) - ComOpen(C,Bristol,E,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(C,Brighton,D,Bristol)..  Locate(C,Brighton) + Locate(D,Bristol) - ComOpen(C,Brighton,D,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(C,Brighton,D,Brighton)..  Locate(C,Brighton) + Locate(D,Brighton) - ComOpen(C,Brighton,D,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(C,Brighton,D,London)..  Locate(C,Brighton) + Locate(D,London) - ComOpen(C,Brighton,D,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(C,Brighton,E,Bristol)..  Locate(C,Brighton) + Locate(E,Bristol) - ComOpen(C,Brighton,E,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(C,Brighton,E,Brighton)..  Locate(C,Brighton) + Locate(E,Brighton) - ComOpen(C,Brighton,E,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(C,Brighton,E,London)..  Locate(C,Brighton) + Locate(E,London) - ComOpen(C,Brighton,E,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(C,London,D,Bristol)..  Locate(C,London) + Locate(D,Bristol) - ComOpen(C,London,D,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(C,London,D,Brighton)..  Locate(C,London) + Locate(D,Brighton) - ComOpen(C,London,D,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(C,London,D,London)..  Locate(C,London) + Locate(D,London) - ComOpen(C,London,D,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(C,London,E,Bristol)..  Locate(C,London) + Locate(E,Bristol) - ComOpen(C,London,E,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(C,London,E,Brighton)..  Locate(C,London) + Locate(E,Brighton) - ComOpen(C,London,E,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(C,London,E,London)..  Locate(C,London) + Locate(E,London) - ComOpen(C,London,E,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(D,Bristol,E,Bristol)..  Locate(D,Bristol) + Locate(E,Bristol) - ComOpen(D,Bristol,E,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(D,Bristol,E,Brighton)..  Locate(D,Bristol) + Locate(E,Brighton) - ComOpen(D,Bristol,E,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(D,Bristol,E,London)..  Locate(D,Bristol) + Locate(E,London) - ComOpen(D,Bristol,E,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(D,Brighton,E,Bristol)..  Locate(D,Brighton) + Locate(E,Bristol) - ComOpen(D,Brighton,E,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(D,Brighton,E,Brighton)..  Locate(D,Brighton) + Locate(E,Brighton) - ComOpen(D,Brighton,E,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(D,Brighton,E,London)..  Locate(D,Brighton) + Locate(E,London) - ComOpen(D,Brighton,E,London) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(D,London,E,Bristol)..  Locate(D,London) + Locate(E,Bristol) - ComOpen(D,London,E,Bristol) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(D,London,E,Brighton)..  Locate(D,London) + Locate(E,Brighton) - ComOpen(D,London,E,Brighton) =L= 1 ; (LHS = 0)
+     
+BinaryCon3(D,London,E,London)..  Locate(D,London) + Locate(E,London) - ComOpen(D,London,E,London) =L= 1 ; (LHS = 0)
+     
+
+---- MaxDept  =L=  Maximum Departments allowed in each city
+
+MaxDept(Bristol)..  Locate(A,Bristol) + Locate(B,Bristol) + Locate(C,Bristol) + Locate(D,Bristol) + Locate(E,Bristol) =L= 3 ; (LHS = 0)
+     
+MaxDept(Brighton)..  Locate(A,Brighton) + Locate(B,Brighton) + Locate(C,Brighton) + Locate(D,Brighton) + Locate(E,Brighton) =L= 3 ; (LHS = 0)
+     
+MaxDept(London)..  Locate(A,London) + Locate(B,London) + Locate(C,London) + Locate(D,London) + Locate(E,London) =L= 3 ; (LHS = 0)
+     
+
+---- MaxCity  =E=  Maximum City for each Department
+
+MaxCity(A)..  Locate(A,Bristol) + Locate(A,Brighton) + Locate(A,London) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+MaxCity(B)..  Locate(B,Bristol) + Locate(B,Brighton) + Locate(B,London) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+MaxCity(C)..  Locate(C,Bristol) + Locate(C,Brighton) + Locate(C,London) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+MaxCity(D)..  Locate(D,Bristol) + Locate(D,Brighton) + Locate(D,London) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+MaxCity(E)..  Locate(E,Bristol) + Locate(E,Brighton) + Locate(E,London) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+
+---- Savings  =E=  Net cost
+
+Savings..  MovCost - ComCost + NetCost =E= 0 ; (LHS = 0)
+     
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/04/18 18:05:23 Page 3
+Decentralization , MIP (DCENTRALIZATN, SEQ =xx)
+Column Listing      SOLVE Decentre Using MIP From line 84
+
+
+---- Locate  Moving Decision Variable
+
+Locate(A,Bristol)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+      -10       Benefits
+       -1       BinaryCon1(A,Bristol,B,Bristol)
+       -1       BinaryCon1(A,Bristol,B,Brighton)
+       -1       BinaryCon1(A,Bristol,B,London)
+       -1       BinaryCon1(A,Bristol,C,Bristol)
+       -1       BinaryCon1(A,Bristol,C,Brighton)
+       -1       BinaryCon1(A,Bristol,C,London)
+       -1       BinaryCon1(A,Bristol,D,Bristol)
+       -1       BinaryCon1(A,Bristol,D,Brighton)
+       -1       BinaryCon1(A,Bristol,D,London)
+       -1       BinaryCon1(A,Bristol,E,Bristol)
+       -1       BinaryCon1(A,Bristol,E,Brighton)
+       -1       BinaryCon1(A,Bristol,E,London)
+        1       BinaryCon3(A,Bristol,B,Bristol)
+        1       BinaryCon3(A,Bristol,B,Brighton)
+        1       BinaryCon3(A,Bristol,B,London)
+        1       BinaryCon3(A,Bristol,C,Bristol)
+        1       BinaryCon3(A,Bristol,C,Brighton)
+        1       BinaryCon3(A,Bristol,C,London)
+        1       BinaryCon3(A,Bristol,D,Bristol)
+        1       BinaryCon3(A,Bristol,D,Brighton)
+        1       BinaryCon3(A,Bristol,D,London)
+        1       BinaryCon3(A,Bristol,E,Bristol)
+        1       BinaryCon3(A,Bristol,E,Brighton)
+        1       BinaryCon3(A,Bristol,E,London)
+        1       MaxDept(Bristol)
+        1       MaxCity(A)
+
+Locate(A,Brighton)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+      -10       Benefits
+       -1       BinaryCon1(A,Brighton,B,Bristol)
+       -1       BinaryCon1(A,Brighton,B,Brighton)
+       -1       BinaryCon1(A,Brighton,B,London)
+       -1       BinaryCon1(A,Brighton,C,Bristol)
+       -1       BinaryCon1(A,Brighton,C,Brighton)
+       -1       BinaryCon1(A,Brighton,C,London)
+       -1       BinaryCon1(A,Brighton,D,Bristol)
+       -1       BinaryCon1(A,Brighton,D,Brighton)
+       -1       BinaryCon1(A,Brighton,D,London)
+       -1       BinaryCon1(A,Brighton,E,Bristol)
+       -1       BinaryCon1(A,Brighton,E,Brighton)
+       -1       BinaryCon1(A,Brighton,E,London)
+        1       BinaryCon3(A,Brighton,B,Bristol)
+        1       BinaryCon3(A,Brighton,B,Brighton)
+        1       BinaryCon3(A,Brighton,B,London)
+        1       BinaryCon3(A,Brighton,C,Bristol)
+        1       BinaryCon3(A,Brighton,C,Brighton)
+        1       BinaryCon3(A,Brighton,C,London)
+        1       BinaryCon3(A,Brighton,D,Bristol)
+        1       BinaryCon3(A,Brighton,D,Brighton)
+        1       BinaryCon3(A,Brighton,D,London)
+        1       BinaryCon3(A,Brighton,E,Bristol)
+        1       BinaryCon3(A,Brighton,E,Brighton)
+        1       BinaryCon3(A,Brighton,E,London)
+        1       MaxDept(Brighton)
+        1       MaxCity(A)
+
+Locate(A,London)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       BinaryCon1(A,London,B,Bristol)
+       -1       BinaryCon1(A,London,B,Brighton)
+       -1       BinaryCon1(A,London,B,London)
+       -1       BinaryCon1(A,London,C,Bristol)
+       -1       BinaryCon1(A,London,C,Brighton)
+       -1       BinaryCon1(A,London,C,London)
+       -1       BinaryCon1(A,London,D,Bristol)
+       -1       BinaryCon1(A,London,D,Brighton)
+       -1       BinaryCon1(A,London,D,London)
+       -1       BinaryCon1(A,London,E,Bristol)
+       -1       BinaryCon1(A,London,E,Brighton)
+       -1       BinaryCon1(A,London,E,London)
+        1       BinaryCon3(A,London,B,Bristol)
+        1       BinaryCon3(A,London,B,Brighton)
+        1       BinaryCon3(A,London,B,London)
+        1       BinaryCon3(A,London,C,Bristol)
+        1       BinaryCon3(A,London,C,Brighton)
+        1       BinaryCon3(A,London,C,London)
+        1       BinaryCon3(A,London,D,Bristol)
+        1       BinaryCon3(A,London,D,Brighton)
+        1       BinaryCon3(A,London,D,London)
+        1       BinaryCon3(A,London,E,Bristol)
+        1       BinaryCon3(A,London,E,Brighton)
+        1       BinaryCon3(A,London,E,London)
+        1       MaxDept(London)
+        1       MaxCity(A)
+
+REMAINING 12 ENTRIES SKIPPED
+
+---- ComOpen  Communication between Dept i at City j to Dept k at City l
+
+ComOpen(A,Bristol,B,Bristol)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       BinaryCon1(A,Bristol,B,Bristol)
+        1       BinaryCon2(A,Bristol,B,Bristol)
+       -1       BinaryCon3(A,Bristol,B,Bristol)
+
+ComOpen(A,Bristol,B,Brighton)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       BinaryCon1(A,Bristol,B,Brighton)
+        1       BinaryCon2(A,Bristol,B,Brighton)
+       -1       BinaryCon3(A,Bristol,B,Brighton)
+
+ComOpen(A,Bristol,B,London)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       BinaryCon1(A,Bristol,B,London)
+        1       BinaryCon2(A,Bristol,B,London)
+       -1       BinaryCon3(A,Bristol,B,London)
+
+REMAINING 87 ENTRIES SKIPPED
+
+---- MovCost  Cost Benefit from Moving, [1000£]
+
+MovCost
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       Benefits
+        1       Savings
+
+
+---- ComCost  Cost from comunication, [1000£] 
+
+ComCost
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       Communication
+       -1       Savings
+
+
+---- NetCost  Net cost, [1000£]
+
+NetCost
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       Savings
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/04/18 18:05:23 Page 4
+Decentralization , MIP (DCENTRALIZATN, SEQ =xx)
+Model Statistics    SOLVE Decentre Using MIP From line 84
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           8     SINGLE EQUATIONS          281
+BLOCKS OF VARIABLES           5     SINGLE VARIABLES          108
+NON ZERO ELEMENTS           729     DISCRETE VARIABLES        105
+
+
+GENERATION TIME      =        0.032 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.032 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/04/18 18:05:23 Page 5
+Decentralization , MIP (DCENTRALIZATN, SEQ =xx)
+Solution Report     SOLVE Decentre Using MIP From line 84
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Decentre            OBJECTIVE  NetCost
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  84
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE              -14.9000
+
+ RESOURCE USAGE, LIMIT          0.110      1000.000
+ ITERATION COUNT, LIMIT       599    2000000000
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+--- GAMS/Cplex licensed for continuous and discrete problems.
+Cplex 12.8.0.0
+
+Space for names approximately 0.02 Mb
+Use option 'names no' to turn use of names off
+MIP status(101): integer optimal solution
+Cplex Time: 0.09sec (det. 58.81 ticks)
+Fixing integer variables, and solving final LP...
+Fixed MIP status(1): optimal
+Cplex Time: 0.02sec (det. 0.19 ticks)
+Proven optimal solution.
+
+MIP Solution:          -14.900000    (599 iterations, 0 nodes)
+Final Solve:           -14.900000    (0 iterations)
+
+Best possible:         -14.900000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU Benefits            .              .              .            -1.0000      
+---- EQU Communica~          .              .              .             1.0000      
+
+  Benefits  Benefit Evaluation
+  Communication  Communication Cost Evaluation
+
+---- EQU BinaryCon1  Logical Condition ComOpen(i,j,k,l) --> Locate(i,j)
+
+                             LOWER          LEVEL          UPPER         MARGINAL
+
+A.Bristol .B.Bristol         -INF           -1.0000          .              .          
+A.Bristol .B.Brighton        -INF             .              .              .          
+A.Bristol .B.London          -INF           -1.0000          .              .          
+A.Bristol .C.Bristol         -INF           -1.0000          .              .          
+A.Bristol .C.Brighton        -INF             .              .              .          
+A.Bristol .C.London          -INF           -1.0000          .              .          
+A.Bristol .D.Bristol         -INF             .              .              .          
+A.Bristol .D.Brighton        -INF           -1.0000          .              .          
+A.Bristol .D.London          -INF           -1.0000          .              .          
+A.Bristol .E.Bristol         -INF           -1.0000          .              .          
+A.Bristol .E.Brighton        -INF             .              .              .          
+A.Bristol .E.London          -INF           -1.0000          .              .          
+A.Brighton.B.Bristol         -INF             .              .              .          
+A.Brighton.B.Brighton        -INF             .              .              .          
+A.Brighton.B.London          -INF             .              .              .          
+A.Brighton.C.Bristol         -INF             .              .              .          
+A.Brighton.C.Brighton        -INF             .              .              .          
+A.Brighton.C.London          -INF             .              .              .          
+A.Brighton.D.Bristol         -INF             .              .              .          
+A.Brighton.D.Brighton        -INF             .              .              .          
+A.Brighton.D.London          -INF             .              .              .          
+A.Brighton.E.Bristol         -INF             .              .              .          
+A.Brighton.E.Brighton        -INF             .              .              .          
+A.Brighton.E.London          -INF             .              .              .          
+A.London  .B.Bristol         -INF             .              .              .          
+A.London  .B.Brighton        -INF             .              .              .          
+A.London  .B.London          -INF             .              .              .          
+A.London  .C.Bristol         -INF             .              .              .          
+A.London  .C.Brighton        -INF             .              .              .          
+A.London  .C.London          -INF             .              .              .          
+A.London  .D.Bristol         -INF             .              .              .          
+A.London  .D.Brighton        -INF             .              .              .          
+A.London  .D.London          -INF             .              .              .          
+A.London  .E.Bristol         -INF             .              .              .          
+A.London  .E.Brighton        -INF             .              .              .          
+A.London  .E.London          -INF             .              .              .          
+B.Bristol .C.Bristol         -INF             .              .              .          
+B.Bristol .C.Brighton        -INF             .              .              .          
+B.Bristol .C.London          -INF             .              .              .          
+B.Bristol .D.Bristol         -INF             .              .              .          
+B.Bristol .D.Brighton        -INF             .              .              .          
+B.Bristol .D.London          -INF             .              .              .          
+B.Bristol .E.Bristol         -INF             .              .              .          
+B.Bristol .E.Brighton        -INF             .              .              .          
+B.Bristol .E.London          -INF             .              .              .          
+B.Brighton.C.Bristol         -INF           -1.0000          .              .          
+B.Brighton.C.Brighton        -INF             .              .              .          
+B.Brighton.C.London          -INF           -1.0000          .              .          
+B.Brighton.D.Bristol         -INF             .              .              .          
+B.Brighton.D.Brighton        -INF           -1.0000          .              .          
+B.Brighton.D.London          -INF           -1.0000          .              .          
+B.Brighton.E.Bristol         -INF           -1.0000          .              .          
+B.Brighton.E.Brighton        -INF             .              .              .          
+B.Brighton.E.London          -INF           -1.0000          .              .          
+B.London  .C.Bristol         -INF             .              .              .          
+B.London  .C.Brighton        -INF             .              .              .          
+B.London  .C.London          -INF             .              .              .          
+B.London  .D.Bristol         -INF             .              .              .          
+B.London  .D.Brighton        -INF             .              .              .          
+B.London  .D.London          -INF             .              .              .          
+B.London  .E.Bristol         -INF             .              .              .          
+B.London  .E.Brighton        -INF             .              .              .          
+B.London  .E.London          -INF             .              .              .          
+C.Bristol .D.Bristol         -INF             .              .              .          
+C.Bristol .D.Brighton        -INF             .              .              .          
+C.Bristol .D.London          -INF             .              .              .          
+C.Bristol .E.Bristol         -INF             .              .              .          
+C.Bristol .E.Brighton        -INF             .              .              .          
+C.Bristol .E.London          -INF             .              .              .          
+C.Brighton.D.Bristol         -INF             .              .              .          
+C.Brighton.D.Brighton        -INF           -1.0000          .              .          
+C.Brighton.D.London          -INF           -1.0000          .              .          
+C.Brighton.E.Bristol         -INF           -1.0000          .              .          
+C.Brighton.E.Brighton        -INF             .              .              .          
+C.Brighton.E.London          -INF           -1.0000          .              .          
+C.London  .D.Bristol         -INF             .              .              .          
+C.London  .D.Brighton        -INF             .              .              .          
+C.London  .D.London          -INF             .              .              .          
+C.London  .E.Bristol         -INF             .              .              .          
+C.London  .E.Brighton        -INF             .              .              .          
+C.London  .E.London          -INF             .              .              .          
+D.Bristol .E.Bristol         -INF           -1.0000          .              .          
+D.Bristol .E.Brighton        -INF             .              .              .          
+D.Bristol .E.London          -INF           -1.0000          .              .          
+D.Brighton.E.Bristol         -INF             .              .              .          
+D.Brighton.E.Brighton        -INF             .              .              .          
+D.Brighton.E.London          -INF             .              .              .          
+D.London  .E.Bristol         -INF             .              .              .          
+D.London  .E.Brighton        -INF             .              .              .          
+D.London  .E.London          -INF             .              .              .          
+
+---- EQU BinaryCon2  Logical Condition ComOpen(i,j,k,l) --> Locate(k,l)
+
+                             LOWER          LEVEL          UPPER         MARGINAL
+
+A.Bristol .B.Bristol         -INF             .              .              .          
+A.Bristol .B.Brighton        -INF             .              .              .          
+A.Bristol .B.London          -INF             .              .              .          
+A.Bristol .C.Bristol         -INF             .              .              .          
+A.Bristol .C.Brighton        -INF             .              .              .          
+A.Bristol .C.London          -INF             .              .              .          
+A.Bristol .D.Bristol         -INF             .              .              .          
+A.Bristol .D.Brighton        -INF             .              .              .          
+A.Bristol .D.London          -INF             .              .              .          
+A.Bristol .E.Bristol         -INF             .              .              .          
+A.Bristol .E.Brighton        -INF             .              .              .          
+A.Bristol .E.London          -INF             .              .              .          
+A.Brighton.B.Bristol         -INF             .              .              .          
+A.Brighton.B.Brighton        -INF           -1.0000          .              .          
+A.Brighton.B.London          -INF             .              .              .          
+A.Brighton.C.Bristol         -INF             .              .              .          
+A.Brighton.C.Brighton        -INF           -1.0000          .              .          
+A.Brighton.C.London          -INF             .              .              .          
+A.Brighton.D.Bristol         -INF           -1.0000          .              .          
+A.Brighton.D.Brighton        -INF             .              .              .          
+A.Brighton.D.London          -INF             .              .              .          
+A.Brighton.E.Bristol         -INF             .              .              .          
+A.Brighton.E.Brighton        -INF           -1.0000          .              .          
+A.Brighton.E.London          -INF             .              .              .          
+A.London  .B.Bristol         -INF             .              .              .          
+A.London  .B.Brighton        -INF           -1.0000          .              .          
+A.London  .B.London          -INF             .              .              .          
+A.London  .C.Bristol         -INF             .              .              .          
+A.London  .C.Brighton        -INF           -1.0000          .              .          
+A.London  .C.London          -INF             .              .              .          
+A.London  .D.Bristol         -INF           -1.0000          .              .          
+A.London  .D.Brighton        -INF             .              .              .          
+A.London  .D.London          -INF             .              .              .          
+A.London  .E.Bristol         -INF             .              .              .          
+A.London  .E.Brighton        -INF           -1.0000          .              .          
+A.London  .E.London          -INF             .              .              .          
+B.Bristol .C.Bristol         -INF             .              .              .          
+B.Bristol .C.Brighton        -INF           -1.0000          .              .          
+B.Bristol .C.London          -INF             .              .              .          
+B.Bristol .D.Bristol         -INF           -1.0000          .              .          
+B.Bristol .D.Brighton        -INF             .              .              .          
+B.Bristol .D.London          -INF             .              .              .          
+B.Bristol .E.Bristol         -INF             .              .              .          
+B.Bristol .E.Brighton        -INF           -1.0000          .              .          
+B.Bristol .E.London          -INF             .              .              .          
+B.Brighton.C.Bristol         -INF             .              .              .          
+B.Brighton.C.Brighton        -INF             .              .              .          
+B.Brighton.C.London          -INF             .              .              .          
+B.Brighton.D.Bristol         -INF             .              .              .          
+B.Brighton.D.Brighton        -INF             .              .              .          
+B.Brighton.D.London          -INF             .              .              .          
+B.Brighton.E.Bristol         -INF             .              .              .          
+B.Brighton.E.Brighton        -INF             .              .              .          
+B.Brighton.E.London          -INF             .              .              .          
+B.London  .C.Bristol         -INF             .              .              .          
+B.London  .C.Brighton        -INF           -1.0000          .              .          
+B.London  .C.London          -INF             .              .              .          
+B.London  .D.Bristol         -INF           -1.0000          .              .          
+B.London  .D.Brighton        -INF             .              .              .          
+B.London  .D.London          -INF             .              .              .          
+B.London  .E.Bristol         -INF             .              .              .          
+B.London  .E.Brighton        -INF           -1.0000          .              .          
+B.London  .E.London          -INF             .              .              .          
+C.Bristol .D.Bristol         -INF           -1.0000          .              .          
+C.Bristol .D.Brighton        -INF             .              .              .          
+C.Bristol .D.London          -INF             .              .              .          
+C.Bristol .E.Bristol         -INF             .              .              .          
+C.Bristol .E.Brighton        -INF           -1.0000          .              .          
+C.Bristol .E.London          -INF             .              .              .          
+C.Brighton.D.Bristol         -INF             .              .              .          
+C.Brighton.D.Brighton        -INF             .              .              .          
+C.Brighton.D.London          -INF             .              .              .          
+C.Brighton.E.Bristol         -INF             .              .              .          
+C.Brighton.E.Brighton        -INF             .              .              .          
+C.Brighton.E.London          -INF             .              .              .          
+C.London  .D.Bristol         -INF           -1.0000          .              .          
+C.London  .D.Brighton        -INF             .              .              .          
+C.London  .D.London          -INF             .              .              .          
+C.London  .E.Bristol         -INF             .              .              .          
+C.London  .E.Brighton        -INF           -1.0000          .              .          
+C.London  .E.London          -INF             .              .              .          
+D.Bristol .E.Bristol         -INF             .              .              .          
+D.Bristol .E.Brighton        -INF             .              .              .          
+D.Bristol .E.London          -INF             .              .              .          
+D.Brighton.E.Bristol         -INF             .              .              .          
+D.Brighton.E.Brighton        -INF           -1.0000          .              .          
+D.Brighton.E.London          -INF             .              .              .          
+D.London  .E.Bristol         -INF             .              .              .          
+D.London  .E.Brighton        -INF           -1.0000          .              .          
+D.London  .E.London          -INF             .              .              .          
+
+---- EQU BinaryCon3  Logical Condition Locate(i,j) and Locate(k,l) --> ComOpen(i,j,k,l)
+
+                             LOWER          LEVEL          UPPER         MARGINAL
+
+A.Bristol .B.Bristol         -INF            1.0000         1.0000          .          
+A.Bristol .B.Brighton        -INF            1.0000         1.0000          .          
+A.Bristol .B.London          -INF            1.0000         1.0000          .          
+A.Bristol .C.Bristol         -INF            1.0000         1.0000          .          
+A.Bristol .C.Brighton        -INF            1.0000         1.0000          .          
+A.Bristol .C.London          -INF            1.0000         1.0000          .          
+A.Bristol .D.Bristol         -INF            1.0000         1.0000          .          
+A.Bristol .D.Brighton        -INF            1.0000         1.0000          .          
+A.Bristol .D.London          -INF            1.0000         1.0000          .          
+A.Bristol .E.Bristol         -INF            1.0000         1.0000          .          
+A.Bristol .E.Brighton        -INF            1.0000         1.0000          .          
+A.Bristol .E.London          -INF            1.0000         1.0000          .          
+A.Brighton.B.Bristol         -INF             .             1.0000          .          
+A.Brighton.B.Brighton        -INF            1.0000         1.0000          .          
+A.Brighton.B.London          -INF             .             1.0000          .          
+A.Brighton.C.Bristol         -INF             .             1.0000          .          
+A.Brighton.C.Brighton        -INF            1.0000         1.0000          .          
+A.Brighton.C.London          -INF             .             1.0000          .          
+A.Brighton.D.Bristol         -INF            1.0000         1.0000          .          
+A.Brighton.D.Brighton        -INF             .             1.0000          .          
+A.Brighton.D.London          -INF             .             1.0000          .          
+A.Brighton.E.Bristol         -INF             .             1.0000          .          
+A.Brighton.E.Brighton        -INF            1.0000         1.0000          .          
+A.Brighton.E.London          -INF             .             1.0000          .          
+A.London  .B.Bristol         -INF             .             1.0000          .          
+A.London  .B.Brighton        -INF            1.0000         1.0000          .          
+A.London  .B.London          -INF             .             1.0000          .          
+A.London  .C.Bristol         -INF             .             1.0000          .          
+A.London  .C.Brighton        -INF            1.0000         1.0000          .          
+A.London  .C.London          -INF             .             1.0000          .          
+A.London  .D.Bristol         -INF            1.0000         1.0000          .          
+A.London  .D.Brighton        -INF             .             1.0000          .          
+A.London  .D.London          -INF             .             1.0000          .          
+A.London  .E.Bristol         -INF             .             1.0000          .          
+A.London  .E.Brighton        -INF            1.0000         1.0000          .          
+A.London  .E.London          -INF             .             1.0000          .          
+B.Bristol .C.Bristol         -INF             .             1.0000          .          
+B.Bristol .C.Brighton        -INF            1.0000         1.0000          .          
+B.Bristol .C.London          -INF             .             1.0000          .          
+B.Bristol .D.Bristol         -INF            1.0000         1.0000          .          
+B.Bristol .D.Brighton        -INF             .             1.0000          .          
+B.Bristol .D.London          -INF             .             1.0000          .          
+B.Bristol .E.Bristol         -INF             .             1.0000          .          
+B.Bristol .E.Brighton        -INF            1.0000         1.0000          .          
+B.Bristol .E.London          -INF             .             1.0000          .          
+B.Brighton.C.Bristol         -INF            1.0000         1.0000          .          
+B.Brighton.C.Brighton        -INF            1.0000         1.0000          .          
+B.Brighton.C.London          -INF            1.0000         1.0000          .          
+B.Brighton.D.Bristol         -INF            1.0000         1.0000          .          
+B.Brighton.D.Brighton        -INF            1.0000         1.0000          .          
+B.Brighton.D.London          -INF            1.0000         1.0000          .          
+B.Brighton.E.Bristol         -INF            1.0000         1.0000          .          
+B.Brighton.E.Brighton        -INF            1.0000         1.0000          .          
+B.Brighton.E.London          -INF            1.0000         1.0000          .          
+B.London  .C.Bristol         -INF             .             1.0000          .          
+B.London  .C.Brighton        -INF            1.0000         1.0000          .          
+B.London  .C.London          -INF             .             1.0000          .          
+B.London  .D.Bristol         -INF            1.0000         1.0000          .          
+B.London  .D.Brighton        -INF             .             1.0000          .          
+B.London  .D.London          -INF             .             1.0000          .          
+B.London  .E.Bristol         -INF             .             1.0000          .          
+B.London  .E.Brighton        -INF            1.0000         1.0000          .          
+B.London  .E.London          -INF             .             1.0000          .          
+C.Bristol .D.Bristol         -INF            1.0000         1.0000          .          
+C.Bristol .D.Brighton        -INF             .             1.0000          .          
+C.Bristol .D.London          -INF             .             1.0000          .          
+C.Bristol .E.Bristol         -INF             .             1.0000          .          
+C.Bristol .E.Brighton        -INF            1.0000         1.0000          .          
+C.Bristol .E.London          -INF             .             1.0000          .          
+C.Brighton.D.Bristol         -INF            1.0000         1.0000          .          
+C.Brighton.D.Brighton        -INF            1.0000         1.0000          .          
+C.Brighton.D.London          -INF            1.0000         1.0000          .          
+C.Brighton.E.Bristol         -INF            1.0000         1.0000          .          
+C.Brighton.E.Brighton        -INF            1.0000         1.0000          .          
+C.Brighton.E.London          -INF            1.0000         1.0000          .          
+C.London  .D.Bristol         -INF            1.0000         1.0000          .          
+C.London  .D.Brighton        -INF             .             1.0000          .          
+C.London  .D.London          -INF             .             1.0000          .          
+C.London  .E.Bristol         -INF             .             1.0000          .          
+C.London  .E.Brighton        -INF            1.0000         1.0000          .          
+C.London  .E.London          -INF             .             1.0000          .          
+D.Bristol .E.Bristol         -INF            1.0000         1.0000          .          
+D.Bristol .E.Brighton        -INF            1.0000         1.0000          .          
+D.Bristol .E.London          -INF            1.0000         1.0000          .          
+D.Brighton.E.Bristol         -INF             .             1.0000          .          
+D.Brighton.E.Brighton        -INF            1.0000         1.0000          .          
+D.Brighton.E.London          -INF             .             1.0000          .          
+D.London  .E.Bristol         -INF             .             1.0000          .          
+D.London  .E.Brighton        -INF            1.0000         1.0000          .          
+D.London  .E.London          -INF             .             1.0000          .          
+
+---- EQU MaxDept  Maximum Departments allowed in each city
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+Bristol         -INF            2.0000         3.0000          .          
+Brighton        -INF            3.0000         3.0000          .          
+London          -INF             .             3.0000          .          
+
+---- EQU MaxCity  Maximum City for each Department
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+A         1.0000         1.0000         1.0000          .          
+B         1.0000         1.0000         1.0000          .          
+C         1.0000         1.0000         1.0000          .          
+D         1.0000         1.0000         1.0000          .          
+E         1.0000         1.0000         1.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU Savings             .              .              .             1.0000      
+
+  Savings  Net cost
+
+---- VAR Locate  Moving Decision Variable
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+A.Bristol           .             1.0000         1.0000       -10.0000      
+A.Brighton          .              .             1.0000       -10.0000      
+A.London            .              .             1.0000         EPS         
+B.Bristol           .              .             1.0000       -15.0000      
+B.Brighton          .             1.0000         1.0000       -20.0000      
+B.London            .              .             1.0000         EPS         
+C.Bristol           .              .             1.0000       -10.0000      
+C.Brighton          .             1.0000         1.0000       -15.0000      
+C.London            .              .             1.0000         EPS         
+D.Bristol           .             1.0000         1.0000       -20.0000      
+D.Brighton          .              .             1.0000       -15.0000      
+D.London            .              .             1.0000         EPS         
+E.Bristol           .              .             1.0000        -5.0000      
+E.Brighton          .             1.0000         1.0000       -15.0000      
+E.London            .              .             1.0000         EPS         
+
+---- VAR ComOpen  Communication between Dept i at City j to Dept k at City l
+
+                             LOWER          LEVEL          UPPER         MARGINAL
+
+A.Bristol .B.Bristol           .              .             1.0000         EPS         
+A.Bristol .B.Brighton          .             1.0000         1.0000         EPS         
+A.Bristol .B.London            .              .             1.0000         EPS         
+A.Bristol .C.Bristol           .              .             1.0000         5.0000      
+A.Bristol .C.Brighton          .             1.0000         1.0000        14.0000      
+A.Bristol .C.London            .              .             1.0000        13.0000      
+A.Bristol .D.Bristol           .             1.0000         1.0000         7.5000      
+A.Bristol .D.Brighton          .              .             1.0000        21.0000      
+A.Bristol .D.London            .              .             1.0000        19.5000      
+A.Bristol .E.Bristol           .              .             1.0000         EPS         
+A.Bristol .E.Brighton          .             1.0000         1.0000         EPS         
+A.Bristol .E.London            .              .             1.0000         EPS         
+A.Brighton.B.Bristol           .              .             1.0000         EPS         
+A.Brighton.B.Brighton          .              .             1.0000         EPS         
+A.Brighton.B.London            .              .             1.0000         EPS         
+A.Brighton.C.Bristol           .              .             1.0000        14.0000      
+A.Brighton.C.Brighton          .              .             1.0000         5.0000      
+A.Brighton.C.London            .              .             1.0000         9.0000      
+A.Brighton.D.Bristol           .              .             1.0000        21.0000      
+A.Brighton.D.Brighton          .              .             1.0000         7.5000      
+A.Brighton.D.London            .              .             1.0000        13.5000      
+A.Brighton.E.Bristol           .              .             1.0000         EPS         
+A.Brighton.E.Brighton          .              .             1.0000         EPS         
+A.Brighton.E.London            .              .             1.0000         EPS         
+A.London  .B.Bristol           .              .             1.0000         EPS         
+A.London  .B.Brighton          .              .             1.0000         EPS         
+A.London  .B.London            .              .             1.0000         EPS         
+A.London  .C.Bristol           .              .             1.0000        13.0000      
+A.London  .C.Brighton          .              .             1.0000         9.0000      
+A.London  .C.London            .              .             1.0000        10.0000      
+A.London  .D.Bristol           .              .             1.0000        19.5000      
+A.London  .D.Brighton          .              .             1.0000        13.5000      
+A.London  .D.London            .              .             1.0000        15.0000      
+A.London  .E.Bristol           .              .             1.0000         EPS         
+A.London  .E.Brighton          .              .             1.0000         EPS         
+A.London  .E.London            .              .             1.0000         EPS         
+B.Bristol .C.Bristol           .              .             1.0000         7.0000      
+B.Bristol .C.Brighton          .              .             1.0000        19.6000      
+B.Bristol .C.London            .              .             1.0000        18.2000      
+B.Bristol .D.Bristol           .              .             1.0000         6.0000      
+B.Bristol .D.Brighton          .              .             1.0000        16.8000      
+B.Bristol .D.London            .              .             1.0000        15.6000      
+B.Bristol .E.Bristol           .              .             1.0000         EPS         
+B.Bristol .E.Brighton          .              .             1.0000         EPS         
+B.Bristol .E.London            .              .             1.0000         EPS         
+B.Brighton.C.Bristol           .              .             1.0000        19.6000      
+B.Brighton.C.Brighton          .             1.0000         1.0000         7.0000      
+B.Brighton.C.London            .              .             1.0000        12.6000      
+B.Brighton.D.Bristol           .             1.0000         1.0000        16.8000      
+B.Brighton.D.Brighton          .              .             1.0000         6.0000      
+B.Brighton.D.London            .              .             1.0000        10.8000      
+B.Brighton.E.Bristol           .              .             1.0000         EPS         
+B.Brighton.E.Brighton          .             1.0000         1.0000         EPS         
+B.Brighton.E.London            .              .             1.0000         EPS         
+B.London  .C.Bristol           .              .             1.0000        18.2000      
+B.London  .C.Brighton          .              .             1.0000        12.6000      
+B.London  .C.London            .              .             1.0000        14.0000      
+B.London  .D.Bristol           .              .             1.0000        15.6000      
+B.London  .D.Brighton          .              .             1.0000        10.8000      
+B.London  .D.London            .              .             1.0000        12.0000      
+B.London  .E.Bristol           .              .             1.0000         EPS         
+B.London  .E.Brighton          .              .             1.0000         EPS         
+B.London  .E.London            .              .             1.0000         EPS         
+C.Bristol .D.Bristol           .              .             1.0000         EPS         
+C.Bristol .D.Brighton          .              .             1.0000         EPS         
+C.Bristol .D.London            .              .             1.0000         EPS         
+C.Bristol .E.Bristol           .              .             1.0000        10.0000      
+C.Bristol .E.Brighton          .              .             1.0000        28.0000      
+C.Bristol .E.London            .              .             1.0000        26.0000      
+C.Brighton.D.Bristol           .             1.0000         1.0000         EPS         
+C.Brighton.D.Brighton          .              .             1.0000         EPS         
+C.Brighton.D.London            .              .             1.0000         EPS         
+C.Brighton.E.Bristol           .              .             1.0000        28.0000      
+C.Brighton.E.Brighton          .             1.0000         1.0000        10.0000      
+C.Brighton.E.London            .              .             1.0000        18.0000      
+C.London  .D.Bristol           .              .             1.0000         EPS         
+C.London  .D.Brighton          .              .             1.0000         EPS         
+C.London  .D.London            .              .             1.0000         EPS         
+C.London  .E.Bristol           .              .             1.0000        26.0000      
+C.London  .E.Brighton          .              .             1.0000        18.0000      
+C.London  .E.London            .              .             1.0000        20.0000      
+D.Bristol .E.Bristol           .              .             1.0000         3.5000      
+D.Bristol .E.Brighton          .             1.0000         1.0000         9.8000      
+D.Bristol .E.London            .              .             1.0000         9.1000      
+D.Brighton.E.Bristol           .              .             1.0000         9.8000      
+D.Brighton.E.Brighton          .              .             1.0000         3.5000      
+D.Brighton.E.London            .              .             1.0000         6.3000      
+D.London  .E.Bristol           .              .             1.0000         9.1000      
+D.London  .E.Brighton          .              .             1.0000         6.3000      
+D.London  .E.London            .              .             1.0000         7.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR MovCost           -INF           80.0000        +INF             .          
+---- VAR ComCost           -INF           65.1000        +INF             .          
+---- VAR NetCost           -INF          -14.9000        +INF             .          
+
+  MovCost  Cost Benefit from Moving, [1000£]
+  ComCost  Cost from comunication, [1000£] 
+  NetCost  Net cost, [1000£]
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/04/18 18:05:23 Page 6
+Decentralization , MIP (DCENTRALIZATN, SEQ =xx)
+E x e c u t i o n
+
+
+----     86 VARIABLE Locate.L  Moving Decision Variable
+
+      Bristol    Brighton
+
+A       1.000
+B                   1.000
+C                   1.000
+D       1.000
+E                   1.000
+
+
+----     86 VARIABLE MovCost.L             =       80.000  Cost Benefit from Moving, [1000£]
+            VARIABLE ComCost.L             =       65.100  Cost from comunication, [1000£] 
+
+
+EXECUTION TIME       =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\decentralization\d2.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\decentralization\d2.lst

@@ -1,0 +1,549 @@
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/08/18 15:59:28 Page 1
+Refinery Optimization (REFINERY, SEQ =xx)
+C o m p i l a t i o n
+
+
+   2   
+      This LP problem optimizes a refinery model to decide operation strategy for producing
+      Petrol, Jet Fuel, Fuel Oil and Lube Oil using two different variety of Crudes.
+      Some produts like petrol and jet fuel have an associated property which must be
+      within certain bounds in the product. The model consists of mass balances across
+      the units, and the process streams. 
+       
+      Model Building in Mathematical Programming, Fifth Edition,
+      H. Paul Williams, Model 12.6 : Refinery
+      Wiley Publication, 2013
+  14   
+  15  Sets
+  16      fluids      'all process fluids in the refinery'
+  17                   /CRD1,CRD2, LN,MN,HN,LO,HO,RES, RGAS, COIL,CGAS,LOIL
+  18                    REG, PRE, JET, FUEL/
+  19   
+  20      crude(fluids)   /CRD1, CRD2/
+  21   
+  22      inter(fluids)   'intermediate fluids' /LN,MN,HN,LO,HO,RES, RGAS, COIL,CGAS,LOIL/
+  23   
+  24      products(fluids)        'final products'    /REG, PRE, JET, FUEL, LOIL/
+  25   
+  26      process         'processes in the refinery'     / Dist, Refmr, Crckr, Rblnd, Pblnd, Jblnd, Fblnd/
+  27   
+  28      rxn(process)    /Dist, Refmr, Crckr/
+  29   
+  30      mix(process)    /Rblnd, Pblnd, Jblnd, Fblnd/
+  31   
+  32      sellfluid(fluids)    /LN,MN,HN,LO,HO,RES, RGAS, COIL,CGAS,LOIL
+  33                    REG, PRE, JET, FUEL/
+  34   
+  35      QParam       /octane, vpress/
+  36   
+  37      crkoil(fluids) /LO,HO/
+  38      nap(fluids)     /LN,MN,HN/
+  39   
+  40      ;
+  41   
+  42  Alias (fluids, f,g,f1), (crude,cr), (process,p,pp), (products,prd),( sellfluid,sf),(QParam,qp) ;
+  43   
+  44  *Set fmap(f,p,g) /(CRD1,CRD2).Dist.(LN,MN,HN,LO,HO,RES), (LN,MN,HN).Refmr.(RGAS) ,
+  45  *                          (LO,HO,RES).Crckr.(COIL,CGAS,LOIL) , (LN,MN,HN).(Rblnd,Pblnd).(REG,PRE),
+  46  *                           (LO,HO,RES,COIL).Jblnd.(JET), (LO,COIL,HO,RES).Fblnd.FUEL /
+  47  ;
+  48  Set Pmap(f,g) /(LN,MN,HN).(REG),(LN,MN,HN).(PRE)
+  49                             (LO,HO,RES,COIL).(JET), (LO,COIL,HO,RES).FUEL /
+  50  ;
+  51   
+  52  Set inmap(f,p)  / (CRD1,CRD2).Dist, (LN,MN,HN).Refmr, (LO,HO,RES).Crckr , (LN,MN,HN,CGAS,RGAS).(Rblnd,Pblnd) ,
+  53                             (LO,HO,RES,COIL).Jblnd , (LO,COIL,HO,RES).Fblnd /
+  54  ;
+  55   
+  56  Set outmap(p,f)  /Dist.(LN,MN,HN,LO,HO,RES), Refmr.(RGAS) ,
+  57                            Crckr.(COIL,CGAS,LOIL) , Rblnd.REG,Pblnd.PRE, Jblnd.(JET), Fblnd.FUEL /
+  58  ;
+  59   
+  60  Set Q(qp,prd) / Octane.(REG,PRE) , Vpress.(FUEL)/
+  61  ;
+  62   
+  63  Table convert(f,rxn,g)
+  64              LN     MN      HN      LO      HO      RES     RGAS    COIL    CGAS    LOIL
+  65  CRD1.Dist   0.1    0.2     0.2     0.12    0.2     0.13
+  66  CRD2.Dist   0.15   0.25    0.18    0.08    0.19    0.12
+  67  LN.Refmr                                                    0.6
+  68  MN.Refmr                                                    0.52
+  69  HN.Refmr                                                    0.45
+  70  LO.Crckr                                                           0.68    0.28
+  71  HO.Crckr                                                           0.75    0.2
+  72  RES.Crckr                                                                           0.5
+  73  ;
+  74   
+  75  Parameter SellPr(sf)  '[$100]'
+  76              /PRE 7, REG 6, JET 4, FUEL 3.50, LOIL 1.5/
+  77         ;
+  78   
+  79   
+  80  Parameter Octane(f) / LN 90, MN 80, HN 70, RGAS 115, CGAS 105/ ;
+  81  Parameter VPress(f)/ LO 1, HO 0.6, COIL 1.5, RES 0.05/;
+  82   
+  83   
+  84   
+  85  Parameter ppp(f,g);
+  86   
+  87  ppp(f,g)$[sum(p,inmap(f,p)*outmap(p,g))] =1;
+  88   
+  89  Positive Variables
+  90      Zmade(f,p)      'Quantity generated from process'
+  91      Zuse(f,p)       'Quantity going into Process'
+  92      Zsell(sf)
+  93          ;
+  94  Variable Profit
+  95      ;
+  96   
+  97  Equation
+  98      massbal(f)        'Amount of intermediate (inter(g)) produced by process p , rxn(p)'
+  99   
+ 100      mixing(f,p)
+ 101   
+ 102      reactions(f,p)
+ 103      obj
+ 104      RegOctane
+ 105      PreOctane
+ 106      JetPress
+ 107      DistilCap
+ 108      ReformCap
+ 109      CrckrCap
+ 110      Petrol
+ 111      FuelMix
+ 112      ;
+ 113   
+ 114   
+ 115  massbal(sf(f))..                            sum(p$outmap(p,sf),Zmade(sf,p)) =E= Zsell(sf) + sum(p$inmap(sf,p),Zuse(sf,p));
+ 116   
+ 117  reactions(f,rxn(p))$outmap(rxn,f)..         Zmade(f,rxn) =E= sum(g$inmap(g,rxn), convert(g,rxn,f) * Zuse(g,rxn));
+ 118   
+ 119  mixing(sf(f),mix(p))$outmap(mix,sf)..        Zmade(sf,mix)  =E= sum(g$inmap(g,mix), Zuse(g,mix));
+ 120   
+ 121  obj..                                       Profit =E= sum(sf,Zsell(sf) * SellPr(sf));
+ 122   
+ 123  RegOctane ..                        Zmade('REG','Rblnd')*84 =L= sum(f$ppp(f,'REG'), Zuse(f,'Rblnd')*octane(f));
+ 124   
+ 125  PreOctane..                         Zmade('PRE','Pblnd')*94 =L= sum(f$ppp(f,'PRE'), Zuse(f,'Pblnd')*octane(f));
+ 126   
+ 127  JetPress..                          Zmade('JET','Jblnd')*1 =G= sum(f$ppp(f,'JET'), Zuse(f,'Jblnd')*Vpress(f));
+ 128   
+ 129  FuelMix..                           Zmade('FUEL','Fblnd') *18 =E= 10*Zuse('LO','Fblnd') +  4*Zuse('COIL','Fblnd')+ 3*Zuse('HO','Fblnd')
+ 130                                                                           + Zuse('RES','Fblnd');
+ 131   
+ 132  DistilCap..                         sum(cr, Zuse(cr,'Dist')) =L= 45000;
+ 133   
+ 134  ReformCap..                         sum(nap, Zuse(nap,'Refmr')) =L= 10000;
+ 135   
+ 136  CrckrCap..                          sum(crkoil, Zuse(crkoil,'Crckr')) =L= 8000;
+ 137   
+ 138  Petrol..                            Zmade('PRE','Pblnd') =G= 0.4* Zmade('REG','Rblnd');
+ 139  *Logical Zero Flow rates
+ 140   
+ 141  Zmade.fx(cr,p) =0;
+ 142  Zmade.fx(f,p)$(not outmap(p,f)) =0;
+ 143   
+ 144  Zuse.fx(f,p)$(not inmap(f,p)) =0;
+ 145   
+ 146  Zuse.up('CRD1',p) = 20000;
+ 147  Zuse.up('CRD2',p) = 30000;
+ 148   
+ 149  *market demands
+ 150  Zsell.lo('LOIL') =500;
+ 151  Zsell.up('LOIL') =1000;
+ 152   
+ 153   
+ 154   
+ 155  *production
+ 156   
+ 157   
+ 158  *Qjet(property,prd(f))$quality(property,prd)..   sum(mix,Zmade(prd,mix) * quality(property,prd)) =G=
+ 159  *                                                            sum((inter,mix)$[fmap(inter,mix,prd)], Zuse(inter,mix)*quality(property,inter));
+ 160   
+ 161   
+ 162  model ref /all/;
+ 163  solve ref using LP max Profit;
+ 164   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/08/18 15:59:28 Page 2
+Refinery Optimization (REFINERY, SEQ =xx)
+Equation Listing    SOLVE ref Using LP From line 163
+
+
+---- massbal  =E=  Amount of intermediate (inter(g)) produced by process p , rxn(p)
+
+massbal(LN)..  Zmade(LN,Dist) - Zuse(LN,Refmr) - Zuse(LN,Rblnd) - Zuse(LN,Pblnd) - Zsell(LN) =E= 0 ; (LHS = 0)
+     
+massbal(MN)..  Zmade(MN,Dist) - Zuse(MN,Refmr) - Zuse(MN,Rblnd) - Zuse(MN,Pblnd) - Zsell(MN) =E= 0 ; (LHS = 0)
+     
+massbal(HN)..  Zmade(HN,Dist) - Zuse(HN,Refmr) - Zuse(HN,Rblnd) - Zuse(HN,Pblnd) - Zsell(HN) =E= 0 ; (LHS = 0)
+     
+massbal(LO)..  Zmade(LO,Dist) - Zuse(LO,Crckr) - Zuse(LO,Jblnd) - Zuse(LO,Fblnd) - Zsell(LO) =E= 0 ; (LHS = 0)
+     
+massbal(HO)..  Zmade(HO,Dist) - Zuse(HO,Crckr) - Zuse(HO,Jblnd) - Zuse(HO,Fblnd) - Zsell(HO) =E= 0 ; (LHS = 0)
+     
+massbal(RES)..  Zmade(RES,Dist) - Zuse(RES,Crckr) - Zuse(RES,Jblnd) - Zuse(RES,Fblnd) - Zsell(RES) =E= 0 ; (LHS = 0)
+     
+massbal(RGAS)..  Zmade(RGAS,Refmr) - Zuse(RGAS,Rblnd) - Zuse(RGAS,Pblnd) - Zsell(RGAS) =E= 0 ; (LHS = 0)
+     
+massbal(COIL)..  Zmade(COIL,Crckr) - Zuse(COIL,Jblnd) - Zuse(COIL,Fblnd) - Zsell(COIL) =E= 0 ; (LHS = 0)
+     
+massbal(CGAS)..  Zmade(CGAS,Crckr) - Zuse(CGAS,Rblnd) - Zuse(CGAS,Pblnd) - Zsell(CGAS) =E= 0 ; (LHS = 0)
+     
+massbal(LOIL)..  Zmade(LOIL,Crckr) - Zsell(LOIL) =E= 0 ; (LHS = -500, INFES = 500 ****)
+     
+massbal(REG)..  Zmade(REG,Rblnd) - Zsell(REG) =E= 0 ; (LHS = 0)
+     
+massbal(PRE)..  Zmade(PRE,Pblnd) - Zsell(PRE) =E= 0 ; (LHS = 0)
+     
+massbal(JET)..  Zmade(JET,Jblnd) - Zsell(JET) =E= 0 ; (LHS = 0)
+     
+massbal(FUEL)..  Zmade(FUEL,Fblnd) - Zsell(FUEL) =E= 0 ; (LHS = 0)
+     
+
+---- mixing  =E=  
+
+mixing(REG,Rblnd)..  Zmade(REG,Rblnd) - Zuse(LN,Rblnd) - Zuse(MN,Rblnd) - Zuse(HN,Rblnd) - Zuse(RGAS,Rblnd) - Zuse(CGAS,Rblnd) =E= 0 ; (LHS = 0)
+     
+mixing(PRE,Pblnd)..  Zmade(PRE,Pblnd) - Zuse(LN,Pblnd) - Zuse(MN,Pblnd) - Zuse(HN,Pblnd) - Zuse(RGAS,Pblnd) - Zuse(CGAS,Pblnd) =E= 0 ; (LHS = 0)
+     
+mixing(JET,Jblnd)..  Zmade(JET,Jblnd) - Zuse(LO,Jblnd) - Zuse(HO,Jblnd) - Zuse(RES,Jblnd) - Zuse(COIL,Jblnd) =E= 0 ; (LHS = 0)
+     
+mixing(FUEL,Fblnd)..  Zmade(FUEL,Fblnd) - Zuse(LO,Fblnd) - Zuse(HO,Fblnd) - Zuse(RES,Fblnd) - Zuse(COIL,Fblnd) =E= 0 ; (LHS = 0)
+     
+
+---- reactions  =E=  
+
+reactions(LN,Dist)..  Zmade(LN,Dist) - 0.1*Zuse(CRD1,Dist) - 0.15*Zuse(CRD2,Dist) =E= 0 ; (LHS = 0)
+     
+reactions(MN,Dist)..  Zmade(MN,Dist) - 0.2*Zuse(CRD1,Dist) - 0.25*Zuse(CRD2,Dist) =E= 0 ; (LHS = 0)
+     
+reactions(HN,Dist)..  Zmade(HN,Dist) - 0.2*Zuse(CRD1,Dist) - 0.18*Zuse(CRD2,Dist) =E= 0 ; (LHS = 0)
+     
+reactions(LO,Dist)..  Zmade(LO,Dist) - 0.12*Zuse(CRD1,Dist) - 0.08*Zuse(CRD2,Dist) =E= 0 ; (LHS = 0)
+     
+reactions(HO,Dist)..  Zmade(HO,Dist) - 0.2*Zuse(CRD1,Dist) - 0.19*Zuse(CRD2,Dist) =E= 0 ; (LHS = 0)
+     
+reactions(RES,Dist)..  Zmade(RES,Dist) - 0.13*Zuse(CRD1,Dist) - 0.12*Zuse(CRD2,Dist) =E= 0 ; (LHS = 0)
+     
+reactions(RGAS,Refmr)..  Zmade(RGAS,Refmr) - 0.6*Zuse(LN,Refmr) - 0.52*Zuse(MN,Refmr) - 0.45*Zuse(HN,Refmr) =E= 0 ; (LHS = 0)
+     
+reactions(COIL,Crckr)..  Zmade(COIL,Crckr) - 0.68*Zuse(LO,Crckr) - 0.75*Zuse(HO,Crckr) =E= 0 ; (LHS = 0)
+     
+reactions(CGAS,Crckr)..  Zmade(CGAS,Crckr) - 0.28*Zuse(LO,Crckr) - 0.2*Zuse(HO,Crckr) =E= 0 ; (LHS = 0)
+     
+reactions(LOIL,Crckr)..  Zmade(LOIL,Crckr) - 0.5*Zuse(RES,Crckr) =E= 0 ; (LHS = 0)
+     
+
+---- obj  =E=  
+
+obj..  - 1.5*Zsell(LOIL) - 6*Zsell(REG) - 7*Zsell(PRE) - 4*Zsell(JET) - 3.5*Zsell(FUEL) + Profit =E= 0 ; (LHS = -750, INFES = 750 ****)
+     
+
+---- RegOctane  =L=  
+
+RegOctane..  84*Zmade(REG,Rblnd) - 90*Zuse(LN,Rblnd) - 80*Zuse(MN,Rblnd) - 70*Zuse(HN,Rblnd) - 115*Zuse(RGAS,Rblnd) - 105*Zuse(CGAS,Rblnd) =L= 0 ; (LHS = 0)
+     
+
+---- PreOctane  =L=  
+
+PreOctane..  94*Zmade(PRE,Pblnd) - 90*Zuse(LN,Pblnd) - 80*Zuse(MN,Pblnd) - 70*Zuse(HN,Pblnd) - 115*Zuse(RGAS,Pblnd) - 105*Zuse(CGAS,Pblnd) =L= 0 ; (LHS = 0)
+     
+
+---- JetPress  =G=  
+
+JetPress..  Zmade(JET,Jblnd) - Zuse(LO,Jblnd) - 0.6*Zuse(HO,Jblnd) - 0.05*Zuse(RES,Jblnd) - 1.5*Zuse(COIL,Jblnd) =G= 0 ; (LHS = 0)
+     
+
+---- DistilCap  =L=  
+
+DistilCap..  Zuse(CRD1,Dist) + Zuse(CRD2,Dist) =L= 45000 ; (LHS = 0)
+     
+
+---- ReformCap  =L=  
+
+ReformCap..  Zuse(LN,Refmr) + Zuse(MN,Refmr) + Zuse(HN,Refmr) =L= 10000 ; (LHS = 0)
+     
+
+---- CrckrCap  =L=  
+
+CrckrCap..  Zuse(LO,Crckr) + Zuse(HO,Crckr) =L= 8000 ; (LHS = 0)
+     
+
+---- Petrol  =G=  
+
+Petrol..  - 0.4*Zmade(REG,Rblnd) + Zmade(PRE,Pblnd) =G= 0 ; (LHS = 0)
+     
+
+---- FuelMix  =E=  
+
+FuelMix..  18*Zmade(FUEL,Fblnd) - 10*Zuse(LO,Fblnd) - 3*Zuse(HO,Fblnd) - Zuse(RES,Fblnd) - 4*Zuse(COIL,Fblnd) =E= 0 ; (LHS = 0)
+     
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/08/18 15:59:28 Page 3
+Refinery Optimization (REFINERY, SEQ =xx)
+Column Listing      SOLVE ref Using LP From line 163
+
+
+---- Zmade  Quantity generated from process
+
+Zmade(LN,Dist)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       massbal(LN)
+        1       reactions(LN,Dist)
+
+Zmade(MN,Dist)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       massbal(MN)
+        1       reactions(MN,Dist)
+
+Zmade(HN,Dist)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       massbal(HN)
+        1       reactions(HN,Dist)
+
+REMAINING 11 ENTRIES SKIPPED
+
+---- Zuse  Quantity going into Process
+
+Zuse(CRD1,Dist)
+                (.LO, .L, .UP, .M = 0, 0, 20000, 0)
+       -0.1     reactions(LN,Dist)
+       -0.2     reactions(MN,Dist)
+       -0.2     reactions(HN,Dist)
+       -0.12    reactions(LO,Dist)
+       -0.2     reactions(HO,Dist)
+       -0.13    reactions(RES,Dist)
+        1       DistilCap
+
+Zuse(CRD2,Dist)
+                (.LO, .L, .UP, .M = 0, 0, 30000, 0)
+       -0.15    reactions(LN,Dist)
+       -0.25    reactions(MN,Dist)
+       -0.18    reactions(HN,Dist)
+       -0.08    reactions(LO,Dist)
+       -0.19    reactions(HO,Dist)
+       -0.12    reactions(RES,Dist)
+        1       DistilCap
+
+Zuse(LN,Refmr)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbal(LN)
+       -0.6     reactions(RGAS,Refmr)
+        1       ReformCap
+
+REMAINING 23 ENTRIES SKIPPED
+
+---- Zsell  
+
+Zsell(LN)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbal(LN)
+
+Zsell(MN)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbal(MN)
+
+Zsell(HN)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       massbal(HN)
+
+REMAINING 11 ENTRIES SKIPPED
+
+---- Profit  
+
+Profit
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/08/18 15:59:28 Page 4
+Refinery Optimization (REFINERY, SEQ =xx)
+Model Statistics    SOLVE ref Using LP From line 163
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS          12     SINGLE EQUATIONS           37
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES           55  1 projected
+NON ZERO ELEMENTS           141
+
+
+GENERATION TIME      =        0.031 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.031 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/08/18 15:59:28 Page 5
+Refinery Optimization (REFINERY, SEQ =xx)
+Solution Report     SOLVE ref Using LP From line 163
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   ref                 OBJECTIVE  Profit
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  163
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE           211365.1348
+
+ RESOURCE USAGE, LIMIT          0.000      1000.000
+ ITERATION COUNT, LIMIT        23    2000000000
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.00sec (det. 0.10 ticks)
+Optimal solution found.
+Objective :      211365.134769
+
+
+---- EQU massbal  Amount of intermediate (inter(g)) produced by process p , rxn(p)
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+LN            .              .              .            -6.6538      
+MN            .              .              .            -5.4827      
+HN            .              .              .            -4.3116      
+LO            .              .              .            -4.3928      
+HO            .              .              .            -4.0000      
+RES           .              .              .            -4.0000      
+RGAS          .              .              .            -9.5814      
+COIL          .              .              .            -4.0000      
+CGAS          .              .              .            -8.4104      
+LOIL          .              .              .            -8.0000      
+REG           .              .              .            -6.0000      
+PRE           .              .              .            -7.0000      
+JET           .              .              .            -4.0000      
+FUEL          .              .              .            -3.5000      
+
+---- EQU mixing  
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+REG .Rblnd          .              .              .            -3.8858      
+PRE .Pblnd          .              .              .            -3.8858      
+JET .Jblnd          .              .              .             4.0000      
+FUEL.Fblnd          .              .              .             3.5000      
+
+---- EQU reactions  
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+LN  .Dist           .              .              .             6.6538      
+MN  .Dist           .              .              .             5.4827      
+HN  .Dist           .              .              .             4.3116      
+LO  .Dist           .              .              .             4.3928      
+HO  .Dist           .              .              .             4.0000      
+RES .Dist           .              .              .             4.0000      
+RGAS.Refmr          .              .              .             9.5814      
+COIL.Crckr          .              .              .             4.0000      
+CGAS.Crckr          .              .              .             8.4104      
+LOIL.Crckr          .              .              .             8.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+---- EQU RegOctane         -INF             .              .             0.1171      
+---- EQU PreOctane         -INF             .              .             0.1171      
+---- EQU JetPress            .          3429.5000        +INF             .          
+---- EQU DistilCap         -INF        45000.0000     45000.0000         4.4714      
+---- EQU ReformCap         -INF         5406.8618     10000.0000          .          
+---- EQU CrckrCap          -INF         8000.0000      8000.0000         0.6821      
+---- EQU Petrol              .              .            +INF           -0.1222      
+---- EQU FuelMix             .              .              .              .          
+
+---- VAR Zmade  Quantity generated from process
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+LN  .Dist           .          6000.0000        +INF             .          
+MN  .Dist           .         10500.0000        +INF             .          
+HN  .Dist           .          8400.0000        +INF             .          
+LO  .Dist           .          4200.0000        +INF             .          
+HO  .Dist           .          8700.0000        +INF             .          
+RES .Dist           .          5550.0000        +INF             .          
+RGAS.Refmr          .          2433.0878        +INF             .          
+COIL.Crckr          .          5706.0000        +INF             .          
+CGAS.Crckr          .          1936.0000        +INF             .          
+LOIL.Crckr          .           500.0000        +INF             .          
+REG .Rblnd          .         17044.4471        +INF             .          
+PRE .Pblnd          .          6817.7789        +INF             .          
+JET .Jblnd          .         15156.0000        +INF             .          
+FUEL.Fblnd          .              .            +INF             .          
+
+---- VAR Zuse  Quantity going into Process
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+CRD1.Dist           .         15000.0000     20000.0000          .          
+CRD2.Dist           .         30000.0000     30000.0000         0.2649      
+LN  .Refmr          .              .            +INF           -0.9049      
+LN  .Rblnd          .           273.0658        +INF             .          
+LN  .Pblnd          .          5726.9342        +INF             .          
+MN  .Refmr          .              .            +INF           -0.5004      
+MN  .Rblnd          .         10500.0000        +INF             .          
+MN  .Pblnd          .              .            +INF            EPS         
+HN  .Refmr          .          5406.8618        +INF             .          
+HN  .Rblnd          .          2993.1382        +INF             .          
+HN  .Pblnd          .              .            +INF      1.776357E-15      
+LO  .Crckr          .          4200.0000        +INF             .          
+LO  .Jblnd          .              .            +INF           -0.3928      
+LO  .Fblnd          .              .            +INF           -0.8928      
+HO  .Crckr          .          3800.0000        +INF             .          
+HO  .Jblnd          .          4900.0000        +INF             .          
+HO  .Fblnd          .              .            +INF           -0.5000      
+RES .Crckr          .          1000.0000        +INF             .          
+RES .Jblnd          .          4550.0000        +INF             .          
+RES .Fblnd          .              .            +INF           -0.5000      
+RGAS.Rblnd          .          1342.2432        +INF             .          
+RGAS.Pblnd          .          1090.8446        +INF             .          
+COIL.Jblnd          .          5706.0000        +INF             .          
+COIL.Fblnd          .              .            +INF           -0.5000      
+CGAS.Rblnd          .          1936.0000        +INF             .          
+CGAS.Pblnd          .              .            +INF            EPS         
+
+---- VAR Zsell  
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+LN            .              .            +INF           -6.6538      
+MN            .              .            +INF           -5.4827      
+HN            .              .            +INF           -4.3116      
+LO            .              .            +INF           -4.3928      
+HO            .              .            +INF           -4.0000      
+RES           .              .            +INF           -4.0000      
+RGAS          .              .            +INF           -9.5814      
+COIL          .              .            +INF           -4.0000      
+CGAS          .              .            +INF           -8.4104      
+LOIL       500.0000       500.0000      1000.0000        -6.5000      
+REG           .         17044.4471        +INF             .          
+PRE           .          6817.7789        +INF             .          
+JET           .         15156.0000        +INF             .          
+FUEL          .              .            +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR Profit            -INF       211365.1348        +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+
+
+EXECUTION TIME       =        0.000 SECONDS      2 MB  25.1.2 r67455 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\refinery\RefGAMSway1.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\refinery\RefGAMSway1.lst
