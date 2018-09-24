@@ -1,0 +1,23 @@
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 16:42:49 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+****  $299  UNEXPECTED END OF FILE (1)
+
+**** 1 ERROR(S)   0 WARNING(S)
+
+
+COMPILATION TIME     =        0.000 SECONDS      2 MB  25.1.2 r67455 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\TARIFF rates\Tariff.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\TARIFF rates\Tariff.lst
+
+**** USER ERROR(S) ENCOUNTERED

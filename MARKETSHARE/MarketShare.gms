@@ -138,7 +138,7 @@ objNetDev..              NetDev =E= sum((cat,S), Deviations(cat,'D1'));
 Model Base /all/;
 
 *============================================================================================================
-*Model market constrints for minimum total deviation across the 7 division criterias
+*Model market constraints for minimum total deviation across the 7 division criterias
 *============================================================================================================
 
 Equations

@@ -1,0 +1,172 @@
+--- Job CurveFitting.gms Start 09/24/18 16:17:49 25.1.2 r67455 WEX-WEI x86 64bit/MS Windows
+GAMS 25.1.2   Copyright (C) 1987-2018 GAMS Development. All rights reserved
+Licensee: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+          GAMS Development, Fairfax                                 DC14199
+          cbhomia@gams.com                                                 
+--- Starting compilation
+--- CurveFitting.gms(29) 2 Mb
+--- call gdxxrw curvefit.xlsm o=curve.gdx @slices.txt
+
+GDXXRW           25.1.2 r67455 Released Aug  1, 2018 VS8 x86 32bit/MS Windows 
+Input file : C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\curvefit.xlsm
+Output file: C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\curve.gdx
+Total time = 1156 Ms
+--- CurveFitting.gms(30) 2 Mb
+--- CurveFitting.gms(32) 2 Mb
+
+--- GDXin=C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\curve.gdx
+--- CurveFitting.gms(105) 3 Mb
+--- Starting execution: elapsed 0:00:01.245
+--- CurveFitting.gms(37) 4 Mb
+--- Generating LP model linearfit
+--- CurveFitting.gms(67) 4 Mb
+---   77 rows  42 columns  190 non-zeroes
+--- Executing CPLEX: elapsed 0:00:01.263
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+Cplex 12.8.0.0
+
+Reading data...
+Starting Cplex...
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+CPXPARAM_Advance                                 0
+CPXPARAM_Simplex_Limits_Iterations               2000000000
+CPXPARAM_TimeLimit                               1000
+CPXPARAM_Threads                                 1
+CPXPARAM_Parallel                                1
+CPXPARAM_Tune_TimeLimit                          200
+Tried aggregator 1 time.
+LP Presolve eliminated 20 rows and 2 columns.
+Aggregator did 19 substitutions.
+Reduced LP has 38 rows, 21 columns, and 112 nonzeros.
+Presolve time = 0.00 sec. (0.05 ticks)
+
+Iteration log . . .
+Iteration:     1   Scaled dual infeas =            93.000000
+Iteration:    23   Dual objective     =             2.927273
+LP status(1): optimal
+Cplex Time: 0.00sec (det. 0.17 ticks)
+
+Optimal solution found.
+Objective :          11.466250
+
+--- Restarting execution
+--- CurveFitting.gms(67) 2 Mb
+--- Reading solution for model linearfit
+--- Executing after solve: elapsed 0:00:01.371
+--- CurveFitting.gms(72) 3 Mb
+--- Generating LP model linearfit
+--- CurveFitting.gms(74) 3 Mb
+---   77 rows  42 columns  190 non-zeroes
+--- Executing CPLEX: elapsed 0:00:01.385
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+Cplex 12.8.0.0
+
+Reading data...
+Starting Cplex...
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+CPXPARAM_Advance                                 2
+CPXPARAM_Simplex_Limits_Iterations               2000000000
+CPXPARAM_TimeLimit                               1000
+CPXPARAM_Threads                                 1
+CPXPARAM_Parallel                                1
+CPXPARAM_Tune_TimeLimit                          200
+Tried aggregator 1 time.
+LP Presolve eliminated 1 rows and 1 columns.
+Aggregator did 38 substitutions.
+Reduced LP has 38 rows, 3 columns, and 112 nonzeros.
+Presolve time = 0.00 sec. (0.05 ticks)
+Using devex.
+
+Iteration log . . .
+Iteration:     1    Objective     =             1.960417
+LP status(1): optimal
+Cplex Time: 0.02sec (det. 0.17 ticks)
+
+Optimal solution found.
+Objective :           1.725000
+
+--- Restarting execution
+--- CurveFitting.gms(74) 2 Mb
+--- Reading solution for model linearfit
+--- Executing after solve: elapsed 0:00:01.488
+--- CurveFitting.gms(76) 3 Mb
+--- Generating QCP model quadfit
+--- CurveFitting.gms(92) 5 Mb
+---   77 rows  43 columns  208 non-zeroes
+---   0 nl-code  0 nl-non-zeroes
+--- CurveFitting.gms(92) 3 Mb
+--- Executing CONOPT: elapsed 0:00:01.506
+CONOPT 3         25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+ 
+ 
+    C O N O P T 3   version 3.17I
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+   Iter Phase Ninf   Infeasibility   RGmax    NSB   Step InItr MX OK
+      0   0        9.1038288019E-15 (Input point)
+ 
+                   Pre-triangular equations:   0
+                   Post-triangular equations:  1
+                   Definitional equations:     18
+ 
+      1   0        1.3322676296E-15 (After pre-processing)
+      2   0        4.4408920985E-16 (After scaling)
+ 
+ ** Feasible solution. Value of objective =    32.7750000000
+ 
+   Iter Phase Ninf     Objective     RGmax    NSB   Step InItr MX OK
+      6   3        1.0458964706E+01 0.0E+00     0
+ 
+ ** Optimal solution. There are no superbasic variables.
+ 
+--- Restarting execution
+--- CurveFitting.gms(92) 2 Mb
+--- Reading solution for model quadfit
+--- Executing after solve: elapsed 0:00:01.611
+--- CurveFitting.gms(95) 3 Mb
+--- Generating QCP model quadfit
+--- CurveFitting.gms(98) 5 Mb
+---   77 rows  43 columns  208 non-zeroes
+---   0 nl-code  0 nl-non-zeroes
+--- CurveFitting.gms(98) 3 Mb
+--- Executing CONOPT: elapsed 0:00:01.625
+CONOPT 3         25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+ 
+ 
+    C O N O P T 3   version 3.17I
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+   Iter Phase Ninf   Infeasibility   RGmax    NSB   Step InItr MX OK
+      0   0        1.8762769116E-14 (Input point)
+ 
+                   Pre-triangular equations:   0
+                   Post-triangular equations:  1
+                   Definitional equations:     18
+ 
+      1   0        8.3266726847E-15 (After pre-processing)
+      2   0        2.8865798640E-15 (After scaling)
+ 
+ ** Feasible solution. Value of objective =    2.29803921569
+ 
+   Iter Phase Ninf     Objective     RGmax    NSB   Step InItr MX OK
+      5   3        1.4750000000E+00 0.0E+00     0
+ 
+ ** Optimal solution. There are no superbasic variables.
+ 
+--- Restarting execution
+--- CurveFitting.gms(98) 2 Mb
+--- Reading solution for model quadfit
+--- Executing after solve: elapsed 0:00:01.715
+--- CurveFitting.gms(104) 3 Mb
+*** Status: Normal completion
+--- Job CurveFitting.gms Stop 09/24/18 16:17:51 elapsed 0:00:01.724

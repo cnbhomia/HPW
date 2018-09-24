@@ -1,0 +1,10 @@
+--- Job Tariff.gms Start 09/24/18 16:42:49 25.1.2 r67455 WEX-WEI x86 64bit/MS Windows
+GAMS 25.1.2   Copyright (C) 1987-2018 GAMS Development. All rights reserved
+Licensee: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+          GAMS Development, Fairfax                                 DC14199
+          cbhomia@gams.com                                                 
+--- Starting compilation
+*** Error 299 in C:\Users\cnbho\Documents\GitHub\HPW\TARIFF rates\Tariff.gms
+    Unexpected end of file
+*** Status: Compilation error(s)
+--- Job Tariff.gms Stop 09/24/18 16:42:49 elapsed 0:00:00.012

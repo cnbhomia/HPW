@@ -1,0 +1,74 @@
+B 2 C o m p i l a t i o n
+B 221 Include File Summary
+B 235 Equation Listing    SOLVE Market2 Using MIP From line 224
+D 236 RetailAssign
+D 250 EnsureRetAssign
+D 261 MaxRetailD1
+D 270 MinRetailD1
+D 279 DevRetailAllot
+D 290 CalcDPoints
+D 305 MaxDPpointsD1
+D 310 MinDPpointsD1
+D 315 TotalDPoint
+D 320 DevDPAllot
+D 325 CalcSpirit
+D 336 MaxSpiritD1
+D 341 MinSpiritD1
+D 346 TotalSpirit
+D 351 DevSpiritAllot
+D 356 CalcOil
+D 367 MaxOilD1
+D 376 MinOilD1
+D 385 TotalOil
+D 394 DevOilAllotR1
+D 399 DevOilAllotR2
+D 404 DevOilAllotR3
+D 409 ObjNetDev
+D 414 MiniMaxDev1
+D 425 MinimaxDev2
+D 436 MiniMaxTotDev
+B 443 Column Listing      SOLVE Market2 Using MIP From line 224
+E 444 RetMap
+E 485 DisPoint
+E 501 SupSpirit
+E 517 SupOil
+E 545 Deviations
+E 573 MinTotDev
+E 580 NetDev
+E 587 MiniMax
+B 609 Model Statistics    SOLVE Market2 Using MIP From line 224
+B 625 Solution Report     SOLVE Market2 Using MIP From line 224
+F 665 RetailAssign
+F 672 EnsureRetAssign
+F 700 MaxRetailD1
+F 707 MinRetailD1
+F 714 DevRetailAllot
+F 721 CalcDPoints
+F 726 MaxDPpointsD1
+F 727 MinDPpointsD1
+F 728 TotalDPoint
+F 729 DevDPAllot
+F 740 CalcSpirit
+F 745 MaxSpiritD1
+F 746 MinSpiritD1
+F 747 TotalSpirit
+F 748 DevSpiritAllot
+F 759 CalcOil
+F 770 MaxOilD1
+F 778 MinOilD1
+F 786 TotalOil
+F 792 DevOilAllotR1
+F 793 DevOilAllotR2
+F 794 DevOilAllotR3
+F 795 ObjNetDev
+F 805 MiniMaxDev1
+F 817 MinimaxDev2
+F 827 MiniMaxTotDev
+G 830 RetMap
+G 881 DisPoint
+G 888 SupSpirit
+G 895 SupOil
+G 906 Deviations
+G 918 MinTotDev
+G 922 NetDev
+G 923 MiniMax

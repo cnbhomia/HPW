@@ -1,0 +1,2121 @@
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 15:39:20 Page 1
+Curve Fitting (CURVE, SEQ =xxx)
+C o m p i l a t i o n
+
+
+   2   
+      This problem aims at fitting a curve ( straigth line and quadratic curve) through
+      a set of data points. The fitting is done using two objectives, viz
+      a. minimize sum of absolute deviations
+      b. minimize the maximum deviation
+       
+      Model Building in Mathematical Programming,Fifth Edition, H. Paul Williams,
+      Model 12.1 : Food Planning I
+      Wiley Publication, 2013
+       
+  14   
+  15  Sets
+  16      i       'number of observation points'
+  17      j       'type of cureve fit,  linear and quadratic' /L , Q/
+  18      ;
+  19   
+  20  Parameters
+  21      x(i)     'input in each observation'
+  22      y(i)     'output in each observation'
+  23      xy(i,*)  'x-y tuple in each observation for import'
+  24      ;
+  29   
+      $ife errorlevel<>0 $abort "Problems with GDXXRW""
+  32   
+GDXIN   C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\curve.gdx
+--- LOAD  i = 1:i
+--- LOAD  xy = 2:xy
+  36   
+  37  x(i) = xy(i,'x');
+  38  y(i) = xy(i,"y");
+  39   
+  40   
+  41  Variables
+  42      a(j)      'coefficient a for straight line'
+  43      b(j)      'coefficient b for straight line'
+  44      c(j)      'coefficient c for straight line'
+  45      ybar(j,i) 'value of y from the curve fit'
+  46      e(j,i)    'error per observation'
+  47      sumErr    'total abosulate error, objvar'
+  48      MinMaxErr 'Minimum Maximum Error'
+  49      ;
+  50   
+  51   
+  52  Equation
+  53      ybarL(i)   'calculate ybar=ax + b, linear equation'
+  54      ybarQ(i)   'calculate ybar=c.x^2 a1x + b1, linear equation'
+  55      error1(j,i)  'calculation of absolute error, ybar-y'
+  56      error2(j,i)  'calculation of absolute error, ybar-y'
+  57      TotAbsDevL  'objfunc, linear fit, minimum total absolute deviation'
+  58      MiniMaxErrL(i) 'objfunc, linear fit, min max deviation'
+  59      TotAbsDevQ  'objfunc, linear fit, minimum total absolute deviation'
+  60      MiniMaxErrQ(i) 'objfunc, linear fit, min max deviation'
+  61      ;
+  62   
+  63   
+  64  ybarL(i)..     ybar('L',i) =E= b('L')*x(i) + a('L');
+  65  ybarQ(i)..     ybar('Q',i) =E= c('Q')*x(i)**2 + b('Q')*x(i) + a('Q');
+  66  error1(j,i)..  e(j,i) =G= ybar(j,i) - y(i);
+  67  error2(j,i)..  e(j,i) =G= y(i) - ybar(j, i);
+  68  TotAbsDevL..   sumErr =E= sum(i,e('L',i));
+  69  MiniMaxErrL(i)..  MinMaxErr =G= e('L',i) ;
+  70   
+  71  model linearfit /ybarL, error1, error2, TotAbsDevL, MiniMaxErrL/ ;
+  72   
+  73  solve linearfit using LP min sumErr ;
+  74   
+  75  solve linearfit using LP min MinMaxErr ;
+  76   
+  77  TotAbsDevQ..   sumErr =E= sum(i,e('Q',i));
+  78  MiniMaxErrQ(i)..  MinMaxErr =G= e('Q',i) ;
+  79   
+  80  model quadfit /ybarQ, error1, error2, TotAbsDevQ, MiniMaxErrQ/ ;
+  81   
+  82  solve quadfit using QCP min sumErr ;
+  83   
+  84  solve quadfit using QCP min MinMaxErr ;
+  85   
+  86  display a.l,b.l,c.l ;
+  87   
+  88   
+  89   
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 15:39:20 Page 2
+Curve Fitting (CURVE, SEQ =xxx)
+Include File Summary
+
+
+   SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
+
+     1        1 INPUT          0       0  C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\try.gms
+     2       30 CALL           1      30  gdxxrw curvefit.xlsm o=curve.gdx @slices.txt
+     3       33 GDXIN          1      33  C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\curve.gdx
+
+
+COMPILATION TIME     =        1.250 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 15:39:20 Page 3
+Curve Fitting (CURVE, SEQ =xxx)
+Equation Listing    SOLVE linearfit Using LP From line 73
+
+
+---- ybarL  =E=  calculate ybar=ax + b, linear equation
+
+ybarL(1)..  - a(L) + ybar(L,1) =E= 0 ; (LHS = 0)
+     
+ybarL(2)..  - a(L) - 0.5*b(L) + ybar(L,2) =E= 0 ; (LHS = 0)
+     
+ybarL(3)..  - a(L) - b(L) + ybar(L,3) =E= 0 ; (LHS = 0)
+     
+REMAINING 16 ENTRIES SKIPPED
+
+
+---- error1  =G=  calculation of absolute error, ybar-y
+
+error1(L,1)..  - ybar(L,1) + e(L,1) =G= -1 ; (LHS = 0)
+     
+error1(L,2)..  - ybar(L,2) + e(L,2) =G= -0.9 ; (LHS = 0)
+     
+error1(L,3)..  - ybar(L,3) + e(L,3) =G= -0.7 ; (LHS = 0)
+     
+REMAINING 35 ENTRIES SKIPPED
+
+
+---- error2  =G=  calculation of absolute error, ybar-y
+
+error2(L,1)..  ybar(L,1) + e(L,1) =G= 1 ; (LHS = 0, INFES = 1 ****)
+     
+error2(L,2)..  ybar(L,2) + e(L,2) =G= 0.9 ; (LHS = 0, INFES = 0.9 ****)
+     
+error2(L,3)..  ybar(L,3) + e(L,3) =G= 0.7 ; (LHS = 0, INFES = 0.7 ****)
+     
+REMAINING 35 ENTRIES SKIPPED
+
+
+---- TotAbsDevL  =E=  objfunc, linear fit, minimum total absolute deviation
+
+TotAbsDevL..  - e(L,1) - e(L,2) - e(L,3) - e(L,4) - e(L,5) - e(L,6) - e(L,7) - e(L,8) - e(L,9) - e(L,10) - e(L,11) - e(L,12) - e(L,13) - e(L,14) - e(L,15) - e(L,16) - e(L,17) - e(L,18) - e(L,19) + sumErr =E= 0 ; (LHS = 0)
+     
+
+---- MiniMaxErrL  =G=  objfunc, linear fit, min max deviation
+
+MiniMaxErrL(1)..  - e(L,1) + MinMaxErr =G= 0 ; (LHS = 0)
+     
+MiniMaxErrL(2)..  - e(L,2) + MinMaxErr =G= 0 ; (LHS = 0)
+     
+MiniMaxErrL(3)..  - e(L,3) + MinMaxErr =G= 0 ; (LHS = 0)
+     
+REMAINING 16 ENTRIES SKIPPED
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 15:39:20 Page 4
+Curve Fitting (CURVE, SEQ =xxx)
+Column Listing      SOLVE linearfit Using LP From line 73
+
+
+---- a  coefficient a for straight line
+
+a(L)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       ybarL(1)
+       -1       ybarL(2)
+       -1       ybarL(3)
+       -1       ybarL(4)
+       -1       ybarL(5)
+       -1       ybarL(6)
+       -1       ybarL(7)
+       -1       ybarL(8)
+       -1       ybarL(9)
+       -1       ybarL(10)
+       -1       ybarL(11)
+       -1       ybarL(12)
+       -1       ybarL(13)
+       -1       ybarL(14)
+       -1       ybarL(15)
+       -1       ybarL(16)
+       -1       ybarL(17)
+       -1       ybarL(18)
+       -1       ybarL(19)
+
+
+---- b  coefficient b for straight line
+
+b(L)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -0.5     ybarL(2)
+       -1       ybarL(3)
+       -1.5     ybarL(4)
+       -1.9     ybarL(5)
+       -2.5     ybarL(6)
+       -3       ybarL(7)
+       -3.5     ybarL(8)
+       -4       ybarL(9)
+       -4.5     ybarL(10)
+       -5       ybarL(11)
+       -5.5     ybarL(12)
+       -6       ybarL(13)
+       -6.6     ybarL(14)
+       -7       ybarL(15)
+       -7.6     ybarL(16)
+       -8.5     ybarL(17)
+       -9       ybarL(18)
+      -10       ybarL(19)
+
+
+---- ybar  value of y from the curve fit
+
+ybar(L,1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       ybarL(1)
+       -1       error1(L,1)
+        1       error2(L,1)
+
+ybar(L,2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       ybarL(2)
+       -1       error1(L,2)
+        1       error2(L,2)
+
+ybar(L,3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       ybarL(3)
+       -1       error1(L,3)
+        1       error2(L,3)
+
+REMAINING 35 ENTRIES SKIPPED
+
+---- e  error per observation
+
+e(L,1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       error1(L,1)
+        1       error2(L,1)
+       -1       TotAbsDevL
+       -1       MiniMaxErrL(1)
+
+e(L,2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       error1(L,2)
+        1       error2(L,2)
+       -1       TotAbsDevL
+       -1       MiniMaxErrL(2)
+
+e(L,3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       error1(L,3)
+        1       error2(L,3)
+       -1       TotAbsDevL
+       -1       MiniMaxErrL(3)
+
+REMAINING 35 ENTRIES SKIPPED
+
+---- sumErr  total abosulate error, objvar
+
+sumErr
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       TotAbsDevL
+
+
+---- MinMaxErr  Minimum Maximum Error
+
+MinMaxErr
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       MiniMaxErrL(1)
+        1       MiniMaxErrL(2)
+        1       MiniMaxErrL(3)
+        1       MiniMaxErrL(4)
+        1       MiniMaxErrL(5)
+        1       MiniMaxErrL(6)
+        1       MiniMaxErrL(7)
+        1       MiniMaxErrL(8)
+        1       MiniMaxErrL(9)
+        1       MiniMaxErrL(10)
+        1       MiniMaxErrL(11)
+        1       MiniMaxErrL(12)
+        1       MiniMaxErrL(13)
+        1       MiniMaxErrL(14)
+        1       MiniMaxErrL(15)
+        1       MiniMaxErrL(16)
+        1       MiniMaxErrL(17)
+        1       MiniMaxErrL(18)
+        1       MiniMaxErrL(19)
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 15:39:20 Page 5
+Curve Fitting (CURVE, SEQ =xxx)
+Model Statistics    SOLVE linearfit Using LP From line 73
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS          115
+BLOCKS OF VARIABLES           6     SINGLE VARIABLES           80
+NON ZERO ELEMENTS           266
+
+
+GENERATION TIME      =        0.015 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.015 SECONDS      4 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 15:39:20 Page 6
+Curve Fitting (CURVE, SEQ =xxx)
+Solution Report     SOLVE linearfit Using LP From line 73
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   linearfit           OBJECTIVE  sumErr
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  73
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE               11.4663
+
+ RESOURCE USAGE, LIMIT          0.000      1000.000
+ ITERATION COUNT, LIMIT        33    2000000000
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.00sec (det. 0.21 ticks)
+Optimal solution found.
+Objective :          11.466250
+
+
+---- EQU ybarL  calculate ybar=ax + b, linear equation
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+1           .              .              .            -1.0000      
+2           .              .              .            -0.7125      
+3           .              .              .             1.0000      
+4           .              .              .             1.0000      
+5           .              .              .            -1.0000      
+6           .              .              .            -1.0000      
+7           .              .              .            -1.0000      
+8           .              .              .             1.0000      
+9           .              .              .             1.0000      
+10          .              .              .            -1.0000      
+11          .              .              .             1.0000      
+12          .              .              .             1.0000      
+13          .              .              .             1.0000      
+14          .              .              .             1.0000      
+15          .              .              .            -1.0000      
+16          .              .              .             1.0000      
+17          .              .              .            -0.2875      
+18          .              .              .            -1.0000      
+19          .              .              .            -1.0000      
+
+---- EQU error1  calculation of absolute error, ybar-y
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+L.1         -1.0000        -0.1625        +INF             .          
+L.2         -0.9000        -0.9000        +INF            0.1438      
+L.3         -0.7000        -0.7000        +INF            1.0000      
+L.4         -1.5000        -1.5000        +INF            1.0000      
+L.5         -2.0000        -1.5850        +INF             .          
+L.6         -2.4000        -1.9500        +INF             .          
+L.7         -3.2000        -1.7875        +INF             .          
+L.8         -2.0000        -2.0000        +INF            1.0000      
+L.9         -2.7000        -2.7000        +INF            1.0000      
+L.10        -3.5000        -3.4000        +INF             .          
+L.11        -1.0000        -1.0000        +INF            1.0000      
+L.12        -4.0000        -4.0000        +INF            1.0000      
+L.13        -3.6000        -3.6000        +INF            1.0000      
+L.14        -2.7000        -2.7000        +INF            1.0000      
+L.15        -5.7000        -4.3875        +INF             .          
+L.16        -4.6000        -4.6000        +INF            1.0000      
+L.17        -6.0000        -6.0000        +INF            0.3563      
+L.18        -6.8000        -5.8375        +INF             .          
+L.19        -7.3000        -6.6125        +INF             .          
+Q.1         -1.0000         1.0000        +INF             .          
+Q.2         -0.9000         0.9000        +INF             .          
+Q.3         -0.7000         0.7000        +INF             .          
+Q.4         -1.5000         1.5000        +INF             .          
+Q.5         -2.0000         2.0000        +INF             .          
+Q.6         -2.4000         2.4000        +INF             .          
+Q.7         -3.2000         3.2000        +INF             .          
+Q.8         -2.0000         2.0000        +INF             .          
+Q.9         -2.7000         2.7000        +INF             .          
+Q.10        -3.5000         3.5000        +INF             .          
+Q.11        -1.0000         1.0000        +INF             .          
+Q.12        -4.0000         4.0000        +INF             .          
+Q.13        -3.6000         3.6000        +INF             .          
+Q.14        -2.7000         2.7000        +INF             .          
+Q.15        -5.7000         5.7000        +INF             .          
+Q.16        -4.6000         4.6000        +INF             .          
+Q.17        -6.0000         6.0000        +INF             .          
+Q.18        -6.8000         6.8000        +INF             .          
+Q.19        -7.3000         7.3000        +INF             .          
+
+---- EQU error2  calculation of absolute error, ybar-y
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+L.1          1.0000         1.0000        +INF            1.0000      
+L.2          0.9000         0.9000        +INF            0.8562      
+L.3          0.7000         1.7375        +INF             .          
+L.4          1.5000         1.5750        +INF             .          
+L.5          2.0000         2.0000        +INF            1.0000      
+L.6          2.4000         2.4000        +INF            1.0000      
+L.7          3.2000         3.2000        +INF            1.0000      
+L.8          2.0000         3.6250        +INF             .          
+L.9          2.7000         3.5625        +INF             .          
+L.10         3.5000         3.5000        +INF            1.0000      
+L.11         1.0000         6.5375        +INF             .          
+L.12         4.0000         4.1750        +INF             .          
+L.13         3.6000         5.2125        +INF             .          
+L.14         2.7000         6.8775        +INF             .          
+L.15         5.7000         5.7000        +INF            1.0000      
+L.16         4.6000         6.2525        +INF             .          
+L.17         6.0000         6.0000        +INF            0.6437      
+L.18         6.8000         6.8000        +INF            1.0000      
+L.19         7.3000         7.3000        +INF            1.0000      
+Q.1          1.0000         1.0000        +INF            EPS         
+Q.2          0.9000         0.9000        +INF            EPS         
+Q.3          0.7000         0.7000        +INF            EPS         
+Q.4          1.5000         1.5000        +INF            EPS         
+Q.5          2.0000         2.0000        +INF            EPS         
+Q.6          2.4000         2.4000        +INF            EPS         
+Q.7          3.2000         3.2000        +INF            EPS         
+Q.8          2.0000         2.0000        +INF            EPS         
+Q.9          2.7000         2.7000        +INF            EPS         
+Q.10         3.5000         3.5000        +INF            EPS         
+Q.11         1.0000         1.0000        +INF            EPS         
+Q.12         4.0000         4.0000        +INF            EPS         
+Q.13         3.6000         3.6000        +INF            EPS         
+Q.14         2.7000         2.7000        +INF            EPS         
+Q.15         5.7000         5.7000        +INF            EPS         
+Q.16         4.6000         4.6000        +INF            EPS         
+Q.17         6.0000         6.0000        +INF            EPS         
+Q.18         6.8000         6.8000        +INF            EPS         
+Q.19         7.3000         7.3000        +INF            EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU TotAbsDevL          .              .              .             1.0000      
+
+  TotAbsDevL  objfunc, linear fit, minimum total absolute deviation
+
+---- EQU MiniMaxErrL  objfunc, linear fit, min max deviation
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+1           .             2.3500        +INF             .          
+2           .             2.7687        +INF             .          
+3           .             2.2500        +INF             .          
+4           .             2.7312        +INF             .          
+5           .             2.5612        +INF             .          
+6           .             2.5437        +INF             .          
+7           .             2.0625        +INF             .          
+8           .             1.9562        +INF             .          
+9           .             2.3375        +INF             .          
+10          .             2.7187        +INF             .          
+11          .              .            +INF            EPS         
+12          .             2.6813        +INF             .          
+13          .             1.9625        +INF             .          
+14          .             0.6800        +INF             .          
+15          .             2.1125        +INF             .          
+16          .             1.9425        +INF             .          
+17          .             2.7687        +INF             .          
+18          .             2.2875        +INF             .          
+19          .             2.4250        +INF             .          
+
+---- VAR a  coefficient a for straight line
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+L        -INF            0.5813        +INF             .          
+
+---- VAR b  coefficient b for straight line
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+L        -INF            0.6375        +INF             .          
+
+---- VAR ybar  value of y from the curve fit
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+L.1         -INF            0.5813        +INF             .          
+L.2         -INF            0.9000        +INF             .          
+L.3         -INF            1.2188        +INF             .          
+L.4         -INF            1.5375        +INF             .          
+L.5         -INF            1.7925        +INF             .          
+L.6         -INF            2.1750        +INF             .          
+L.7         -INF            2.4937        +INF             .          
+L.8         -INF            2.8125        +INF             .          
+L.9         -INF            3.1312        +INF             .          
+L.10        -INF            3.4500        +INF             .          
+L.11        -INF            3.7687        +INF             .          
+L.12        -INF            4.0875        +INF             .          
+L.13        -INF            4.4062        +INF             .          
+L.14        -INF            4.7887        +INF             .          
+L.15        -INF            5.0437        +INF             .          
+L.16        -INF            5.4262        +INF             .          
+L.17        -INF            6.0000        +INF             .          
+L.18        -INF            6.3187        +INF             .          
+L.19        -INF            6.9562        +INF             .          
+Q.1         -INF             .            +INF            EPS         
+Q.2         -INF             .            +INF            EPS         
+Q.3         -INF             .            +INF            EPS         
+Q.4         -INF             .            +INF            EPS         
+Q.5         -INF             .            +INF            EPS         
+Q.6         -INF             .            +INF            EPS         
+Q.7         -INF             .            +INF            EPS         
+Q.8         -INF             .            +INF            EPS         
+Q.9         -INF             .            +INF            EPS         
+Q.10        -INF             .            +INF            EPS         
+Q.11        -INF             .            +INF            EPS         
+Q.12        -INF             .            +INF            EPS         
+Q.13        -INF             .            +INF            EPS         
+Q.14        -INF             .            +INF            EPS         
+Q.15        -INF             .            +INF            EPS         
+Q.16        -INF             .            +INF            EPS         
+Q.17        -INF             .            +INF            EPS         
+Q.18        -INF             .            +INF            EPS         
+Q.19        -INF             .            +INF            EPS         
+
+---- VAR e  error per observation
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+L.1         -INF            0.4187        +INF             .          
+L.2         -INF             .            +INF             .          
+L.3         -INF            0.5188        +INF             .          
+L.4         -INF            0.0375        +INF             .          
+L.5         -INF            0.2075        +INF             .          
+L.6         -INF            0.2250        +INF             .          
+L.7         -INF            0.7063        +INF             .          
+L.8         -INF            0.8125        +INF             .          
+L.9         -INF            0.4312        +INF             .          
+L.10        -INF            0.0500        +INF             .          
+L.11        -INF            2.7687        +INF             .          
+L.12        -INF            0.0875        +INF             .          
+L.13        -INF            0.8062        +INF             .          
+L.14        -INF            2.0887        +INF             .          
+L.15        -INF            0.6563        +INF             .          
+L.16        -INF            0.8262        +INF             .          
+L.17        -INF             .            +INF             .          
+L.18        -INF            0.4813        +INF             .          
+L.19        -INF            0.3437        +INF             .          
+Q.1         -INF            1.0000        +INF             .          
+Q.2         -INF            0.9000        +INF             .          
+Q.3         -INF            0.7000        +INF             .          
+Q.4         -INF            1.5000        +INF             .          
+Q.5         -INF            2.0000        +INF             .          
+Q.6         -INF            2.4000        +INF             .          
+Q.7         -INF            3.2000        +INF             .          
+Q.8         -INF            2.0000        +INF             .          
+Q.9         -INF            2.7000        +INF             .          
+Q.10        -INF            3.5000        +INF             .          
+Q.11        -INF            1.0000        +INF             .          
+Q.12        -INF            4.0000        +INF             .          
+Q.13        -INF            3.6000        +INF             .          
+Q.14        -INF            2.7000        +INF             .          
+Q.15        -INF            5.7000        +INF             .          
+Q.16        -INF            4.6000        +INF             .          
+Q.17        -INF            6.0000        +INF             .          
+Q.18        -INF            6.8000        +INF             .          
+Q.19        -INF            7.3000        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR sumErr            -INF           11.4663        +INF             .          
+---- VAR MinMaxErr         -INF            2.7687        +INF             .          
+
+  sumErr  total abosulate error, objvar
+  MinMaxErr  Minimum Maximum Error
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 15:39:20 Page 7
+Curve Fitting (CURVE, SEQ =xxx)
+Equation Listing    SOLVE linearfit Using LP From line 75
+
+
+---- ybarL  =E=  calculate ybar=ax + b, linear equation
+
+ybarL(1)..  - a(L) + ybar(L,1) =E= 0 ; (LHS = 0)
+     
+ybarL(2)..  - a(L) - 0.5*b(L) + ybar(L,2) =E= 0 ; (LHS = 0)
+     
+ybarL(3)..  - a(L) - b(L) + ybar(L,3) =E= 0 ; (LHS = 0)
+     
+REMAINING 16 ENTRIES SKIPPED
+
+
+---- error1  =G=  calculation of absolute error, ybar-y
+
+error1(L,1)..  - ybar(L,1) + e(L,1) =G= -1 ; (LHS = -0.1625)
+     
+error1(L,2)..  - ybar(L,2) + e(L,2) =G= -0.9 ; (LHS = -0.9)
+     
+error1(L,3)..  - ybar(L,3) + e(L,3) =G= -0.7 ; (LHS = -0.7)
+     
+REMAINING 35 ENTRIES SKIPPED
+
+
+---- error2  =G=  calculation of absolute error, ybar-y
+
+error2(L,1)..  ybar(L,1) + e(L,1) =G= 1 ; (LHS = 1)
+     
+error2(L,2)..  ybar(L,2) + e(L,2) =G= 0.9 ; (LHS = 0.9)
+     
+error2(L,3)..  ybar(L,3) + e(L,3) =G= 0.7 ; (LHS = 1.7375)
+     
+REMAINING 35 ENTRIES SKIPPED
+
+
+---- TotAbsDevL  =E=  objfunc, linear fit, minimum total absolute deviation
+
+TotAbsDevL..  - e(L,1) - e(L,2) - e(L,3) - e(L,4) - e(L,5) - e(L,6) - e(L,7) - e(L,8) - e(L,9) - e(L,10) - e(L,11) - e(L,12) - e(L,13) - e(L,14) - e(L,15) - e(L,16) - e(L,17) - e(L,18) - e(L,19) + sumErr =E= 0 ; (LHS = 0)
+     
+
+---- MiniMaxErrL  =G=  objfunc, linear fit, min max deviation
+
+MiniMaxErrL(1)..  - e(L,1) + MinMaxErr =G= 0 ; (LHS = 2.35)
+     
+MiniMaxErrL(2)..  - e(L,2) + MinMaxErr =G= 0 ; (LHS = 2.76875)
+     
+MiniMaxErrL(3)..  - e(L,3) + MinMaxErr =G= 0 ; (LHS = 2.25)
+     
+REMAINING 16 ENTRIES SKIPPED
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 15:39:20 Page 8
+Curve Fitting (CURVE, SEQ =xxx)
+Column Listing      SOLVE linearfit Using LP From line 75
+
+
+---- a  coefficient a for straight line
+
+a(L)
+                (.LO, .L, .UP, .M = -INF, 0.58125, +INF, 0)
+       -1       ybarL(1)
+       -1       ybarL(2)
+       -1       ybarL(3)
+       -1       ybarL(4)
+       -1       ybarL(5)
+       -1       ybarL(6)
+       -1       ybarL(7)
+       -1       ybarL(8)
+       -1       ybarL(9)
+       -1       ybarL(10)
+       -1       ybarL(11)
+       -1       ybarL(12)
+       -1       ybarL(13)
+       -1       ybarL(14)
+       -1       ybarL(15)
+       -1       ybarL(16)
+       -1       ybarL(17)
+       -1       ybarL(18)
+       -1       ybarL(19)
+
+
+---- b  coefficient b for straight line
+
+b(L)
+                (.LO, .L, .UP, .M = -INF, 0.6375, +INF, 0)
+       -0.5     ybarL(2)
+       -1       ybarL(3)
+       -1.5     ybarL(4)
+       -1.9     ybarL(5)
+       -2.5     ybarL(6)
+       -3       ybarL(7)
+       -3.5     ybarL(8)
+       -4       ybarL(9)
+       -4.5     ybarL(10)
+       -5       ybarL(11)
+       -5.5     ybarL(12)
+       -6       ybarL(13)
+       -6.6     ybarL(14)
+       -7       ybarL(15)
+       -7.6     ybarL(16)
+       -8.5     ybarL(17)
+       -9       ybarL(18)
+      -10       ybarL(19)
+
+
+---- ybar  value of y from the curve fit
+
+ybar(L,1)
+                (.LO, .L, .UP, .M = -INF, 0.58125, +INF, 0)
+        1       ybarL(1)
+       -1       error1(L,1)
+        1       error2(L,1)
+
+ybar(L,2)
+                (.LO, .L, .UP, .M = -INF, 0.9, +INF, 0)
+        1       ybarL(2)
+       -1       error1(L,2)
+        1       error2(L,2)
+
+ybar(L,3)
+                (.LO, .L, .UP, .M = -INF, 1.21875, +INF, 0)
+        1       ybarL(3)
+       -1       error1(L,3)
+        1       error2(L,3)
+
+REMAINING 35 ENTRIES SKIPPED
+
+---- e  error per observation
+
+e(L,1)
+                (.LO, .L, .UP, .M = -INF, 0.41875, +INF, 0)
+        1       error1(L,1)
+        1       error2(L,1)
+       -1       TotAbsDevL
+       -1       MiniMaxErrL(1)
+
+e(L,2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       error1(L,2)
+        1       error2(L,2)
+       -1       TotAbsDevL
+       -1       MiniMaxErrL(2)
+
+e(L,3)
+                (.LO, .L, .UP, .M = -INF, 0.51875, +INF, 0)
+        1       error1(L,3)
+        1       error2(L,3)
+       -1       TotAbsDevL
+       -1       MiniMaxErrL(3)
+
+REMAINING 35 ENTRIES SKIPPED
+
+---- sumErr  total abosulate error, objvar
+
+sumErr
+                (.LO, .L, .UP, .M = -INF, 11.46625, +INF, 0)
+        1       TotAbsDevL
+
+
+---- MinMaxErr  Minimum Maximum Error
+
+MinMaxErr
+                (.LO, .L, .UP, .M = -INF, 2.76875, +INF, 0)
+        1       MiniMaxErrL(1)
+        1       MiniMaxErrL(2)
+        1       MiniMaxErrL(3)
+        1       MiniMaxErrL(4)
+        1       MiniMaxErrL(5)
+        1       MiniMaxErrL(6)
+        1       MiniMaxErrL(7)
+        1       MiniMaxErrL(8)
+        1       MiniMaxErrL(9)
+        1       MiniMaxErrL(10)
+        1       MiniMaxErrL(11)
+        1       MiniMaxErrL(12)
+        1       MiniMaxErrL(13)
+        1       MiniMaxErrL(14)
+        1       MiniMaxErrL(15)
+        1       MiniMaxErrL(16)
+        1       MiniMaxErrL(17)
+        1       MiniMaxErrL(18)
+        1       MiniMaxErrL(19)
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 15:39:20 Page 9
+Curve Fitting (CURVE, SEQ =xxx)
+Model Statistics    SOLVE linearfit Using LP From line 75
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS          115
+BLOCKS OF VARIABLES           6     SINGLE VARIABLES           80
+NON ZERO ELEMENTS           266
+
+
+GENERATION TIME      =        0.015 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.015 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 15:39:20 Page 10
+Curve Fitting (CURVE, SEQ =xxx)
+Solution Report     SOLVE linearfit Using LP From line 75
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   linearfit           OBJECTIVE  MinMaxErr
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  75
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE                1.7250
+
+ RESOURCE USAGE, LIMIT          0.016      1000.000
+ ITERATION COUNT, LIMIT         4    2000000000
+
+IBM ILOG CPLEX   25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.00sec (det. 0.22 ticks)
+Optimal solution found.
+Objective :           1.725000
+
+
+---- EQU ybarL  calculate ybar=ax + b, linear equation
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+1           .              .              .             EPS         
+2           .              .              .             EPS         
+3           .              .              .             EPS         
+4           .              .              .             EPS         
+5           .              .              .             EPS         
+6           .              .              .             EPS         
+7           .              .              .            -0.2500      
+8           .              .              .             EPS         
+9           .              .              .             EPS         
+10          .              .              .             EPS         
+11          .              .              .             0.5000      
+12          .              .              .             EPS         
+13          .              .              .             EPS         
+14          .              .              .             EPS         
+15          .              .              .            -0.2500      
+16          .              .              .             EPS         
+17          .              .              .             EPS         
+18          .              .              .             EPS         
+19          .              .              .             EPS         
+
+---- EQU error1  calculation of absolute error, ybar-y
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+L.1         -1.0000         2.1250        +INF             .          
+L.2         -0.9000         1.8125        +INF             .          
+L.3         -0.7000         1.5000        +INF             .          
+L.4         -1.5000         1.1875        +INF             .          
+L.5         -2.0000         0.9375        +INF             .          
+L.6         -2.4000         0.5625        +INF             .          
+L.7         -3.2000         0.2500        +INF             .          
+L.8         -2.0000        -0.0625        +INF             .          
+L.9         -2.7000        -0.3750        +INF             .          
+L.10        -3.5000        -0.6875        +INF             .          
+L.11        -1.0000        -1.0000        +INF            0.5000      
+L.12        -4.0000        -1.3125        +INF             .          
+L.13        -3.6000        -1.6250        +INF             .          
+L.14        -2.7000        -2.0000        +INF             .          
+L.15        -5.7000        -2.2500        +INF             .          
+L.16        -4.6000        -2.6250        +INF             .          
+L.17        -6.0000        -3.1875        +INF             .          
+L.18        -6.8000        -3.5000        +INF             .          
+L.19        -7.3000        -4.1250        +INF             .          
+Q.1         -1.0000         1.0000        +INF             .          
+Q.2         -0.9000         0.9000        +INF             .          
+Q.3         -0.7000         0.7000        +INF             .          
+Q.4         -1.5000         1.5000        +INF             .          
+Q.5         -2.0000         2.0000        +INF             .          
+Q.6         -2.4000         2.4000        +INF             .          
+Q.7         -3.2000         3.2000        +INF             .          
+Q.8         -2.0000         2.0000        +INF             .          
+Q.9         -2.7000         2.7000        +INF             .          
+Q.10        -3.5000         3.5000        +INF             .          
+Q.11        -1.0000         1.0000        +INF             .          
+Q.12        -4.0000         4.0000        +INF             .          
+Q.13        -3.6000         3.6000        +INF             .          
+Q.14        -2.7000         2.7000        +INF             .          
+Q.15        -5.7000         5.7000        +INF             .          
+Q.16        -4.6000         4.6000        +INF             .          
+Q.17        -6.0000         6.0000        +INF             .          
+Q.18        -6.8000         6.8000        +INF             .          
+Q.19        -7.3000         7.3000        +INF             .          
+
+---- EQU error2  calculation of absolute error, ybar-y
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+L.1          1.0000         1.3250        +INF             .          
+L.2          0.9000         1.6375        +INF             .          
+L.3          0.7000         1.9500        +INF             .          
+L.4          1.5000         2.2625        +INF             .          
+L.5          2.0000         2.5125        +INF             .          
+L.6          2.4000         2.8875        +INF             .          
+L.7          3.2000         3.2000        +INF            0.2500      
+L.8          2.0000         3.5125        +INF             .          
+L.9          2.7000         3.8250        +INF             .          
+L.10         3.5000         4.1375        +INF             .          
+L.11         1.0000         4.4500        +INF             .          
+L.12         4.0000         4.7625        +INF             .          
+L.13         3.6000         5.0750        +INF             .          
+L.14         2.7000         5.4500        +INF             .          
+L.15         5.7000         5.7000        +INF            0.2500      
+L.16         4.6000         6.0750        +INF             .          
+L.17         6.0000         6.6375        +INF             .          
+L.18         6.8000         6.9500        +INF             .          
+L.19         7.3000         7.5750        +INF             .          
+Q.1          1.0000         1.0000        +INF            EPS         
+Q.2          0.9000         0.9000        +INF            EPS         
+Q.3          0.7000         0.7000        +INF            EPS         
+Q.4          1.5000         1.5000        +INF            EPS         
+Q.5          2.0000         2.0000        +INF            EPS         
+Q.6          2.4000         2.4000        +INF            EPS         
+Q.7          3.2000         3.2000        +INF            EPS         
+Q.8          2.0000         2.0000        +INF            EPS         
+Q.9          2.7000         2.7000        +INF            EPS         
+Q.10         3.5000         3.5000        +INF            EPS         
+Q.11         1.0000         1.0000        +INF            EPS         
+Q.12         4.0000         4.0000        +INF            EPS         
+Q.13         3.6000         3.6000        +INF            EPS         
+Q.14         2.7000         2.7000        +INF            EPS         
+Q.15         5.7000         5.7000        +INF            EPS         
+Q.16         4.6000         4.6000        +INF            EPS         
+Q.17         6.0000         6.0000        +INF            EPS         
+Q.18         6.8000         6.8000        +INF            EPS         
+Q.19         7.3000         7.3000        +INF            EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU TotAbsDevL          .              .              .             EPS         
+
+  TotAbsDevL  objfunc, linear fit, minimum total absolute deviation
+
+---- EQU MiniMaxErrL  objfunc, linear fit, min max deviation
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+1           .              .            +INF            EPS         
+2           .              .            +INF            EPS         
+3           .              .            +INF            EPS         
+4           .              .            +INF            EPS         
+5           .              .            +INF            EPS         
+6           .              .            +INF            EPS         
+7           .              .            +INF            0.2500      
+8           .              .            +INF            EPS         
+9           .              .            +INF            EPS         
+10          .              .            +INF            EPS         
+11          .              .            +INF            0.5000      
+12          .              .            +INF            EPS         
+13          .              .            +INF            EPS         
+14          .              .            +INF            EPS         
+15          .              .            +INF            0.2500      
+16          .              .            +INF            EPS         
+17          .              .            +INF            EPS         
+18          .              .            +INF            EPS         
+19          .              .            +INF            EPS         
+
+---- VAR a  coefficient a for straight line
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+L        -INF           -0.4000        +INF             .          
+
+---- VAR b  coefficient b for straight line
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+L        -INF            0.6250        +INF             .          
+
+---- VAR ybar  value of y from the curve fit
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+L.1         -INF           -0.4000        +INF             .          
+L.2         -INF           -0.0875        +INF             .          
+L.3         -INF            0.2250        +INF             .          
+L.4         -INF            0.5375        +INF             .          
+L.5         -INF            0.7875        +INF             .          
+L.6         -INF            1.1625        +INF             .          
+L.7         -INF            1.4750        +INF             .          
+L.8         -INF            1.7875        +INF             .          
+L.9         -INF            2.1000        +INF             .          
+L.10        -INF            2.4125        +INF             .          
+L.11        -INF            2.7250        +INF             .          
+L.12        -INF            3.0375        +INF             .          
+L.13        -INF            3.3500        +INF             .          
+L.14        -INF            3.7250        +INF             .          
+L.15        -INF            3.9750        +INF             .          
+L.16        -INF            4.3500        +INF             .          
+L.17        -INF            4.9125        +INF             .          
+L.18        -INF            5.2250        +INF             .          
+L.19        -INF            5.8500        +INF             .          
+Q.1         -INF             .            +INF            EPS         
+Q.2         -INF             .            +INF            EPS         
+Q.3         -INF             .            +INF            EPS         
+Q.4         -INF             .            +INF            EPS         
+Q.5         -INF             .            +INF            EPS         
+Q.6         -INF             .            +INF            EPS         
+Q.7         -INF             .            +INF            EPS         
+Q.8         -INF             .            +INF            EPS         
+Q.9         -INF             .            +INF            EPS         
+Q.10        -INF             .            +INF            EPS         
+Q.11        -INF             .            +INF            EPS         
+Q.12        -INF             .            +INF            EPS         
+Q.13        -INF             .            +INF            EPS         
+Q.14        -INF             .            +INF            EPS         
+Q.15        -INF             .            +INF            EPS         
+Q.16        -INF             .            +INF            EPS         
+Q.17        -INF             .            +INF            EPS         
+Q.18        -INF             .            +INF            EPS         
+Q.19        -INF             .            +INF            EPS         
+
+---- VAR e  error per observation
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+L.1         -INF            1.7250        +INF             .          
+L.2         -INF            1.7250        +INF             .          
+L.3         -INF            1.7250        +INF             .          
+L.4         -INF            1.7250        +INF             .          
+L.5         -INF            1.7250        +INF             .          
+L.6         -INF            1.7250        +INF             .          
+L.7         -INF            1.7250        +INF             .          
+L.8         -INF            1.7250        +INF             .          
+L.9         -INF            1.7250        +INF             .          
+L.10        -INF            1.7250        +INF             .          
+L.11        -INF            1.7250        +INF             .          
+L.12        -INF            1.7250        +INF             .          
+L.13        -INF            1.7250        +INF             .          
+L.14        -INF            1.7250        +INF             .          
+L.15        -INF            1.7250        +INF             .          
+L.16        -INF            1.7250        +INF             .          
+L.17        -INF            1.7250        +INF             .          
+L.18        -INF            1.7250        +INF             .          
+L.19        -INF            1.7250        +INF             .          
+Q.1         -INF            1.0000        +INF             .          
+Q.2         -INF            0.9000        +INF             .          
+Q.3         -INF            0.7000        +INF             .          
+Q.4         -INF            1.5000        +INF             .          
+Q.5         -INF            2.0000        +INF             .          
+Q.6         -INF            2.4000        +INF             .          
+Q.7         -INF            3.2000        +INF             .          
+Q.8         -INF            2.0000        +INF             .          
+Q.9         -INF            2.7000        +INF             .          
+Q.10        -INF            3.5000        +INF             .          
+Q.11        -INF            1.0000        +INF             .          
+Q.12        -INF            4.0000        +INF             .          
+Q.13        -INF            3.6000        +INF             .          
+Q.14        -INF            2.7000        +INF             .          
+Q.15        -INF            5.7000        +INF             .          
+Q.16        -INF            4.6000        +INF             .          
+Q.17        -INF            6.0000        +INF             .          
+Q.18        -INF            6.8000        +INF             .          
+Q.19        -INF            7.3000        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR sumErr            -INF           32.7750        +INF             .          
+---- VAR MinMaxErr         -INF            1.7250        +INF             .          
+
+  sumErr  total abosulate error, objvar
+  MinMaxErr  Minimum Maximum Error
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 15:39:20 Page 11
+Curve Fitting (CURVE, SEQ =xxx)
+Equation Listing    SOLVE quadfit Using QCP From line 82
+
+
+---- ybarQ  =E=  calculate ybar=c.x^2 a1x + b1, linear equation
+
+ybarQ(1)..  - a(Q) + ybar(Q,1) =E= 0 ; (LHS = 0)
+     
+ybarQ(2)..  - a(Q) - 0.5*b(Q) - 0.25*c(Q) + ybar(Q,2) =E= 0 ; (LHS = 0)
+     
+ybarQ(3)..  - a(Q) - b(Q) - c(Q) + ybar(Q,3) =E= 0 ; (LHS = 0)
+     
+REMAINING 16 ENTRIES SKIPPED
+
+
+---- error1  =G=  calculation of absolute error, ybar-y
+
+error1(L,1)..  - ybar(L,1) + e(L,1) =G= -1 ; (LHS = 2.125)
+     
+error1(L,2)..  - ybar(L,2) + e(L,2) =G= -0.9 ; (LHS = 1.8125)
+     
+error1(L,3)..  - ybar(L,3) + e(L,3) =G= -0.7 ; (LHS = 1.5)
+     
+REMAINING 35 ENTRIES SKIPPED
+
+
+---- error2  =G=  calculation of absolute error, ybar-y
+
+error2(L,1)..  ybar(L,1) + e(L,1) =G= 1 ; (LHS = 1.325)
+     
+error2(L,2)..  ybar(L,2) + e(L,2) =G= 0.9 ; (LHS = 1.6375)
+     
+error2(L,3)..  ybar(L,3) + e(L,3) =G= 0.7 ; (LHS = 1.95)
+     
+REMAINING 35 ENTRIES SKIPPED
+
+
+---- TotAbsDevQ  =E=  objfunc, linear fit, minimum total absolute deviation
+
+TotAbsDevQ..  - e(Q,1) - e(Q,2) - e(Q,3) - e(Q,4) - e(Q,5) - e(Q,6) - e(Q,7) - e(Q,8) - e(Q,9) - e(Q,10) - e(Q,11) - e(Q,12) - e(Q,13) - e(Q,14) - e(Q,15) - e(Q,16) - e(Q,17) - e(Q,18) - e(Q,19) + sumErr =E= 0 ; (LHS = -28.825, INFES = 28.825 ****)
+     
+
+---- MiniMaxErrQ  =G=  objfunc, linear fit, min max deviation
+
+MiniMaxErrQ(1)..  - e(Q,1) + MinMaxErr =G= 0 ; (LHS = 0.725)
+     
+MiniMaxErrQ(2)..  - e(Q,2) + MinMaxErr =G= 0 ; (LHS = 0.825)
+     
+MiniMaxErrQ(3)..  - e(Q,3) + MinMaxErr =G= 0 ; (LHS = 1.025)
+     
+REMAINING 16 ENTRIES SKIPPED
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 15:39:20 Page 12
+Curve Fitting (CURVE, SEQ =xxx)
+Column Listing      SOLVE quadfit Using QCP From line 82
+
+
+---- a  coefficient a for straight line
+
+a(Q)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       ybarQ(1)
+       -1       ybarQ(2)
+       -1       ybarQ(3)
+       -1       ybarQ(4)
+       -1       ybarQ(5)
+       -1       ybarQ(6)
+       -1       ybarQ(7)
+       -1       ybarQ(8)
+       -1       ybarQ(9)
+       -1       ybarQ(10)
+       -1       ybarQ(11)
+       -1       ybarQ(12)
+       -1       ybarQ(13)
+       -1       ybarQ(14)
+       -1       ybarQ(15)
+       -1       ybarQ(16)
+       -1       ybarQ(17)
+       -1       ybarQ(18)
+       -1       ybarQ(19)
+
+
+---- b  coefficient b for straight line
+
+b(Q)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -0.5     ybarQ(2)
+       -1       ybarQ(3)
+       -1.5     ybarQ(4)
+       -1.9     ybarQ(5)
+       -2.5     ybarQ(6)
+       -3       ybarQ(7)
+       -3.5     ybarQ(8)
+       -4       ybarQ(9)
+       -4.5     ybarQ(10)
+       -5       ybarQ(11)
+       -5.5     ybarQ(12)
+       -6       ybarQ(13)
+       -6.6     ybarQ(14)
+       -7       ybarQ(15)
+       -7.6     ybarQ(16)
+       -8.5     ybarQ(17)
+       -9       ybarQ(18)
+      -10       ybarQ(19)
+
+
+---- c  coefficient c for straight line
+
+c(Q)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -0.25    ybarQ(2)
+       -1       ybarQ(3)
+       -2.25    ybarQ(4)
+       -3.61    ybarQ(5)
+       -6.25    ybarQ(6)
+       -9       ybarQ(7)
+      -12.25    ybarQ(8)
+      -16       ybarQ(9)
+      -20.25    ybarQ(10)
+      -25       ybarQ(11)
+      -30.25    ybarQ(12)
+      -36       ybarQ(13)
+      -43.56    ybarQ(14)
+      -49       ybarQ(15)
+      -57.76    ybarQ(16)
+      -72.25    ybarQ(17)
+      -81       ybarQ(18)
+     -100       ybarQ(19)
+
+
+---- ybar  value of y from the curve fit
+
+ybar(L,1)
+                (.LO, .L, .UP, .M = -INF, -0.399999999999999, +INF, 0)
+       -1       error1(L,1)
+        1       error2(L,1)
+
+ybar(L,2)
+                (.LO, .L, .UP, .M = -INF, -0.0874999999999993, +INF, 0)
+       -1       error1(L,2)
+        1       error2(L,2)
+
+ybar(L,3)
+                (.LO, .L, .UP, .M = -INF, 0.225000000000001, +INF, 0)
+       -1       error1(L,3)
+        1       error2(L,3)
+
+REMAINING 35 ENTRIES SKIPPED
+
+---- e  error per observation
+
+e(L,1)
+                (.LO, .L, .UP, .M = -INF, 1.725, +INF, 0)
+        1       error1(L,1)
+        1       error2(L,1)
+
+e(L,2)
+                (.LO, .L, .UP, .M = -INF, 1.725, +INF, 0)
+        1       error1(L,2)
+        1       error2(L,2)
+
+e(L,3)
+                (.LO, .L, .UP, .M = -INF, 1.725, +INF, 0)
+        1       error1(L,3)
+        1       error2(L,3)
+
+REMAINING 35 ENTRIES SKIPPED
+
+---- sumErr  total abosulate error, objvar
+
+sumErr
+                (.LO, .L, .UP, .M = -INF, 32.775, +INF, 0)
+        1       TotAbsDevQ
+
+
+---- MinMaxErr  Minimum Maximum Error
+
+MinMaxErr
+                (.LO, .L, .UP, .M = -INF, 1.725, +INF, 0)
+        1       MiniMaxErrQ(1)
+        1       MiniMaxErrQ(2)
+        1       MiniMaxErrQ(3)
+        1       MiniMaxErrQ(4)
+        1       MiniMaxErrQ(5)
+        1       MiniMaxErrQ(6)
+        1       MiniMaxErrQ(7)
+        1       MiniMaxErrQ(8)
+        1       MiniMaxErrQ(9)
+        1       MiniMaxErrQ(10)
+        1       MiniMaxErrQ(11)
+        1       MiniMaxErrQ(12)
+        1       MiniMaxErrQ(13)
+        1       MiniMaxErrQ(14)
+        1       MiniMaxErrQ(15)
+        1       MiniMaxErrQ(16)
+        1       MiniMaxErrQ(17)
+        1       MiniMaxErrQ(18)
+        1       MiniMaxErrQ(19)
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 15:39:20 Page 13
+Curve Fitting (CURVE, SEQ =xxx)
+Model Statistics    SOLVE quadfit Using QCP From line 82
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS          115
+BLOCKS OF VARIABLES           7     SINGLE VARIABLES           81
+NON ZERO ELEMENTS           284     NON LINEAR N-Z              0
+DERIVATIVE POOL              20     CONSTANT POOL              16
+CODE LENGTH                   0
+
+
+GENERATION TIME      =        0.016 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.016 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 15:39:20 Page 14
+Curve Fitting (CURVE, SEQ =xxx)
+Solution Report     SOLVE quadfit Using QCP From line 82
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   quadfit             OBJECTIVE  sumErr
+     TYPE    QCP                 DIRECTION  MINIMIZE
+     SOLVER  CONOPT              FROM LINE  82
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE               10.4590
+
+ RESOURCE USAGE, LIMIT          0.000      1000.000
+ ITERATION COUNT, LIMIT         6    2000000000
+ EVALUATION ERRORS              0             0
+CONOPT 3         25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+ 
+ 
+    C O N O P T 3   version 3.17I
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+                   Pre-triangular equations:   0
+                   Post-triangular equations:  1
+                   Definitional equations:     18
+ 
+ 
+ ** Optimal solution. Reduced gradient less than tolerance.
+ 
+ 
+ CONOPT time Total                            0.002 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+ 
+
+---- EQU ybarQ  calculate ybar=c.x^2 a1x + b1, linear equation
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+1           .              .              .            -1.0000      
+2           .              .              .             1.0000      
+3           .              .              .             1.0000      
+4           .              .              .             0.5642      
+5           .              .              .            -1.0000      
+6           .              .              .            -1.0000      
+7           .              .              .            -1.0000      
+8           .              .              .             1.0000      
+9           .              .              .             0.5840      
+10          .              .              .            -1.0000      
+11          .              .              .             1.0000      
+12          .              .              .            -1.0000      
+13          .              .              .             1.0000      
+14          .              .              .             1.0000      
+15          .              .              .            -1.0000      
+16          .              .              .             1.0000      
+17          .              .              .            -1.0000      
+18          .              .              .            -1.0000      
+19          .              .              .             0.8518      
+
+---- EQU error1  calculation of absolute error, ybar-y
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+L.1         -1.0000         2.1250        +INF            EPS         
+L.2         -0.9000         1.8125        +INF            EPS         
+L.3         -0.7000         1.5000        +INF            EPS         
+L.4         -1.5000         1.1875        +INF            EPS         
+L.5         -2.0000         0.9375        +INF            EPS         
+L.6         -2.4000         0.5625        +INF            EPS         
+L.7         -3.2000         0.2500        +INF            EPS         
+L.8         -2.0000        -0.0625        +INF            EPS         
+L.9         -2.7000        -0.3750        +INF            EPS         
+L.10        -3.5000        -0.6875        +INF            EPS         
+L.11        -1.0000        -1.0000        +INF            EPS         
+L.12        -4.0000        -1.3125        +INF            EPS         
+L.13        -3.6000        -1.6250        +INF            EPS         
+L.14        -2.7000        -2.0000        +INF            EPS         
+L.15        -5.7000        -2.2500        +INF            EPS         
+L.16        -4.6000        -2.6250        +INF            EPS         
+L.17        -6.0000        -3.1875        +INF            EPS         
+L.18        -6.8000        -3.5000        +INF            EPS         
+L.19        -7.3000        -4.1250        +INF            EPS         
+Q.1         -1.0000        -0.9647        +INF             .          
+Q.2         -0.9000        -0.9000        +INF            1.0000      
+Q.3         -0.7000        -0.7000        +INF            1.0000      
+Q.4         -1.5000        -1.5000        +INF            0.7821      
+Q.5         -2.0000        -1.3273        +INF             .          
+Q.6         -2.4000        -1.4588        +INF             .          
+Q.7         -3.2000        -1.1388        +INF             .          
+Q.8         -2.0000        -2.0000        +INF            1.0000      
+Q.9         -2.7000        -2.7000        +INF            0.7920      
+Q.10        -3.5000        -2.4812        +INF             .          
+Q.11        -1.0000        -1.0000        +INF            1.0000      
+Q.12        -4.0000        -3.2447        +INF             .          
+Q.13        -3.6000        -3.6000        +INF            1.0000      
+Q.14        -2.7000        -2.7000        +INF            1.0000      
+Q.15        -5.7000        -3.6929        +INF             .          
+Q.16        -4.6000        -4.6000        +INF            1.0000      
+Q.17        -6.0000        -5.8447        +INF             .          
+Q.18        -6.8000        -5.9294        +INF             .          
+Q.19        -7.3000        -7.3000        +INF            0.9259      
+
+---- EQU error2  calculation of absolute error, ybar-y
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+L.1          1.0000         1.3250        +INF            EPS         
+L.2          0.9000         1.6375        +INF            EPS         
+L.3          0.7000         1.9500        +INF            EPS         
+L.4          1.5000         2.2625        +INF            EPS         
+L.5          2.0000         2.5125        +INF            EPS         
+L.6          2.4000         2.8875        +INF            EPS         
+L.7          3.2000         3.2000        +INF            EPS         
+L.8          2.0000         3.5125        +INF            EPS         
+L.9          2.7000         3.8250        +INF            EPS         
+L.10         3.5000         4.1375        +INF            EPS         
+L.11         1.0000         4.4500        +INF            EPS         
+L.12         4.0000         4.7625        +INF            EPS         
+L.13         3.6000         5.0750        +INF            EPS         
+L.14         2.7000         5.4500        +INF            EPS         
+L.15         5.7000         5.7000        +INF            EPS         
+L.16         4.6000         6.0750        +INF            EPS         
+L.17         6.0000         6.6375        +INF            EPS         
+L.18         6.8000         6.9500        +INF            EPS         
+L.19         7.3000         7.5750        +INF            EPS         
+Q.1          1.0000         1.0000        +INF            1.0000      
+Q.2          0.9000         1.3761        +INF             .          
+Q.3          0.7000         1.9212        +INF             .          
+Q.4          1.5000         1.5000        +INF            0.2179      
+Q.5          2.0000         2.0000        +INF            1.0000      
+Q.6          2.4000         2.4000        +INF            1.0000      
+Q.7          3.2000         3.2000        +INF            1.0000      
+Q.8          2.0000         2.8525        +INF             .          
+Q.9          2.7000         2.7000        +INF            0.2080      
+Q.10         3.5000         3.5000        +INF            1.0000      
+Q.11         1.0000         5.5961        +INF             .          
+Q.12         4.0000         4.0000        +INF            1.0000      
+Q.13         3.6000         4.3271        +INF             .          
+Q.14         2.7000         6.0904        +INF             .          
+Q.15         5.7000         5.7000        +INF            1.0000      
+Q.16         4.6000         5.7372        +INF             .          
+Q.17         6.0000         6.0000        +INF            1.0000      
+Q.18         6.8000         6.8000        +INF            1.0000      
+Q.19         7.3000         7.3000        +INF            0.0741      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU TotAbsDevQ          .              .              .             1.0000      
+
+  TotAbsDevQ  objfunc, linear fit, minimum total absolute deviation
+
+---- EQU MiniMaxErrQ  objfunc, linear fit, min max deviation
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+1           .             2.2804        +INF             .          
+2           .             2.0600        +INF             .          
+3           .             1.6875        +INF             .          
+4           .             2.2980        +INF             .          
+5           .             1.9617        +INF             .          
+6           .             1.8275        +INF             .          
+7           .             1.2675        +INF             .          
+8           .             1.8718        +INF             .          
+9           .             2.2980        +INF             .          
+10          .             1.7886        +INF             .          
+11          .              .            +INF            EPS         
+12          .             1.9204        +INF             .          
+13          .             1.9345        +INF             .          
+14          .             0.6028        +INF             .          
+15          .             1.2945        +INF             .          
+16          .             1.7294        +INF             .          
+17          .             2.2204        +INF             .          
+18          .             1.8627        +INF             .          
+19          .             2.2980        +INF             .          
+
+---- VAR a  coefficient a for straight line
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+Q        -INF            0.9824        +INF             .          
+
+---- VAR b  coefficient b for straight line
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+Q        -INF            0.2945        +INF             .          
+
+---- VAR c  coefficient c for straight line
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+Q        -INF            0.0337        +INF             .          
+
+---- VAR ybar  value of y from the curve fit
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+L.1         -INF           -0.4000        +INF             .          
+L.2         -INF           -0.0875        +INF             .          
+L.3         -INF            0.2250        +INF             .          
+L.4         -INF            0.5375        +INF             .          
+L.5         -INF            0.7875        +INF             .          
+L.6         -INF            1.1625        +INF             .          
+L.7         -INF            1.4750        +INF             .          
+L.8         -INF            1.7875        +INF             .          
+L.9         -INF            2.1000        +INF             .          
+L.10        -INF            2.4125        +INF             .          
+L.11        -INF            2.7250        +INF             .          
+L.12        -INF            3.0375        +INF             .          
+L.13        -INF            3.3500        +INF             .          
+L.14        -INF            3.7250        +INF             .          
+L.15        -INF            3.9750        +INF             .          
+L.16        -INF            4.3500        +INF             .          
+L.17        -INF            4.9125        +INF             .          
+L.18        -INF            5.2250        +INF             .          
+L.19        -INF            5.8500        +INF             .          
+Q.1         -INF            0.9824        +INF             .          
+Q.2         -INF            1.1380        +INF             .          
+Q.3         -INF            1.3106        +INF             .          
+Q.4         -INF            1.5000        +INF             .          
+Q.5         -INF            1.6637        +INF             .          
+Q.6         -INF            1.9294        +INF             .          
+Q.7         -INF            2.1694        +INF             .          
+Q.8         -INF            2.4263        +INF             .          
+Q.9         -INF            2.7000        +INF             .          
+Q.10        -INF            2.9906        +INF             .          
+Q.11        -INF            3.2980        +INF             .          
+Q.12        -INF            3.6224        +INF             .          
+Q.13        -INF            3.9635        +INF             .          
+Q.14        -INF            4.3952        +INF             .          
+Q.15        -INF            4.6965        +INF             .          
+Q.16        -INF            5.1686        +INF             .          
+Q.17        -INF            5.9224        +INF             .          
+Q.18        -INF            6.3647        +INF             .          
+Q.19        -INF            7.3000        +INF             .          
+
+---- VAR e  error per observation
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+L.1         -INF            1.7250        +INF             .          
+L.2         -INF            1.7250        +INF             .          
+L.3         -INF            1.7250        +INF             .          
+L.4         -INF            1.7250        +INF             .          
+L.5         -INF            1.7250        +INF             .          
+L.6         -INF            1.7250        +INF             .          
+L.7         -INF            1.7250        +INF             .          
+L.8         -INF            1.7250        +INF             .          
+L.9         -INF            1.7250        +INF             .          
+L.10        -INF            1.7250        +INF             .          
+L.11        -INF            1.7250        +INF             .          
+L.12        -INF            1.7250        +INF             .          
+L.13        -INF            1.7250        +INF             .          
+L.14        -INF            1.7250        +INF             .          
+L.15        -INF            1.7250        +INF             .          
+L.16        -INF            1.7250        +INF             .          
+L.17        -INF            1.7250        +INF             .          
+L.18        -INF            1.7250        +INF             .          
+L.19        -INF            1.7250        +INF             .          
+Q.1         -INF            0.0176        +INF             .          
+Q.2         -INF            0.2380        +INF             .          
+Q.3         -INF            0.6106        +INF             .          
+Q.4         -INF      -4.44089E-16        +INF             .          
+Q.5         -INF            0.3363        +INF             .          
+Q.6         -INF            0.4706        +INF             .          
+Q.7         -INF            1.0306        +INF             .          
+Q.8         -INF            0.4263        +INF             .          
+Q.9         -INF             .            +INF             .          
+Q.10        -INF            0.5094        +INF             .          
+Q.11        -INF            2.2980        +INF             .          
+Q.12        -INF            0.3776        +INF             .          
+Q.13        -INF            0.3635        +INF             .          
+Q.14        -INF            1.6952        +INF             .          
+Q.15        -INF            1.0035        +INF             .          
+Q.16        -INF            0.5686        +INF             .          
+Q.17        -INF            0.0776        +INF             .          
+Q.18        -INF            0.4353        +INF             .          
+Q.19        -INF             .            +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR sumErr            -INF           10.4590        +INF             .          
+---- VAR MinMaxErr         -INF            2.2980        +INF             .          
+
+  sumErr  total abosulate error, objvar
+  MinMaxErr  Minimum Maximum Error
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 15:39:20 Page 15
+Curve Fitting (CURVE, SEQ =xxx)
+Equation Listing    SOLVE quadfit Using QCP From line 84
+
+
+---- ybarQ  =E=  calculate ybar=c.x^2 a1x + b1, linear equation
+
+ybarQ(1)..  - a(Q) + ybar(Q,1) =E= 0 ; (LHS = 0)
+     
+ybarQ(2)..  - a(Q) - 0.5*b(Q) - 0.25*c(Q) + ybar(Q,2) =E= 0 ; (LHS = 0)
+     
+ybarQ(3)..  - a(Q) - b(Q) - c(Q) + ybar(Q,3) =E= 0 ; (LHS = 0)
+     
+REMAINING 16 ENTRIES SKIPPED
+
+
+---- error1  =G=  calculation of absolute error, ybar-y
+
+error1(L,1)..  - ybar(L,1) + e(L,1) =G= -1 ; (LHS = 2.125)
+     
+error1(L,2)..  - ybar(L,2) + e(L,2) =G= -0.9 ; (LHS = 1.8125)
+     
+error1(L,3)..  - ybar(L,3) + e(L,3) =G= -0.7 ; (LHS = 1.5)
+     
+REMAINING 35 ENTRIES SKIPPED
+
+
+---- error2  =G=  calculation of absolute error, ybar-y
+
+error2(L,1)..  ybar(L,1) + e(L,1) =G= 1 ; (LHS = 1.325)
+     
+error2(L,2)..  ybar(L,2) + e(L,2) =G= 0.9 ; (LHS = 1.6375)
+     
+error2(L,3)..  ybar(L,3) + e(L,3) =G= 0.7 ; (LHS = 1.95)
+     
+REMAINING 35 ENTRIES SKIPPED
+
+
+---- TotAbsDevQ  =E=  objfunc, linear fit, minimum total absolute deviation
+
+TotAbsDevQ..  - e(Q,1) - e(Q,2) - e(Q,3) - e(Q,4) - e(Q,5) - e(Q,6) - e(Q,7) - e(Q,8) - e(Q,9) - e(Q,10) - e(Q,11) - e(Q,12) - e(Q,13) - e(Q,14) - e(Q,15) - e(Q,16) - e(Q,17) - e(Q,18) - e(Q,19) + sumErr =E= 0 ; (LHS = 0)
+     
+
+---- MiniMaxErrQ  =G=  objfunc, linear fit, min max deviation
+
+MiniMaxErrQ(1)..  - e(Q,1) + MinMaxErr =G= 0 ; (LHS = 2.28039215686275)
+     
+MiniMaxErrQ(2)..  - e(Q,2) + MinMaxErr =G= 0 ; (LHS = 2.06)
+     
+MiniMaxErrQ(3)..  - e(Q,3) + MinMaxErr =G= 0 ; (LHS = 1.68745098039216)
+     
+REMAINING 16 ENTRIES SKIPPED
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 15:39:20 Page 16
+Curve Fitting (CURVE, SEQ =xxx)
+Column Listing      SOLVE quadfit Using QCP From line 84
+
+
+---- a  coefficient a for straight line
+
+a(Q)
+                (.LO, .L, .UP, .M = -INF, 0.982352941176471, +INF, 0)
+       -1       ybarQ(1)
+       -1       ybarQ(2)
+       -1       ybarQ(3)
+       -1       ybarQ(4)
+       -1       ybarQ(5)
+       -1       ybarQ(6)
+       -1       ybarQ(7)
+       -1       ybarQ(8)
+       -1       ybarQ(9)
+       -1       ybarQ(10)
+       -1       ybarQ(11)
+       -1       ybarQ(12)
+       -1       ybarQ(13)
+       -1       ybarQ(14)
+       -1       ybarQ(15)
+       -1       ybarQ(16)
+       -1       ybarQ(17)
+       -1       ybarQ(18)
+       -1       ybarQ(19)
+
+
+---- b  coefficient b for straight line
+
+b(Q)
+                (.LO, .L, .UP, .M = -INF, 0.294509803921569, +INF, 0)
+       -0.5     ybarQ(2)
+       -1       ybarQ(3)
+       -1.5     ybarQ(4)
+       -1.9     ybarQ(5)
+       -2.5     ybarQ(6)
+       -3       ybarQ(7)
+       -3.5     ybarQ(8)
+       -4       ybarQ(9)
+       -4.5     ybarQ(10)
+       -5       ybarQ(11)
+       -5.5     ybarQ(12)
+       -6       ybarQ(13)
+       -6.6     ybarQ(14)
+       -7       ybarQ(15)
+       -7.6     ybarQ(16)
+       -8.5     ybarQ(17)
+       -9       ybarQ(18)
+      -10       ybarQ(19)
+
+
+---- c  coefficient c for straight line
+
+c(Q)
+                (.LO, .L, .UP, .M = -INF, 0.0337254901960785, +INF, 0)
+       -0.25    ybarQ(2)
+       -1       ybarQ(3)
+       -2.25    ybarQ(4)
+       -3.61    ybarQ(5)
+       -6.25    ybarQ(6)
+       -9       ybarQ(7)
+      -12.25    ybarQ(8)
+      -16       ybarQ(9)
+      -20.25    ybarQ(10)
+      -25       ybarQ(11)
+      -30.25    ybarQ(12)
+      -36       ybarQ(13)
+      -43.56    ybarQ(14)
+      -49       ybarQ(15)
+      -57.76    ybarQ(16)
+      -72.25    ybarQ(17)
+      -81       ybarQ(18)
+     -100       ybarQ(19)
+
+
+---- ybar  value of y from the curve fit
+
+ybar(L,1)
+                (.LO, .L, .UP, .M = -INF, -0.399999999999999, +INF, 0)
+       -1       error1(L,1)
+        1       error2(L,1)
+
+ybar(L,2)
+                (.LO, .L, .UP, .M = -INF, -0.0874999999999993, +INF, 0)
+       -1       error1(L,2)
+        1       error2(L,2)
+
+ybar(L,3)
+                (.LO, .L, .UP, .M = -INF, 0.225000000000001, +INF, 0)
+       -1       error1(L,3)
+        1       error2(L,3)
+
+REMAINING 35 ENTRIES SKIPPED
+
+---- e  error per observation
+
+e(L,1)
+                (.LO, .L, .UP, .M = -INF, 1.725, +INF, 0)
+        1       error1(L,1)
+        1       error2(L,1)
+
+e(L,2)
+                (.LO, .L, .UP, .M = -INF, 1.725, +INF, 0)
+        1       error1(L,2)
+        1       error2(L,2)
+
+e(L,3)
+                (.LO, .L, .UP, .M = -INF, 1.725, +INF, 0)
+        1       error1(L,3)
+        1       error2(L,3)
+
+REMAINING 35 ENTRIES SKIPPED
+
+---- sumErr  total abosulate error, objvar
+
+sumErr
+                (.LO, .L, .UP, .M = -INF, 10.4589647058824, +INF, 0)
+        1       TotAbsDevQ
+
+
+---- MinMaxErr  Minimum Maximum Error
+
+MinMaxErr
+                (.LO, .L, .UP, .M = -INF, 2.29803921568627, +INF, 0)
+        1       MiniMaxErrQ(1)
+        1       MiniMaxErrQ(2)
+        1       MiniMaxErrQ(3)
+        1       MiniMaxErrQ(4)
+        1       MiniMaxErrQ(5)
+        1       MiniMaxErrQ(6)
+        1       MiniMaxErrQ(7)
+        1       MiniMaxErrQ(8)
+        1       MiniMaxErrQ(9)
+        1       MiniMaxErrQ(10)
+        1       MiniMaxErrQ(11)
+        1       MiniMaxErrQ(12)
+        1       MiniMaxErrQ(13)
+        1       MiniMaxErrQ(14)
+        1       MiniMaxErrQ(15)
+        1       MiniMaxErrQ(16)
+        1       MiniMaxErrQ(17)
+        1       MiniMaxErrQ(18)
+        1       MiniMaxErrQ(19)
+
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 15:39:20 Page 17
+Curve Fitting (CURVE, SEQ =xxx)
+Model Statistics    SOLVE quadfit Using QCP From line 84
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS          115
+BLOCKS OF VARIABLES           7     SINGLE VARIABLES           81
+NON ZERO ELEMENTS           284     NON LINEAR N-Z              0
+DERIVATIVE POOL              20     CONSTANT POOL              16
+CODE LENGTH                   0
+
+
+GENERATION TIME      =        0.016 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+
+
+EXECUTION TIME       =        0.016 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 15:39:20 Page 18
+Curve Fitting (CURVE, SEQ =xxx)
+Solution Report     SOLVE quadfit Using QCP From line 84
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   quadfit             OBJECTIVE  MinMaxErr
+     TYPE    QCP                 DIRECTION  MINIMIZE
+     SOLVER  CONOPT              FROM LINE  84
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE                1.4750
+
+ RESOURCE USAGE, LIMIT          0.000      1000.000
+ ITERATION COUNT, LIMIT         5    2000000000
+ EVALUATION ERRORS              0             0
+CONOPT 3         25.1.2 r67455 Released Aug  1, 2018 WEI x86 64bit/MS Windows 
+ 
+ 
+    C O N O P T 3   version 3.17I
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+                   Pre-triangular equations:   0
+                   Post-triangular equations:  1
+                   Definitional equations:     18
+ 
+ 
+ ** Optimal solution. Reduced gradient less than tolerance.
+ 
+ 
+ CONOPT time Total                            0.001 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+ 
+
+---- EQU ybarQ  calculate ybar=c.x^2 a1x + b1, linear equation
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+1           .              .              .             0.0800      
+2           .              .              .             EPS         
+3           .              .              .             EPS         
+4           .              .              .             EPS         
+5           .              .              .             EPS         
+6           .              .              .             EPS         
+7           .              .              .            -0.3500      
+8           .              .              .             EPS         
+9           .              .              .             EPS         
+10          .              .              .             EPS         
+11          .              .              .             0.4200      
+12          .              .              .             EPS         
+13          .              .              .             EPS         
+14          .              .              .             EPS         
+15          .              .              .            -0.1500      
+16          .              .              .             EPS         
+17          .              .              .             EPS         
+18          .              .              .             EPS         
+19          .              .              .             EPS         
+
+---- EQU error1  calculation of absolute error, ybar-y
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+L.1         -1.0000         2.1250        +INF            EPS         
+L.2         -0.9000         1.8125        +INF            EPS         
+L.3         -0.7000         1.5000        +INF            EPS         
+L.4         -1.5000         1.1875        +INF            EPS         
+L.5         -2.0000         0.9375        +INF            EPS         
+L.6         -2.4000         0.5625        +INF            EPS         
+L.7         -3.2000         0.2500        +INF            EPS         
+L.8         -2.0000        -0.0625        +INF            EPS         
+L.9         -2.7000        -0.3750        +INF            EPS         
+L.10        -3.5000        -0.6875        +INF            EPS         
+L.11        -1.0000        -1.0000        +INF            EPS         
+L.12        -4.0000        -1.3125        +INF            EPS         
+L.13        -3.6000        -1.6250        +INF            EPS         
+L.14        -2.7000        -2.0000        +INF            EPS         
+L.15        -5.7000        -2.2500        +INF            EPS         
+L.16        -4.6000        -2.6250        +INF            EPS         
+L.17        -6.0000        -3.1875        +INF            EPS         
+L.18        -6.8000        -3.5000        +INF            EPS         
+L.19        -7.3000        -4.1250        +INF            EPS         
+Q.1         -1.0000        -1.0000        +INF            0.0800      
+Q.2         -0.9000        -0.9000        +INF            EPS         
+Q.3         -0.7000        -0.7000        +INF            EPS         
+Q.4         -1.5000        -1.5000        +INF            EPS         
+Q.5         -2.0000        -1.4775        +INF             .          
+Q.6         -2.4000        -0.9875        +INF             .          
+Q.7         -3.2000        -0.2500        +INF             .          
+Q.8         -2.0000        -1.6375        +INF             .          
+Q.9         -2.7000        -1.2500        +INF             .          
+Q.10        -3.5000        -0.8875        +INF             .          
+Q.11        -1.0000        -1.0000        +INF            0.4200      
+Q.12        -4.0000        -1.6375        +INF             .          
+Q.13        -3.6000        -2.8500        +INF             .          
+Q.14        -2.7000        -2.7000        +INF            EPS         
+Q.15        -5.7000        -2.7500        +INF             .          
+Q.16        -4.6000        -4.6000        +INF            EPS         
+Q.17        -6.0000        -6.0000        +INF            EPS         
+Q.18        -6.8000        -6.8000        +INF            EPS         
+Q.19        -7.3000        -7.3000        +INF            EPS         
+
+---- EQU error2  calculation of absolute error, ybar-y
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+L.1          1.0000         1.3250        +INF            EPS         
+L.2          0.9000         1.6375        +INF            EPS         
+L.3          0.7000         1.9500        +INF            EPS         
+L.4          1.5000         2.2625        +INF            EPS         
+L.5          2.0000         2.5125        +INF            EPS         
+L.6          2.4000         2.8875        +INF            EPS         
+L.7          3.2000         3.2000        +INF            EPS         
+L.8          2.0000         3.5125        +INF            EPS         
+L.9          2.7000         3.8250        +INF            EPS         
+L.10         3.5000         4.1375        +INF            EPS         
+L.11         1.0000         4.4500        +INF            EPS         
+L.12         4.0000         4.7625        +INF            EPS         
+L.13         3.6000         5.0750        +INF            EPS         
+L.14         2.7000         5.4500        +INF            EPS         
+L.15         5.7000         5.7000        +INF            EPS         
+L.16         4.6000         6.0750        +INF            EPS         
+L.17         6.0000         6.6375        +INF            EPS         
+L.18         6.8000         6.9500        +INF            EPS         
+L.19         7.3000         7.5750        +INF            EPS         
+Q.1          1.0000         3.9500        +INF             .          
+Q.2          0.9000         3.4875        +INF             .          
+Q.3          0.7000         3.2500        +INF             .          
+Q.4          1.5000         2.1375        +INF             .          
+Q.5          2.0000         2.0000        +INF            EPS         
+Q.6          2.4000         2.4000        +INF            EPS         
+Q.7          3.2000         3.2000        +INF            0.3500      
+Q.8          2.0000         2.0000        +INF            EPS         
+Q.9          2.7000         2.7000        +INF            EPS         
+Q.10         3.5000         3.5000        +INF            EPS         
+Q.11         1.0000         3.9500        +INF             .          
+Q.12         4.0000         4.0000        +INF            EPS         
+Q.13         3.6000         3.6000        +INF            EPS         
+Q.14         2.7000         4.8900        +INF             .          
+Q.15         5.7000         5.7000        +INF            0.1500      
+Q.16         4.6000         5.2900        +INF             .          
+Q.17         6.0000         6.3875        +INF             .          
+Q.18         6.8000         7.1500        +INF             .          
+Q.19         7.3000        10.1500        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU TotAbsDevQ          .              .              .             EPS         
+
+  TotAbsDevQ  objfunc, linear fit, minimum total absolute deviation
+
+---- EQU MiniMaxErrQ  objfunc, linear fit, min max deviation
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+1           .              .            +INF            0.0800      
+2           .             0.1813        +INF             .          
+3           .             0.2000        +INF             .          
+4           .             1.1563        +INF             .          
+5           .             1.2137        +INF             .          
+6           .             0.7687        +INF             .          
+7           .              .            +INF            0.3500      
+8           .             1.2938        +INF             .          
+9           .             0.7500        +INF             .          
+10          .             0.1688        +INF             .          
+11          .              .            +INF            0.4200      
+12          .             0.2938        +INF             .          
+13          .             1.1000        +INF             .          
+14          .             0.3800        +INF             .          
+15          .              .            +INF            0.1500      
+16          .             1.1300        +INF             .          
+17          .             1.2812        +INF             .          
+18          .             1.3000        +INF             .          
+19          .             0.0500        +INF             .          
+
+---- VAR a  coefficient a for straight line
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+Q        -INF            2.4750        +INF             .          
+
+---- VAR b  coefficient b for straight line
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+Q        -INF           -0.6250        +INF             .          
+
+---- VAR c  coefficient c for straight line
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+Q        -INF            0.1250        +INF             .          
+
+---- VAR ybar  value of y from the curve fit
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+L.1         -INF           -0.4000        +INF             .          
+L.2         -INF           -0.0875        +INF             .          
+L.3         -INF            0.2250        +INF             .          
+L.4         -INF            0.5375        +INF             .          
+L.5         -INF            0.7875        +INF             .          
+L.6         -INF            1.1625        +INF             .          
+L.7         -INF            1.4750        +INF             .          
+L.8         -INF            1.7875        +INF             .          
+L.9         -INF            2.1000        +INF             .          
+L.10        -INF            2.4125        +INF             .          
+L.11        -INF            2.7250        +INF             .          
+L.12        -INF            3.0375        +INF             .          
+L.13        -INF            3.3500        +INF             .          
+L.14        -INF            3.7250        +INF             .          
+L.15        -INF            3.9750        +INF             .          
+L.16        -INF            4.3500        +INF             .          
+L.17        -INF            4.9125        +INF             .          
+L.18        -INF            5.2250        +INF             .          
+L.19        -INF            5.8500        +INF             .          
+Q.1         -INF            2.4750        +INF             .          
+Q.2         -INF            2.1937        +INF             .          
+Q.3         -INF            1.9750        +INF             .          
+Q.4         -INF            1.8187        +INF             .          
+Q.5         -INF            1.7387        +INF             .          
+Q.6         -INF            1.6937        +INF             .          
+Q.7         -INF            1.7250        +INF             .          
+Q.8         -INF            1.8188        +INF             .          
+Q.9         -INF            1.9750        +INF             .          
+Q.10        -INF            2.1938        +INF             .          
+Q.11        -INF            2.4750        +INF             .          
+Q.12        -INF            2.8188        +INF             .          
+Q.13        -INF            3.2250        +INF             .          
+Q.14        -INF            3.7950        +INF             .          
+Q.15        -INF            4.2250        +INF             .          
+Q.16        -INF            4.9450        +INF             .          
+Q.17        -INF            6.1938        +INF             .          
+Q.18        -INF            6.9750        +INF             .          
+Q.19        -INF            8.7250        +INF             .          
+
+---- VAR e  error per observation
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+L.1         -INF            1.7250        +INF             .          
+L.2         -INF            1.7250        +INF             .          
+L.3         -INF            1.7250        +INF             .          
+L.4         -INF            1.7250        +INF             .          
+L.5         -INF            1.7250        +INF             .          
+L.6         -INF            1.7250        +INF             .          
+L.7         -INF            1.7250        +INF             .          
+L.8         -INF            1.7250        +INF             .          
+L.9         -INF            1.7250        +INF             .          
+L.10        -INF            1.7250        +INF             .          
+L.11        -INF            1.7250        +INF             .          
+L.12        -INF            1.7250        +INF             .          
+L.13        -INF            1.7250        +INF             .          
+L.14        -INF            1.7250        +INF             .          
+L.15        -INF            1.7250        +INF             .          
+L.16        -INF            1.7250        +INF             .          
+L.17        -INF            1.7250        +INF             .          
+L.18        -INF            1.7250        +INF             .          
+L.19        -INF            1.7250        +INF             .          
+Q.1         -INF            1.4750        +INF             .          
+Q.2         -INF            1.2937        +INF             .          
+Q.3         -INF            1.2750        +INF             .          
+Q.4         -INF            0.3187        +INF             .          
+Q.5         -INF            0.2613        +INF             .          
+Q.6         -INF            0.7063        +INF             .          
+Q.7         -INF            1.4750        +INF             .          
+Q.8         -INF            0.1812        +INF             .          
+Q.9         -INF            0.7250        +INF             .          
+Q.10        -INF            1.3062        +INF             .          
+Q.11        -INF            1.4750        +INF             .          
+Q.12        -INF            1.1812        +INF             .          
+Q.13        -INF            0.3750        +INF             .          
+Q.14        -INF            1.0950        +INF             .          
+Q.15        -INF            1.4750        +INF             .          
+Q.16        -INF            0.3450        +INF             .          
+Q.17        -INF            0.1938        +INF             .          
+Q.18        -INF            0.1750        +INF             .          
+Q.19        -INF            1.4250        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR sumErr            -INF           16.7575        +INF             .          
+---- VAR MinMaxErr         -INF            1.4750        +INF             .          
+
+  sumErr  total abosulate error, objvar
+  MinMaxErr  Minimum Maximum Error
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 25.1.2  r67455 Released Aug  1, 2018 WEX-WEI x86 64bit/MS Windows - 09/24/18 15:39:20 Page 19
+Curve Fitting (CURVE, SEQ =xxx)
+E x e c u t i o n
+
+
+----     86 VARIABLE a.L  coefficient a for straight line
+
+L -0.400,    Q  2.475
+
+
+----     86 VARIABLE b.L  coefficient b for straight line
+
+L  0.625,    Q -0.625
+
+
+----     86 VARIABLE c.L  coefficient c for straight line
+
+Q 0.125
+
+
+
+EXECUTION TIME       =        0.000 SECONDS      3 MB  25.1.2 r67455 WEX-WEI
+
+
+USER: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+      GAMS Development, Fairfax                                 DC14199
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\try.gms
+Output     C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\try.lst

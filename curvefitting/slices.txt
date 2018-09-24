@@ -1,3 +1,2 @@
 dset =i rng =A2:A20 rdim=1
-par=x rng A2:B20 rdim=1
-par=y1 rng A2:C20 rdim=2
+par=xy rng A1 rdim=1 cdim =1

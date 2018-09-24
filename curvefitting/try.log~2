@@ -1,0 +1,36 @@
+--- Job try.gms Start 09/24/18 15:37:51 25.1.2 r67455 WEX-WEI x86 64bit/MS Windows
+GAMS 25.1.2   Copyright (C) 1987-2018 GAMS Development. All rights reserved
+Licensee: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+          GAMS Development, Fairfax                                 DC14199
+          cbhomia@gams.com                                                 
+--- Starting compilation
+--- try.gms(30) 3 Mb
+--- call gdxxrw curvefit.xlsm o=curve.gdx @slices.txt
+
+GDXXRW           25.1.2 r67455 Released Aug  1, 2018 VS8 x86 32bit/MS Windows 
+Input file : C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\curvefit.xlsm
+Output file: C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\curve.gdx
+Total time = 1203 Ms
+--- try.gms(31) 3 Mb
+--- try.gms(33) 3 Mb
+
+--- GDXin=C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\curve.gdx
+--- try.gms(73) 3 Mb 2 Errors
+*** Error 140 in C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\try.gms
+    Unknown symbol
+*** Error 257 in C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\try.gms
+    Solve statement not checked because of previous errors
+--- try.gms(75) 3 Mb 4 Errors
+*** Error 140 in C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\try.gms
+    Unknown symbol
+*** Error 257 in C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\try.gms
+    Solve statement not checked because of previous errors
+--- try.gms(82) 3 Mb 5 Errors
+*** Error 257 in C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\try.gms
+    Solve statement not checked because of previous errors
+--- try.gms(84) 3 Mb 6 Errors
+*** Error 257 in C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\try.gms
+    Solve statement not checked because of previous errors
+--- try.gms(87) 3 Mb 6 Errors
+*** Status: Compilation error(s)
+--- Job try.gms Stop 09/24/18 15:37:52 elapsed 0:00:01.275

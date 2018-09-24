@@ -1,0 +1,24 @@
+--- Job CurveFitting.gms Start 09/24/18 16:17:42 25.1.2 r67455 WEX-WEI x86 64bit/MS Windows
+GAMS 25.1.2   Copyright (C) 1987-2018 GAMS Development. All rights reserved
+Licensee: Chintan Bhomia, Single User License            G180612/0001CN-GEN
+          GAMS Development, Fairfax                                 DC14199
+          cbhomia@gams.com                                                 
+--- Starting compilation
+--- CurveFitting.gms(29) 2 Mb
+--- call gdxxrw curvefit.xlsm o=curve.gdx @slices.txt
+
+GDXXRW           25.1.2 r67455 Released Aug  1, 2018 VS8 x86 32bit/MS Windows 
+Input file : C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\curvefit.xlsm
+Output file: C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\curve.gdx
+Total time = 1171 Ms
+--- CurveFitting.gms(30) 2 Mb
+--- CurveFitting.gms(32) 2 Mb
+
+--- GDXin=C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\curve.gdx
+--- CurveFitting.gms(104) 3 Mb 1 Error
+*** Error 409 in C:\Users\cnbho\Documents\GitHub\HPW\curvefitting\CurveFitting.gms
+    Unrecognizable item - skip to find a new statement
+      looking for a ';' or a key word to get started again
+--- CurveFitting.gms(105) 3 Mb 1 Error
+*** Status: Compilation error(s)
+--- Job CurveFitting.gms Stop 09/24/18 16:17:43 elapsed 0:00:01.249

@@ -1,0 +1,114 @@
+B 2 C o m p i l a t i o n
+B 88 Include File Summary
+B 101 Equation Listing    SOLVE linearfit Using LP From line 73
+D 102 ybarL
+D 114 error1
+D 125 error2
+D 136 TotAbsDevL
+D 141 MiniMaxErrL
+B 154 Column Listing      SOLVE linearfit Using LP From line 73
+E 155 a
+E 181 b
+E 205 ybar
+E 227 e
+E 252 sumErr
+E 259 MinMaxErr
+B 286 Model Statistics    SOLVE linearfit Using LP From line 73
+B 302 Solution Report     SOLVE linearfit Using LP From line 73
+F 333 ybarL
+F 357 error1
+F 400 error2
+F 441 TotAbsDevL
+F 449 MiniMaxErrL
+G 468 a
+G 474 b
+G 480 ybar
+G 523 e
+G 566 sumErr
+G 570 MinMaxErr
+B 581 Equation Listing    SOLVE linearfit Using LP From line 75
+D 582 ybarL
+D 594 error1
+D 605 error2
+D 616 TotAbsDevL
+D 621 MiniMaxErrL
+B 634 Column Listing      SOLVE linearfit Using LP From line 75
+E 635 a
+E 661 b
+E 685 ybar
+E 707 e
+E 732 sumErr
+E 739 MinMaxErr
+B 766 Model Statistics    SOLVE linearfit Using LP From line 75
+B 782 Solution Report     SOLVE linearfit Using LP From line 75
+F 813 ybarL
+F 837 error1
+F 880 error2
+F 921 TotAbsDevL
+F 929 MiniMaxErrL
+G 948 a
+G 954 b
+G 960 ybar
+G 1003 e
+G 1046 sumErr
+G 1050 MinMaxErr
+B 1061 Equation Listing    SOLVE quadfit Using QCP From line 82
+D 1062 ybarQ
+D 1074 error1
+D 1085 error2
+D 1096 TotAbsDevQ
+D 1101 MiniMaxErrQ
+B 1114 Column Listing      SOLVE quadfit Using QCP From line 82
+E 1115 a
+E 1141 b
+E 1165 c
+E 1189 ybar
+E 1208 e
+E 1227 sumErr
+E 1234 MinMaxErr
+B 1261 Model Statistics    SOLVE quadfit Using QCP From line 82
+B 1279 Solution Report     SOLVE quadfit Using QCP From line 82
+F 1321 ybarQ
+F 1345 error1
+F 1388 error2
+F 1429 TotAbsDevQ
+F 1437 MiniMaxErrQ
+G 1456 a
+G 1462 b
+G 1468 c
+G 1474 ybar
+G 1517 e
+G 1560 sumErr
+G 1564 MinMaxErr
+B 1576 Equation Listing    SOLVE quadfit Using QCP From line 84
+D 1577 ybarQ
+D 1589 error1
+D 1600 error2
+D 1611 TotAbsDevQ
+D 1616 MiniMaxErrQ
+B 1629 Column Listing      SOLVE quadfit Using QCP From line 84
+E 1630 a
+E 1656 b
+E 1680 c
+E 1704 ybar
+E 1723 e
+E 1742 sumErr
+E 1749 MinMaxErr
+B 1776 Model Statistics    SOLVE quadfit Using QCP From line 84
+B 1794 Solution Report     SOLVE quadfit Using QCP From line 84
+F 1836 ybarQ
+F 1860 error1
+F 1903 error2
+F 1944 TotAbsDevQ
+F 1952 MiniMaxErrQ
+G 1971 a
+G 1977 b
+G 1983 c
+G 1989 ybar
+G 2032 e
+G 2075 sumErr
+G 2079 MinMaxErr
+B 2091 E x e c u t i o n
+I 2092 a
+I 2098 b
+I 2103 c
